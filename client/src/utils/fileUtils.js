@@ -19,12 +19,23 @@
 /**
  * Converts a document ID to a filename (preferred method for uniqueness)
  * @param {string} id - The document ID (e.g., CAP-001, ENB-001)
- * @param {string} type - The document type (not used, kept for compatibility)
- * @returns {string} - The filename based on ID only (e.g., CAP-001.md)
+ * @param {string} type - The document type (capability, enabler)
+ * @returns {string} - The filename with appropriate suffix (e.g., cap-001-capability.md, enb-001-enabler.md)
  */
 export function idToFilename(id, type) {
   if (!id) return '';
-  return `${id.toLowerCase()}.md`;
+
+  const lowerId = id.toLowerCase();
+
+  // Add type suffix for consistency with backend naming
+  if (type === 'capability') {
+    return `${lowerId}-capability.md`;
+  } else if (type === 'enabler') {
+    return `${lowerId}-enabler.md`;
+  }
+
+  // Fallback for unknown types
+  return `${lowerId}.md`;
 }
 
 /**
@@ -60,8 +71,9 @@ export function filenameToName(filename) {
 
   // Check if it's an ID-based filename (starts with CAP- or ENB-)
   if (nameWithoutExtension.match(/^(CAP|ENB)-/i)) {
-    // For ID-based filenames, return the ID as-is (uppercase)
-    return nameWithoutExtension.toUpperCase();
+    // For ID-based filenames, remove type suffix if present and return the ID as-is (uppercase)
+    const idWithoutSuffix = nameWithoutExtension.replace(/-capability$|-enabler$/, '');
+    return idWithoutSuffix.toUpperCase();
   }
 
   // For legacy name-based filenames, remove type suffix and format

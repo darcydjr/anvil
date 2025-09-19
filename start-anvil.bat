@@ -1,7 +1,7 @@
 @echo off
 
-REM Read version from version.json
-for /f "tokens=*" %%i in ('powershell -Command "(Get-Content version.json | ConvertFrom-Json).version"') do set VERSION=%%i
+REM Read version from package.json
+for /f "tokens=*" %%i in ('powershell -Command "(Get-Content package.json | ConvertFrom-Json).version"') do set VERSION=%%i
 
 echo ============================================
 echo        Starting Anvil v%VERSION% - Level 1!

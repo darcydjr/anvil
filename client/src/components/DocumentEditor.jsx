@@ -279,9 +279,9 @@ export default function DocumentEditor() {
             for (const enabler of formData.enablers) {
               if (enabler.id) {
                 try {
-                  // Find enabler filename - try different naming conventions
-                  const enablerFilename = `${enabler.id.toLowerCase()}-enabler.md`
-                  const enablerPath = `${enabler.id.toLowerCase()}-enabler.md`
+                  // Use consistent filename generation
+                  const enablerFilename = idToFilename(enabler.id, 'enabler')
+                  const enablerPath = idToFilename(enabler.id, 'enabler')
                   const newEnablerPath = `${formData.selectedPath}/${enablerFilename}`
 
                   console.log(`[ENABLER-MOVE] Moving enabler ${enabler.id} to ${newEnablerPath}`)

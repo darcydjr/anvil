@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Read version from version.json
-VERSION=$(cat version.json | grep -Po '"version":\s*"\K[^"]*')
+# Read version from package.json
+VERSION=$(cat package.json | grep -Po '"version":\s*"\K[^"]*')
 
 echo "============================================"
 echo "       Starting Anvil v$VERSION - Level 1!"

@@ -671,6 +671,12 @@ The system includes automated state management:
 
 ## Version History
 
+### v1.0.2 - Defect Fixes and Version Management ✅
+- **DUPLICATE ENABLER FIX**: Fixed duplicate enabler file creation issue where inconsistent filename generation between frontend and backend created files with and without `-enabler` suffix
+- **CENTRALIZED VERSION MANAGEMENT**: Updated all code to use package.json as single source of truth for version information
+- **FILENAME CONSISTENCY**: Standardized enabler file naming to use `-enabler.md` suffix consistently across the application
+- **VERSION SYNC SCRIPT**: Added `npm run version:sync` command to synchronize versions between root and client package.json files
+
 ### v1.0.0 - Initial Open Source Release ✅
 - **APACHE 2.0 LICENSE**: Released under Apache 2.0 license with full open source compliance
 - **COMPREHENSIVE FEATURE SET**: Complete PRD management system with capabilities, enablers, and requirements tracking
