@@ -2044,6 +2044,47 @@ app.get('/api/config', (req, res) => {
   }
 });
 
+// Discovery API - Analyze text and generate capabilities/enablers
+app.post('/api/discovery/analyze', async (req, res) => {
+  try {
+    const { text } = req.body;
+
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ error: 'Text content is required' });
+    }
+
+    console.log('[DISCOVERY] Analyzing text for capabilities and enablers');
+
+    // AI Analysis logic to extract capabilities and enablers
+    const analysis = await analyzeTextForDiscovery(text);
+
+    res.json(analysis);
+  } catch (error) {
+    console.error('[DISCOVERY] Error analyzing text:', error);
+    res.status(500).json({ error: 'Error analyzing text: ' + error.message });
+  }
+});
+
+// Discovery API - Create documents from analysis results
+app.post('/api/discovery/create', async (req, res) => {
+  try {
+    const { type, documentData } = req.body;
+
+    if (!type || !documentData) {
+      return res.status(400).json({ error: 'Type and document data are required' });
+    }
+
+    console.log('[DISCOVERY] Creating document:', type, documentData.name);
+
+    const result = await createDocumentFromDiscovery(type, documentData);
+
+    res.json(result);
+  } catch (error) {
+    console.error('[DISCOVERY] Error creating document:', error);
+    res.status(500).json({ error: 'Error creating document: ' + error.message });
+  }
+});
+
 // Update full configuration
 app.post('/api/config', async (req, res) => {
   try {
@@ -2597,6 +2638,277 @@ app.post('/api/shutdown', (req, res) => {
     process.exit(0);
   }, 100);
 });
+
+// Discovery Analysis Functions
+async function analyzeTextForDiscovery(inputText) {
+  try {
+    console.log('[DISCOVERY] Starting analysis of input text');
+
+    // Extract key information patterns
+    const capabilities = extractCapabilities(inputText);
+    const enablers = extractEnablers(inputText);
+    const summary = generateAnalysisSummary(inputText, capabilities, enablers);
+
+    return {
+      capabilities,
+      enablers,
+      summary,
+      originalText: inputText
+    };
+  } catch (error) {
+    console.error('[DISCOVERY] Analysis error:', error);
+    throw new Error('Failed to analyze text: ' + error.message);
+  }
+}
+
+function extractCapabilities(text) {
+  const capabilities = [];
+
+  // Look for high-level features, systems, or major functionality
+  const capabilityPatterns = [
+    /(?:^|\n)#\s+(.+?)(?:\n|$)/g, // Main headers
+    /(?:capability|system|platform|service):\s*(.+?)(?:\n|$)/gi,
+    /(?:we need|build|create|implement)\s+(?:a|an)?\s*(.+?)(?:\s+(?:system|platform|service|capability))/gi,
+    /(?:main|primary|core)\s+(?:feature|functionality|system):\s*(.+?)(?:\n|$)/gi
+  ];
+
+  capabilityPatterns.forEach((pattern, index) => {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      const name = match[1].trim();
+      if (name && name.length > 3 && name.length < 100) {
+        const id = generateCapabilityId();
+        capabilities.push({
+          id,
+          name: capitalizeFirst(name),
+          description: extractDescriptionFromContext(text, name),
+          enablers: []
+        });
+      }
+    }
+  });
+
+  // If no patterns found, create a default capability from the title or first line
+  if (capabilities.length === 0) {
+    const firstLine = text.split('\n')[0].replace(/^#+\s*/, '').trim();
+    if (firstLine) {
+      capabilities.push({
+        id: generateCapabilityId(),
+        name: capitalizeFirst(firstLine),
+        description: 'Auto-generated capability from discovery analysis',
+        enablers: []
+      });
+    }
+  }
+
+  return capabilities.slice(0, 5); // Limit to 5 capabilities
+}
+
+function extractEnablers(text) {
+  const enablers = [];
+
+  // Look for specific features, components, or implementation details
+  const enablerPatterns = [
+    /(?:^|\n)##\s+(.+?)(?:\n|$)/g, // Sub-headers
+    /(?:^|\n)-\s+(.+?)(?:\n|$)/g, // Bullet points
+    /(?:feature|component|module|service):\s*(.+?)(?:\n|$)/gi,
+    /(?:includes?|features?|supports?):\s*(.+?)(?:\n|$)/gi,
+    /(?:^|\n)\*\s+(.+?)(?:\n|$)/g, // Asterisk bullet points
+    /(?:implement|create|build|add)\s+(.+?)(?:\s+(?:feature|component|functionality))/gi
+  ];
+
+  enablerPatterns.forEach(pattern => {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      const name = match[1].trim();
+      if (name && name.length > 3 && name.length < 100 && !isGenericTerm(name)) {
+        const id = generateEnablerId();
+        enablers.push({
+          id,
+          name: capitalizeFirst(name),
+          description: extractDescriptionFromContext(text, name),
+          requirements: extractRequirements(text, name)
+        });
+      }
+    }
+  });
+
+  return [...new Map(enablers.map(e => [e.name.toLowerCase(), e])).values()].slice(0, 10); // Remove duplicates, limit to 10
+}
+
+function extractDescriptionFromContext(text, itemName) {
+  // Try to find sentences that mention the item
+  const sentences = text.split(/[.!?]+/);
+  for (const sentence of sentences) {
+    if (sentence.toLowerCase().includes(itemName.toLowerCase()) && sentence.length > itemName.length + 10) {
+      return sentence.trim();
+    }
+  }
+  return `${itemName} functionality as described in the requirements`;
+}
+
+function extractRequirements(text, enablerName) {
+  const requirements = [];
+
+  // Look for requirement-like statements near the enabler name
+  const lines = text.split('\n');
+  const enablerLineIndex = lines.findIndex(line =>
+    line.toLowerCase().includes(enablerName.toLowerCase())
+  );
+
+  if (enablerLineIndex !== -1) {
+    // Look at following lines for requirements
+    for (let i = enablerLineIndex + 1; i < Math.min(enablerLineIndex + 5, lines.length); i++) {
+      const line = lines[i].trim();
+      if (line.match(/^\s*[-*]\s+/) || line.match(/^\s*\d+\.\s+/)) {
+        const req = line.replace(/^\s*[-*\d.]\s*/, '').trim();
+        if (req.length > 10 && req.length < 150) {
+          requirements.push(req);
+        }
+      }
+    }
+  }
+
+  return requirements.slice(0, 5); // Limit to 5 requirements per enabler
+}
+
+function generateAnalysisSummary(text, capabilities, enablers) {
+  const wordCount = text.split(/\s+/).length;
+  return `Analyzed ${wordCount} words and identified ${capabilities.length} capabilities and ${enablers.length} enablers. The system appears to focus on ${capabilities.map(c => c.name).join(', ')} with supporting features including ${enablers.slice(0, 3).map(e => e.name).join(', ')}.`;
+}
+
+function isGenericTerm(term) {
+  const genericTerms = ['features', 'functionality', 'system', 'platform', 'service', 'component', 'module', 'api', 'interface', 'data', 'user', 'admin'];
+  return genericTerms.some(generic => term.toLowerCase().includes(generic) && term.split(' ').length === 1);
+}
+
+function capitalizeFirst(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+async function createDocumentFromDiscovery(type, documentData) {
+  try {
+    const configPaths = getConfigPaths(config);
+    const firstProjectPath = path.resolve(configPaths.projectPaths[0]);
+
+    let fileName;
+    let content;
+
+    if (type === 'capability') {
+      fileName = `${documentData.id.toLowerCase()}-capability.md`;
+      content = await generateCapabilityContentFromDiscovery(documentData);
+    } else if (type === 'enabler') {
+      fileName = `${documentData.id.toLowerCase()}-enabler.md`;
+      content = await generateEnablerContentFromDiscovery(documentData);
+    } else {
+      throw new Error('Invalid document type');
+    }
+
+    const filePath = path.join(firstProjectPath, fileName);
+
+    // Check if file already exists
+    if (await fs.pathExists(filePath)) {
+      throw new Error(`File ${fileName} already exists`);
+    }
+
+    await fs.writeFile(filePath, content, 'utf8');
+    console.log('[DISCOVERY] Created document:', fileName);
+
+    return {
+      success: true,
+      fileName,
+      type,
+      id: documentData.id
+    };
+  } catch (error) {
+    console.error('[DISCOVERY] Document creation error:', error);
+    throw error;
+  }
+}
+
+async function generateCapabilityContentFromDiscovery(capabilityData) {
+  const currentDate = new Date().toISOString().split('T')[0];
+
+  return `# ${capabilityData.name}
+
+## Metadata
+- **Name**: ${capabilityData.name}
+- **Type**: Capability
+- **ID**: ${capabilityData.id}
+- **Status**: In Draft
+- **Approval**: Not Approved
+- **Priority**: Medium
+- **Owner**: Product Team
+- **Analysis Review**: Required
+- **Design Review**: Required
+- **Code Review**: Not Required
+- **Created Date**: ${currentDate}
+- **Last Updated**: ${currentDate}
+- **Version**: ${version.version}
+
+## Business Overview
+### Purpose
+${capabilityData.description}
+
+### Business Value
+This capability provides strategic business value by enabling ${capabilityData.name.toLowerCase()} functionality for end users.
+
+## Architecture Overview
+### High-Level Design
+The ${capabilityData.name} capability will be implemented as a modular system supporting scalable operations.
+
+### Dependencies
+- System Infrastructure
+- Data Management Layer
+- User Interface Framework
+
+## Enabler Dependencies
+${capabilityData.enablers && capabilityData.enablers.length > 0 ?
+  capabilityData.enablers.map(enabler => `| ${enabler} | Supporting functionality | Medium |`).join('\n') :
+  '| TBD | To be determined | Medium |'
+}
+
+*Generated from Discovery analysis*`;
+}
+
+async function generateEnablerContentFromDiscovery(enablerData) {
+  const currentDate = new Date().toISOString().split('T')[0];
+
+  return `# ${enablerData.name}
+
+## Metadata
+- **Name**: ${enablerData.name}
+- **Type**: Enabler
+- **ID**: ${enablerData.id}
+- **Capability ID**: TBD
+- **Status**: In Draft
+- **Approval**: Not Approved
+- **Priority**: Medium
+- **Owner**: Product Team
+- **Developer**: Development Team
+- **Created Date**: ${currentDate}
+- **Last Updated**: ${currentDate}
+- **Version**: ${version.version}
+
+## Technical Overview
+### Purpose
+${enablerData.description}
+
+## Functional Requirements
+${enablerData.requirements && enablerData.requirements.length > 0 ?
+  enablerData.requirements.map((req, index) => `| FR-${String(index + 1).padStart(3, '0')} | ${req} | High | Not Started |`).join('\n') :
+  '| FR-001 | Core functionality requirement | High | Not Started |'
+}
+
+## Non-Functional Requirements
+| ID | Requirement | Priority | Status |
+|----|-------------|----------|--------|
+| NFR-001 | Performance and scalability | High | Not Started |
+| NFR-002 | Security and data protection | High | Not Started |
+| NFR-003 | Maintainability and documentation | Medium | Not Started |
+
+*Generated from Discovery analysis*`;
+}
 
 // Serve React app for all non-API routes
 app.get('*', (req, res) => {

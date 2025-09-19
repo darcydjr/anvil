@@ -167,8 +167,6 @@ flowchart TD
 | 3 | Generate new Enablers, add Enablers to Capability List and Create the actual Enabler files, ensure you include the Technical Specifications section from the Enabler Template| Analyze the Capability and create new Enablers |
 | 4 | Configure Enablers | Apply Enabler Configuration Rules below |
 
-
-
 ### Enabler Configuration Rules
 | Enabler Analysis Review Setting | Enabler Approval | Enabler Status | Enabler Priority |
 |------------------------|---------------------|-------------------|-------------------|
@@ -178,7 +176,7 @@ flowchart TD
 ### Post-Condition Transition
 | Step | Action |
 |------|--------|
-| 1 | Set Enabler Status "Ready for Design"
+| 1 | Set Capability Status "Ready for Design"
 
 ### Exit Criteria Checklist
 - [ ] All new Enablers added to Capability

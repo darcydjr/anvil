@@ -118,7 +118,8 @@
 
 .help-button,
 .settings-button,
-.agents-button {
+.agents-button,
+.discovery-button {
   background: none;
   border: none;
   color: #4a90e2;
@@ -133,7 +134,8 @@
 
 .help-button:hover,
 .settings-button:hover,
-.agents-button:hover {
+.agents-button:hover,
+.discovery-button:hover {
   background: rgba(74, 144, 226, 0.1);
   color: #357abd;
   transform: scale(1.1);
@@ -141,7 +143,8 @@
 
 .help-button:active,
 .settings-button:active,
-.agents-button:active {
+.agents-button:active,
+.discovery-button:active {
   transform: scale(0.95);
 }
 

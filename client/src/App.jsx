@@ -24,6 +24,7 @@ import DocumentEditor from './components/DocumentEditor'
 import TemplateEditor from './components/TemplateEditor'
 import Settings from './components/Settings'
 import AgentDashboard from './components/AgentDashboard'
+import Discovery from './components/Discovery'
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/agents" element={<AgentDashboard />} />
+            <Route path="/discovery" element={<Discovery />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/view/:type/*" element={<DocumentView />} />
             <Route path="/edit/template/*" element={<TemplateEditor />} />

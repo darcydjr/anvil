@@ -1,6 +1,8 @@
 # Dependencies
 node_modules/
 client/node_modules/
+package-lock.json
+client/package-lock.json
 
 # Build outputs
 dist/

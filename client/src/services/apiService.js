@@ -203,5 +203,34 @@ export const apiService = {
       console.error('Failed to save enabler with reparenting:', error)
       throw new Error(`Failed to save enabler: ${error.message}`)
     }
+  },
+
+  async analyzeForDiscovery(inputText) {
+    try {
+      if (!inputText) throw new Error('Input text is required')
+
+      const response = await api.post('/discovery/analyze', {
+        text: inputText
+      })
+      return response.data
+    } catch (error) {
+      console.error('Failed to analyze text for discovery:', error)
+      throw new Error(`Failed to analyze text: ${error.message}`)
+    }
+  },
+
+  async createFromDiscovery(type, documentData) {
+    try {
+      if (!type || !documentData) throw new Error('Type and document data are required')
+
+      const response = await api.post('/discovery/create', {
+        type,
+        documentData
+      })
+      return response.data
+    } catch (error) {
+      console.error('Failed to create document from discovery:', error)
+      throw new Error(`Failed to create ${type}: ${error.message}`)
+    }
   }
 }

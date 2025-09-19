@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings, HelpCircle, Bot } from 'lucide-react'
+import { Settings, HelpCircle, Bot, Lightbulb } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { version } from '../../../package.json'
 import './Header.css'
@@ -50,6 +50,13 @@ export default function Header() {
               title="Agent Dashboard"
             >
               <Bot size={20} />
+            </button>
+            <button
+              className="discovery-button"
+              onClick={() => navigate('/discovery')}
+              title="Discovery - AI Analysis"
+            >
+              <Lightbulb size={20} />
             </button>
             <button
               className="help-button"
