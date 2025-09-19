@@ -118,10 +118,125 @@ npm install  # First time only
 npm start    # Start the server
 ```
 
+## 🤖 NEW: Claude Code Subagent Integration
+
+### **AI-Powered Development Automation**
+Anvil now includes a comprehensive **Claude Code Subagent System** that transforms your specifications into working software through AI-orchestrated workflows.
+
+#### **Agent Control Center**
+Access the Agent Dashboard by clicking the **Bot icon** (🤖) in the header or navigate to `/agents`
+
+#### **Available Agents**
+- **📋 Requirements Analyzer**: Analyzes and validates capabilities and enablers
+  - Extracts metadata and requirements
+  - Validates document completeness
+  - Checks dependencies and relationships
+  - Generates improvement suggestions
+
+- **🎨 Design Architect** *(Coming Soon)*: Creates system designs from requirements
+- **💻 Code Generator** *(Coming Soon)*: Generates implementation code
+- **🧪 Test Automator** *(Coming Soon)*: Creates comprehensive test suites
+- **📚 Documentation Generator** *(Coming Soon)*: Produces technical documentation
+
+#### **Predefined Workflows**
+- **Full Implementation Pipeline**: Analysis → Design → Code → Test → Document
+- **Quick Analysis**: Fast requirements validation
+- **Design Only**: Requirements analysis + system design
+- **Test Generation**: Code analysis + test creation
+
+#### **Agent API Endpoints**
+```
+GET  /api/agents              # List all agents
+POST /api/agents/analyze      # Analyze documents
+POST /api/agents/workflow     # Execute workflows
+GET  /api/agents/job/:id      # Check job status
+GET  /api/agents/history      # View execution history
+```
+
+### 📊 **Agent Architecture Diagram**
+
+```mermaid
+graph TB
+    subgraph "Anvil UI"
+        UI[Agent Dashboard]
+        DE[Document Editor]
+    end
+
+    subgraph "Agent System"
+        O[Orchestrator]
+        R[Router]
+        Q[Job Queue]
+
+        subgraph "Specialized Agents"
+            A1[Requirements Analyzer]
+            A2[Design Architect]
+            A3[Code Generator]
+            A4[Test Automator]
+            A5[Documentation Generator]
+        end
+    end
+
+    subgraph "Data Layer"
+        MD[Markdown Files]
+        CF[Config Files]
+        JH[Job History]
+    end
+
+    UI -->|Trigger| O
+    DE -->|Analyze| O
+    O -->|Route| R
+    R -->|Dispatch| A1
+    R -->|Dispatch| A2
+    R -->|Dispatch| A3
+    R -->|Dispatch| A4
+    R -->|Dispatch| A5
+    O -->|Manage| Q
+    Q -->|Execute| A1
+    A1 -->|Read/Write| MD
+    O -->|Store| JH
+    O -->|Config| CF
+```
+
+### 🚀 **Usage Examples**
+
+#### **Analyzing a Capability Document**
+```javascript
+// Using the API directly
+fetch('/api/agents/analyze', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    documentId: 'CAP-0001',
+    documentContent: markdownContent,
+    documentType: 'Capability'
+  })
+})
+```
+
+#### **Executing a Workflow**
+```javascript
+// Execute full implementation pipeline
+fetch('/api/agents/workflow', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    workflowName: 'full-implementation',
+    input: { documentId: 'CAP-0001' }
+  })
+})
+```
+
+#### **Via UI Dashboard**
+1. Navigate to `/agents` or click the Bot icon
+2. Select the "Workflows" tab
+3. Click "Execute" on desired workflow
+4. Monitor progress in real-time
+5. View results in Job History
+
 ## Features Implemented
 
 ### 🗂️ **Document Organization**
-- **Capabilities Section**: High-level capability documents 
+- **Capabilities Section**: High-level capability documents
 - **Enablers Section**: Detailed feature enabler documents
 - **Templates Section**: Template files for creating new documents
 - Automatic categorization based on Type metadata field
@@ -157,19 +272,27 @@ npm start    # Start the server
 
 ## Architecture
 
-Anvil is a modern **React + Node.js** application with the following architecture:
+Anvil is a modern **React + Node.js** application with AI agent integration:
 
 ### Frontend (React)
 - **Framework**: React 18 with Vite for fast development and building
 - **State Management**: React Context for global application state
-- **Routing**: React Router for client-side navigation  
+- **Routing**: React Router for client-side navigation
 - **Styling**: CSS modules with modern responsive design
 - **Components**: Modular component architecture for maintainability
+- **Agent Dashboard**: Real-time monitoring and control interface
 
 ### Backend (Node.js + Express)
 - **Server**: Express.js REST API
 - **File Operations**: Markdown file management and parsing
 - **APIs**: RESTful endpoints for CRUD operations
+- **Agent System**: Orchestrator-based subagent management
+
+### AI Agent Layer
+- **Orchestrator**: Central command system managing all subagents
+- **Router**: Intelligent request routing to appropriate agents
+- **Job Queue**: Concurrent execution with history tracking
+- **Event System**: Real-time status updates and notifications
 
 ## File Structure
 
@@ -177,6 +300,15 @@ Anvil is a modern **React + Node.js** application with the following architectur
 anvil/
 ├── server.js                    # Express server with API endpoints
 ├── package.json                 # Server dependencies and scripts
+├── agent-config.json            # Agent system configuration
+├── agents/                      # AI subagent modules
+│   ├── orchestrator/           # Central orchestrator
+│   │   ├── index.js           # Orchestrator core
+│   │   └── router.js          # Intelligent routing
+│   └── requirements/           # Requirements analyzer
+│       └── analyzer.js        # Analysis logic
+├── api/                         # API layer
+│   └── agent-endpoints.js      # Agent REST endpoints
 ├── client/                      # React frontend application
 │   ├── package.json            # Client dependencies
 │   ├── vite.config.js          # Vite build configuration
@@ -192,6 +324,7 @@ anvil/
 │       │   ├── Dashboard.jsx   # Main dashboard
 │       │   ├── DocumentView.jsx # Document viewer
 │       │   ├── DocumentEditor.jsx # Document editor
+│       │   ├── AgentDashboard.jsx # Agent control center
 │       │   └── forms/          # Form components
 │       │       ├── CapabilityForm.jsx
 │       │       └── EnablerForm.jsx
@@ -286,10 +419,19 @@ Enablers support two types of requirements:
 
 ## Dependencies
 
+### Server Dependencies
 - **express**: Web server framework
 - **marked**: Markdown parsing and rendering
 - **fs-extra**: Enhanced file system operations
+- **uuid**: Unique ID generation for agent jobs
 - **nodemon**: Development auto-restart (dev dependency)
+
+### Client Dependencies
+- **react**: UI framework
+- **react-router-dom**: Client-side routing
+- **axios**: HTTP client for API calls
+- **lucide-react**: Icon library
+- **mermaid**: Diagram rendering
 
 ## Quick Start
 

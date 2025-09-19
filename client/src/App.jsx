@@ -23,6 +23,7 @@ import DocumentView from './components/DocumentView'
 import DocumentEditor from './components/DocumentEditor'
 import TemplateEditor from './components/TemplateEditor'
 import Settings from './components/Settings'
+import AgentDashboard from './components/AgentDashboard'
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/agents" element={<AgentDashboard />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/view/:type/*" element={<DocumentView />} />
             <Route path="/edit/template/*" element={<TemplateEditor />} />

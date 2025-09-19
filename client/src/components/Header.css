@@ -117,7 +117,8 @@
 }
 
 .help-button,
-.settings-button {
+.settings-button,
+.agents-button {
   background: none;
   border: none;
   color: #4a90e2;
@@ -131,14 +132,16 @@
 }
 
 .help-button:hover,
-.settings-button:hover {
+.settings-button:hover,
+.agents-button:hover {
   background: rgba(74, 144, 226, 0.1);
   color: #357abd;
   transform: scale(1.1);
 }
 
 .help-button:active,
-.settings-button:active {
+.settings-button:active,
+.agents-button:active {
   transform: scale(0.95);
 }
 

@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings, HelpCircle } from 'lucide-react'
+import { Settings, HelpCircle, Bot } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { version } from '../../../package.json'
 import './Header.css'
@@ -44,6 +44,13 @@ export default function Header() {
             <div className="build-version">BUILD v{version}</div>
           </div>
           <div className="header-actions">
+            <button
+              className="agents-button"
+              onClick={() => navigate('/agents')}
+              title="Agent Dashboard"
+            >
+              <Bot size={20} />
+            </button>
             <button
               className="help-button"
               onClick={() => window.open('/README.md', '_blank')}

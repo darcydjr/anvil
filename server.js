@@ -18,6 +18,7 @@ const express = require('express');
 const fs = require('fs-extra');
 const path = require('path');
 const { marked } = require('marked');
+const agentAPI = require('./api/agent-endpoints');
 
 // Load version from package.json
 let version;
@@ -232,6 +233,18 @@ app.use(express.json({ limit: '10mb' }));
 marked.setOptions({
   breaks: true,
   gfm: true
+});
+
+// Mount agent API routes
+app.use('/api/agents', agentAPI.router);
+
+// Initialize agents on server start
+agentAPI.initializeAgents().then(success => {
+  if (success) {
+    console.log('[SERVER] Agent system initialized');
+  } else {
+    console.warn('[SERVER] Agent system initialization failed - agents will not be available');
+  }
 });
 
 // Serve static files from React build
