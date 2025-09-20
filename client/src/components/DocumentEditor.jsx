@@ -2,20 +2,21 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { apiService } from '../services/apiService'
 import { useApp } from '../contexts/AppContext'
-import { Save, ArrowLeft, Eye, Code, Plus } from 'lucide-react'
+import { Save, ArrowLeft, Eye, Code, Plus, Wand2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { parseMarkdownToForm, convertFormToMarkdown } from '../utils/markdownUtils'
 import { generateCapabilityId, generateEnablerId } from '../utils/idGenerator'
 import { nameToFilename, namesGenerateDifferentFilenames, idToFilename } from '../utils/fileUtils'
 import CapabilityForm from './forms/CapabilityForm'
 import EnablerForm from './forms/EnablerForm'
+import DocumentWizard from './wizard/DocumentWizard'
 import './DocumentEditor.css'
 
 export default function DocumentEditor() {
   const { type, '*': path, capabilityId } = useParams()
   const navigate = useNavigate()
   const { refreshData, config, capabilities, enablers, setSelectedDocument } = useApp()
-  
+
   const [document, setDocument] = useState(null)
   const [formData, setFormData] = useState({})
   const [markdownContent, setMarkdownContent] = useState('')
@@ -26,6 +27,7 @@ export default function DocumentEditor() {
   const [originalCapabilityId, setOriginalCapabilityId] = useState(null) // Track original capability for reparenting
   const [originalName, setOriginalName] = useState('') // Track original name for file renaming
   const [validationState, setValidationState] = useState({ isValid: true, errors: {} })
+  const [showWizard, setShowWizard] = useState(false)
 
   useEffect(() => {
     if (path) {
@@ -377,6 +379,65 @@ export default function DocumentEditor() {
     }
   }
 
+  const handleWizardComplete = async (wizardData) => {
+    try {
+      setShowWizard(false)
+      setSaving(true)
+
+      // Convert wizard data to markdown
+      const contentToSave = convertFormToMarkdown(wizardData, wizardData.type)
+
+      // Generate filename
+      const filename = wizardData.id ? idToFilename(wizardData.id, wizardData.type) : nameToFilename(wizardData.name || 'untitled', wizardData.type)
+
+      let savePath = filename
+      if (wizardData.type === 'capability' && wizardData.selectedPath) {
+        savePath = `${wizardData.selectedPath}/${filename}`
+      }
+
+      // Save the document
+      if (wizardData.type === 'capability') {
+        await apiService.saveCapabilityWithEnablers(
+          savePath,
+          contentToSave,
+          wizardData.id,
+          wizardData.internalUpstream || [],
+          wizardData.internalDownstream || [],
+          wizardData.enablers || []
+        )
+      } else if (wizardData.type === 'enabler') {
+        await apiService.saveEnablerWithReparenting(
+          savePath,
+          contentToSave,
+          wizardData,
+          null
+        )
+      } else {
+        await apiService.saveFile(savePath, contentToSave)
+      }
+
+      // Save path preference
+      if (wizardData.type === 'capability' && wizardData.selectedPath) {
+        try {
+          await apiService.updateConfig({
+            lastSelectedCapabilityPath: wizardData.selectedPath
+          })
+        } catch (error) {
+          console.error('Error saving path preference:', error)
+        }
+      }
+
+      await refreshData()
+      toast.success(`${wizardData.type === 'capability' ? 'Capability' : 'Enabler'} created successfully!`)
+      navigate(`/edit/${wizardData.type}/${savePath}`)
+    } catch (error) {
+      console.error('Error creating document from wizard:', error)
+      toast.error(`Failed to create document: ${error.message}`)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="editor-loading">
@@ -410,7 +471,18 @@ export default function DocumentEditor() {
               Markdown
             </button>
           </div>
-          
+
+          {isNew && (
+            <button
+              onClick={() => setShowWizard(true)}
+              className="btn btn-info btn-sm"
+              title="Use the guided wizard to create your document"
+            >
+              <Wand2 size={16} />
+              Use Wizard
+            </button>
+          )}
+
           <button onClick={handleBack} className="btn btn-secondary btn-sm">
             <ArrowLeft size={16} />
             Back
@@ -487,6 +559,14 @@ export default function DocumentEditor() {
           </div>
         )}
       </div>
+
+      {showWizard && (
+        <DocumentWizard
+          initialType={type}
+          onClose={() => setShowWizard(false)}
+          onComplete={handleWizardComplete}
+        />
+      )}
     </div>
   )
 }

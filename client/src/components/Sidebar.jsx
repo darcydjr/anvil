@@ -1,30 +1,34 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../contexts/AppContext'
-import { FileText, Plus, ArrowLeft, ChevronDown, ChevronRight, Settings, Box, Zap } from 'lucide-react'
+import { FileText, Plus, ArrowLeft, ChevronDown, ChevronRight, Settings, Box, Zap, Wand2 } from 'lucide-react'
+import DocumentWizard from './wizard/DocumentWizard'
 import './Sidebar.css'
 
 export default function Sidebar() {
-  const { 
-    capabilities, 
-    enablers, 
-    templates, 
-    selectedCapability, 
+  const {
+    capabilities,
+    enablers,
+    templates,
+    selectedCapability,
     setSelectedCapability,
     selectedDocument,
     setSelectedDocument,
     navigationHistory,
     goBack,
     clearHistory,
-    loading 
+    loading,
+    refreshData
   } = useApp()
-  
+
   const [expandedSections, setExpandedSections] = useState({
     capabilities: true,
     enablers: true,
     templates: true
   })
-  
+  const [showWizard, setShowWizard] = useState(false)
+  const [wizardType, setWizardType] = useState(null)
+
   const navigate = useNavigate()
 
   const toggleSection = (section) => {
@@ -73,6 +77,68 @@ export default function Sidebar() {
     // Clear selected document when creating new
     setSelectedDocument(null)
     navigate('/create/enabler')
+  }
+
+  const handleCreateWithWizard = (type) => {
+    setWizardType(type)
+    setShowWizard(true)
+  }
+
+  const handleWizardComplete = async (wizardData) => {
+    try {
+      setShowWizard(false)
+
+      // Import necessary utilities
+      const { convertFormToMarkdown } = await import('../utils/markdownUtils')
+      const { idToFilename, nameToFilename } = await import('../utils/fileUtils')
+      const { apiService } = await import('../services/apiService')
+
+      // Convert wizard data to markdown
+      const contentToSave = convertFormToMarkdown(wizardData, wizardData.type)
+
+      // Generate filename
+      const filename = wizardData.id ? idToFilename(wizardData.id, wizardData.type) : nameToFilename(wizardData.name || 'untitled', wizardData.type)
+
+      let savePath = filename
+      if (wizardData.type === 'capability' && wizardData.selectedPath) {
+        savePath = `${wizardData.selectedPath}/${filename}`
+      }
+
+      // Save the document
+      if (wizardData.type === 'capability') {
+        await apiService.saveCapabilityWithEnablers(
+          savePath,
+          contentToSave,
+          wizardData.id,
+          wizardData.internalUpstream || [],
+          wizardData.internalDownstream || [],
+          wizardData.enablers || []
+        )
+      } else if (wizardData.type === 'enabler') {
+        await apiService.saveEnablerWithReparenting(
+          savePath,
+          contentToSave,
+          wizardData,
+          null
+        )
+      }
+
+      // Save path preference
+      if (wizardData.type === 'capability' && wizardData.selectedPath) {
+        try {
+          await apiService.updateConfig({
+            lastSelectedCapabilityPath: wizardData.selectedPath
+          })
+        } catch (error) {
+          console.error('Error saving path preference:', error)
+        }
+      }
+
+      await refreshData()
+      navigate(`/edit/${wizardData.type}/${savePath}`)
+    } catch (error) {
+      console.error('Error creating document from wizard:', error)
+    }
   }
 
   const handleBackClick = () => {
@@ -142,15 +208,28 @@ export default function Sidebar() {
         >
           {expandedSections.capabilities ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           <span>Capabilities</span>
-          <button 
-            onClick={(e) => {
-              e.stopPropagation()
-              handleCreateCapability()
-            }}
-            className="btn btn-sm btn-primary"
-          >
-            <Plus size={14} />
-          </button>
+          <div className="section-actions">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleCreateWithWizard('capability')
+              }}
+              className="btn btn-sm btn-info"
+              title="Create with wizard"
+            >
+              <Wand2 size={14} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleCreateCapability()
+              }}
+              className="btn btn-sm btn-primary"
+              title="Create directly"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
         </div>
         
         {expandedSections.capabilities && (
@@ -193,15 +272,28 @@ export default function Sidebar() {
         >
           {expandedSections.enablers ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           <span>Enablers</span>
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              handleCreateEnabler()
-            }}
-            className="btn btn-sm btn-primary"
-          >
-            <Plus size={14} />
-          </button>
+          <div className="section-actions">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleCreateWithWizard('enabler')
+              }}
+              className="btn btn-sm btn-info"
+              title="Create with wizard"
+            >
+              <Wand2 size={14} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleCreateEnabler()
+              }}
+              className="btn btn-sm btn-primary"
+              title="Create directly"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
         </div>
         
         {expandedSections.enablers && (
@@ -244,6 +336,14 @@ export default function Sidebar() {
           </div>
         )}
       </div>
+
+      {showWizard && (
+        <DocumentWizard
+          initialType={wizardType}
+          onClose={() => setShowWizard(false)}
+          onComplete={handleWizardComplete}
+        />
+      )}
     </div>
   )
 }
