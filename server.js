@@ -2348,7 +2348,7 @@ app.get('/api/workspaces', (req, res) => {
 // Create new workspace
 app.post('/api/workspaces', async (req, res) => {
   try {
-    const { name, description, projectPaths } = req.body;
+    const { name, description, projectPaths, copySwPlan } = req.body;
 
     if (!name || typeof name !== 'string') {
       return res.status(400).json({ error: 'Workspace name is required' });
@@ -2364,6 +2364,7 @@ app.post('/api/workspaces', async (req, res) => {
       description: description?.trim() || '',
       isActive: false,
       projectPaths: projectPaths,
+      copySwPlan: copySwPlan !== false, // Default to true
       createdDate: new Date().toISOString()
     };
 
@@ -2372,6 +2373,36 @@ app.post('/api/workspaces', async (req, res) => {
     }
 
     config.workspaces.push(newWorkspace);
+
+    // Copy SOFTWARE_DEVELOPMENT_PLAN.md to all project paths if workspace has copySwPlan enabled
+    if (newWorkspace.copySwPlan !== false) {
+      for (const pathItem of projectPaths) {
+        try {
+          const projectPath = typeof pathItem === 'string' ? pathItem : pathItem.path;
+          const sourcePath = path.join(__dirname, 'SOFTWARE_DEVELOPMENT_PLAN.md');
+          const destPath = path.join(projectPath, 'SOFTWARE_DEVELOPMENT_PLAN.md');
+
+          // Check if source file exists
+          if (await fs.pathExists(sourcePath)) {
+            // Ensure destination directory exists
+            await fs.ensureDir(projectPath);
+
+            // Only copy if destination doesn't already exist
+            if (!(await fs.pathExists(destPath))) {
+              await fs.copy(sourcePath, destPath);
+              console.log(`[WORKSPACE] Copied SOFTWARE_DEVELOPMENT_PLAN.md to ${destPath}`);
+            } else {
+              console.log(`[WORKSPACE] SOFTWARE_DEVELOPMENT_PLAN.md already exists at ${destPath}, skipping copy`);
+            }
+          } else {
+            console.log(`[WORKSPACE] Source SOFTWARE_DEVELOPMENT_PLAN.md not found at ${sourcePath}, skipping copy`);
+          }
+        } catch (error) {
+          console.warn(`[WORKSPACE] Failed to copy SOFTWARE_DEVELOPMENT_PLAN.md to ${projectPath}:`, error.message);
+          // Don't fail the request if copy fails, just log warning
+        }
+      }
+    }
 
     // Validate the entire updated config
     const validationErrors = validateConfig(config);
@@ -2394,7 +2425,7 @@ app.post('/api/workspaces', async (req, res) => {
 app.put('/api/workspaces/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, projectPaths } = req.body;
+    const { name, description, projectPaths, copySwPlan } = req.body;
 
     const workspaceIndex = config.workspaces?.findIndex(ws => ws.id === id);
     if (workspaceIndex === -1) {
@@ -2420,6 +2451,48 @@ app.put('/api/workspaces/:id', async (req, res) => {
         return res.status(400).json({ error: 'At least one project path is required' });
       }
       workspace.projectPaths = projectPaths;
+    }
+
+    if (copySwPlan !== undefined) {
+      workspace.copySwPlan = copySwPlan !== false; // Default to true
+    }
+
+    // Copy SOFTWARE_DEVELOPMENT_PLAN.md to new project paths if workspace has copySwPlan enabled
+    if (projectPaths !== undefined && workspace.copySwPlan !== false) {
+      // Find new paths that weren't in the original workspace
+      const originalPaths = originalWorkspace.projectPaths || [];
+      const originalPathStrings = originalPaths.map(p => typeof p === 'string' ? p : p.path);
+      const newPaths = projectPaths.filter(pathItem => {
+        const pathString = typeof pathItem === 'string' ? pathItem : pathItem.path;
+        return !originalPathStrings.includes(pathString);
+      });
+
+      for (const pathItem of newPaths) {
+        try {
+          const projectPath = typeof pathItem === 'string' ? pathItem : pathItem.path;
+          const sourcePath = path.join(__dirname, 'SOFTWARE_DEVELOPMENT_PLAN.md');
+          const destPath = path.join(projectPath, 'SOFTWARE_DEVELOPMENT_PLAN.md');
+
+          // Check if source file exists
+          if (await fs.pathExists(sourcePath)) {
+            // Ensure destination directory exists
+            await fs.ensureDir(projectPath);
+
+            // Only copy if destination doesn't already exist
+            if (!(await fs.pathExists(destPath))) {
+              await fs.copy(sourcePath, destPath);
+              console.log(`[WORKSPACE] Copied SOFTWARE_DEVELOPMENT_PLAN.md to ${destPath}`);
+            } else {
+              console.log(`[WORKSPACE] SOFTWARE_DEVELOPMENT_PLAN.md already exists at ${destPath}, skipping copy`);
+            }
+          } else {
+            console.log(`[WORKSPACE] Source SOFTWARE_DEVELOPMENT_PLAN.md not found at ${sourcePath}, skipping copy`);
+          }
+        } catch (error) {
+          console.warn(`[WORKSPACE] Failed to copy SOFTWARE_DEVELOPMENT_PLAN.md to ${projectPath}:`, error.message);
+          // Don't fail the request if copy fails, just log warning
+        }
+      }
     }
 
     // Validate the entire updated config
@@ -2526,6 +2599,33 @@ app.post('/api/workspaces/:id/paths', async (req, res) => {
     }
 
     workspace.projectPaths.push(projectPath);
+
+    // Copy SOFTWARE_DEVELOPMENT_PLAN.md if workspace has copySwPlan enabled
+    if (workspace.copySwPlan !== false) {
+      try {
+        const sourcePath = path.join(__dirname, 'SOFTWARE_DEVELOPMENT_PLAN.md');
+        const destPath = path.join(projectPath, 'SOFTWARE_DEVELOPMENT_PLAN.md');
+
+        // Check if source file exists
+        if (await fs.pathExists(sourcePath)) {
+          // Ensure destination directory exists
+          await fs.ensureDir(projectPath);
+
+          // Only copy if destination doesn't already exist
+          if (!(await fs.pathExists(destPath))) {
+            await fs.copy(sourcePath, destPath);
+            console.log(`[WORKSPACE] Copied SOFTWARE_DEVELOPMENT_PLAN.md to ${destPath}`);
+          } else {
+            console.log(`[WORKSPACE] SOFTWARE_DEVELOPMENT_PLAN.md already exists at ${destPath}, skipping copy`);
+          }
+        } else {
+          console.log(`[WORKSPACE] Source SOFTWARE_DEVELOPMENT_PLAN.md not found at ${sourcePath}, skipping copy`);
+        }
+      } catch (error) {
+        console.warn(`[WORKSPACE] Failed to copy SOFTWARE_DEVELOPMENT_PLAN.md to ${projectPath}:`, error.message);
+        // Don't fail the request if copy fails, just log warning
+      }
+    }
 
     // Validate the entire updated config
     const validationErrors = validateConfig(config);

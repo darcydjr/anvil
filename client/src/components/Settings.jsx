@@ -17,12 +17,14 @@ export default function Settings() {
   const [newWorkspaceName, setNewWorkspaceName] = useState('')
   const [newWorkspaceDescription, setNewWorkspaceDescription] = useState('')
   const [newWorkspacePaths, setNewWorkspacePaths] = useState([{ path: '', icon: 'Folder' }])
+  const [newWorkspaceCopySwPlan, setNewWorkspaceCopySwPlan] = useState(true) // Default to true
   const [editingWorkspace, setEditingWorkspace] = useState(null)
   const [newProjectPath, setNewProjectPath] = useState('')
   const [editingWorkspaceId, setEditingWorkspaceId] = useState(null)
   const [editWorkspaceName, setEditWorkspaceName] = useState('')
   const [editWorkspaceDescription, setEditWorkspaceDescription] = useState('')
   const [editWorkspacePaths, setEditWorkspacePaths] = useState([])
+  const [editWorkspaceCopySwPlan, setEditWorkspaceCopySwPlan] = useState(true) // Default to true
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
   const [isBasicConfigExpanded, setIsBasicConfigExpanded] = useState(false)
@@ -194,7 +196,8 @@ export default function Settings() {
         body: JSON.stringify({
           name: newWorkspaceName.trim(),
           description: newWorkspaceDescription.trim(),
-          projectPaths: validPaths
+          projectPaths: validPaths,
+          copySwPlan: newWorkspaceCopySwPlan
         })
       })
 
@@ -206,6 +209,7 @@ export default function Settings() {
       setNewWorkspaceName('')
       setNewWorkspaceDescription('')
       setNewWorkspacePaths([{ path: '', icon: 'Folder' }])
+      setNewWorkspaceCopySwPlan(true)
       setShowCreateForm(false)
       await loadWorkspaces()
       toast.success('Workspace created successfully')
@@ -347,7 +351,8 @@ export default function Settings() {
         body: JSON.stringify({
           name: editWorkspaceName.trim(),
           description: editWorkspaceDescription.trim(),
-          projectPaths: validPaths
+          projectPaths: validPaths,
+          copySwPlan: editWorkspaceCopySwPlan
         })
       })
 
@@ -360,6 +365,7 @@ export default function Settings() {
       setEditWorkspaceName('')
       setEditWorkspaceDescription('')
       setEditWorkspacePaths([])
+      setEditWorkspaceCopySwPlan(true)
       setShowEditForm(false)
       await loadWorkspaces()
       toast.success('Workspace updated successfully')
@@ -372,6 +378,7 @@ export default function Settings() {
     setEditingWorkspaceId(workspace.id)
     setEditWorkspaceName(workspace.name)
     setEditWorkspaceDescription(workspace.description || '')
+    setEditWorkspaceCopySwPlan(workspace.copySwPlan !== false) // Default to true if not set
 
     // Convert paths to path objects if they're still strings (backward compatibility)
     const pathObjects = (workspace.projectPaths || []).map(pathItem => {
@@ -559,6 +566,20 @@ export default function Settings() {
                     />
                   </div>
                   <div className="form-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={newWorkspaceCopySwPlan !== false} // Default to true if not set
+                        onChange={(e) => setNewWorkspaceCopySwPlan(e.target.checked)}
+                        className="form-checkbox"
+                      />
+                      Automatically copy SOFTWARE_DEVELOPMENT_PLAN.md to new project paths
+                    </label>
+                    <small className="form-help">
+                      When enabled, SOFTWARE_DEVELOPMENT_PLAN.md will be automatically copied to new project paths in this workspace.
+                    </small>
+                  </div>
+                  <div className="form-group">
                     <label>Project Paths</label>
                     {newWorkspacePaths.map((pathObj, index) => (
                       <div key={index} className="path-input-group">
@@ -618,6 +639,7 @@ export default function Settings() {
                         setNewWorkspaceName('')
                         setNewWorkspaceDescription('')
                         setNewWorkspacePaths([{ path: '', icon: 'Folder' }])
+                        setNewWorkspaceCopySwPlan(true)
                       }}
                       className="cancel-create-button"
                     >
@@ -652,6 +674,20 @@ export default function Settings() {
                       placeholder="e.g., Primary development workspace"
                       className="form-input"
                     />
+                  </div>
+                  <div className="form-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={editWorkspaceCopySwPlan !== false}
+                        onChange={(e) => setEditWorkspaceCopySwPlan(e.target.checked)}
+                        className="form-checkbox"
+                      />
+                      Automatically copy SOFTWARE_DEVELOPMENT_PLAN.md to new project paths
+                    </label>
+                    <small className="form-help">
+                      When enabled, SOFTWARE_DEVELOPMENT_PLAN.md will be automatically copied to new project paths in this workspace.
+                    </small>
                   </div>
                   <div className="form-group">
                     <label>Project Paths</label>
@@ -714,6 +750,7 @@ export default function Settings() {
                         setEditWorkspaceName('')
                         setEditWorkspaceDescription('')
                         setEditWorkspacePaths([])
+                        setEditWorkspaceCopySwPlan(true)
                       }}
                       className="cancel-create-button"
                     >
