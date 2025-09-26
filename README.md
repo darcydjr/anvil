@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-2.1.0-green.svg)]()
+[![Version](https://img.shields.io/badge/version-2.2.0-green.svg)]()
 
 ## Overview
 
@@ -256,6 +256,40 @@ Anvil supports **workspace-based configuration** for managing multiple document 
 - **mermaid**: Diagram rendering
 
 ## Release Notes & Version History
+
+### v2.2.0 - Workspace Auto-Copy SOFTWARE_DEVELOPMENT_PLAN.md Feature ✅
+
+#### ✨ **NEW: Automatic SOFTWARE_DEVELOPMENT_PLAN.md Copying**
+- **WORKSPACE SETTING**: Added checkbox in workspace settings to automatically copy SOFTWARE_DEVELOPMENT_PLAN.md when creating new project paths
+- **DEFAULT ENABLED**: New workspaces have auto-copy enabled by default for seamless project setup
+- **SMART COPYING**: Only copies if destination file doesn't already exist, creates directories as needed
+- **COMPREHENSIVE COVERAGE**: Works in three scenarios:
+  1. **Workspace Creation**: Copies to all initial project paths
+  2. **Workspace Updates**: Copies to newly added paths during workspace editing
+  3. **Individual Path Addition**: Copies when adding single paths via workspace management
+
+#### 🎯 **Frontend Enhancements**
+- **SETTINGS UI**: Added copySwPlan checkbox to both create and edit workspace forms in Settings.jsx
+- **FORM MANAGEMENT**: Proper state management for checkbox with default-enabled behavior
+- **API INTEGRATION**: Updated workspace API calls to include copySwPlan setting
+- **RESET LOGIC**: Enhanced form reset functionality to maintain checkbox state consistency
+
+#### ⚙️ **Backend Implementation**
+- **WORKSPACE ENDPOINTS**: Enhanced creation and update endpoints to handle copySwPlan setting
+- **FILE OPERATIONS**: Robust file copying using fs-extra with proper error handling
+- **DIRECTORY CREATION**: Automatic creation of destination directories when needed
+- **ROLLBACK SUPPORT**: Comprehensive error handling with workspace rollback on failures
+- **DETAILED LOGGING**: Informative console logs for copy operations, skips, and errors
+
+#### 📁 **Documentation & Examples**
+- **HELLO WORLD REFERENCE**: Added SOFTWARE_DEVELOPMENT_PLAN.md to examples/hello-world/ directory
+- **IMPLEMENTATION GUIDE**: Updated workspace configuration documentation
+- **FEATURE USAGE**: Clear instructions for enabling/disabling auto-copy functionality
+
+#### 🔄 **Version Management**
+- **VERSION BUMP**: Updated from 2.1.0 to 2.2.0 across all package.json files
+- **BUILD OPTIMIZATION**: Rebuilt client and server with latest changes
+- **COMPREHENSIVE TESTING**: Verified feature functionality with existing workspace configurations
 
 ### v2.1.0 - System Architecture Visualization & Technical Specifications Template Bug Fixes ✅
 
