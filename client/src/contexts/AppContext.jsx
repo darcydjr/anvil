@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react'
 import { apiService } from '../services/apiService'
+import { websocketService } from '../services/websocketService'
 
 const AppContext = createContext()
 
@@ -129,6 +130,32 @@ export function AppProvider({ children }) {
   useEffect(() => {
     loadData()
     loadConfig()
+
+    // Connect to WebSocket and setup file change listeners
+    websocketService.connect()
+
+    const removeListener = websocketService.addListener((data) => {
+      console.log('WebSocket data received in AppContext:', data)
+
+      if (data.type === 'file-change') {
+        // Check if the changed file is a markdown file that affects our data
+        const filePath = data.filePath.toLowerCase()
+        if (filePath.endsWith('.md') && (filePath.includes('capability') || filePath.includes('enabler'))) {
+          console.log('Markdown file changed, refreshing data:', data.filePath)
+
+          // Add a small delay to ensure file writes are complete
+          setTimeout(() => {
+            loadData()
+          }, 500)
+        }
+      }
+    })
+
+    // Cleanup on unmount
+    return () => {
+      removeListener()
+      websocketService.disconnect()
+    }
   }, [])
 
   const value = {

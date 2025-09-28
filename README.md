@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-2.2.0-green.svg)]()
+[![Version](https://img.shields.io/badge/version-2.3.0-green.svg)]()
 
 ## Overview
 
@@ -256,6 +256,37 @@ Anvil supports **workspace-based configuration** for managing multiple document 
 - **mermaid**: Diagram rendering
 
 ## Release Notes & Version History
+
+### v2.3.0 - Reactive UI with Real-Time File Updates ✅
+
+#### ✨ **NEW: Real-Time File Change Detection**
+- **WEBSOCKET INTEGRATION**: Added WebSocket server for real-time communication between server and client
+- **FILE WATCHING**: Implemented automatic file system monitoring using chokidar for all markdown files in workspace project paths
+- **AUTOMATIC REFRESH**: UI automatically updates when capabilities and enablers are modified externally (by Claude Code or other tools)
+- **NO MORE F5**: Eliminates the need to manually refresh the browser when files change
+
+#### 🎯 **Frontend Reactive Features**
+- **NAVIGATION PANEL AUTO-REFRESH**: Sidebar automatically updates when capabilities/enablers are added, modified, or deleted
+- **DOCUMENT VIEWER AUTO-REFRESH**: Currently viewed documents automatically reload when their content changes
+- **WEBSOCKET SERVICE**: New client-side WebSocket service with automatic reconnection and error handling
+- **SMART FILTERING**: Only refreshes UI when relevant markdown files (capabilities/enablers) are modified
+
+#### ⚙️ **Backend Real-Time Infrastructure**
+- **WEBSOCKET SERVER**: Integrated WebSocket support with HTTP server using ws library
+- **FILE WATCHER SETUP**: Chokidar-based file watching with configurable paths from workspace settings
+- **GRACEFUL SHUTDOWN**: Proper cleanup of file watchers and WebSocket connections on server shutdown
+- **SHUTDOWN API**: Added /api/shutdown endpoint for clean server restarts
+- **BROADCAST SYSTEM**: Efficient message broadcasting to all connected clients when files change
+
+#### 📡 **Network Dependencies**
+- **NEW DEPENDENCY**: ws (WebSocket library) for real-time communication
+- **NEW DEPENDENCY**: chokidar (file system watcher) for detecting file changes
+- **HTTP UPGRADE**: Server now uses HTTP server with WebSocket upgrade support
+
+#### 🔄 **Version Management**
+- **VERSION BUMP**: Updated from 2.2.0 to 2.3.0 across all package.json files
+- **BUILD OPTIMIZATION**: Rebuilt client and server with reactive UI capabilities
+- **BACKWARDS COMPATIBLE**: All existing functionality preserved with enhanced real-time capabilities
 
 ### v2.2.0 - Workspace Auto-Copy SOFTWARE_DEVELOPMENT_PLAN.md Feature ✅
 

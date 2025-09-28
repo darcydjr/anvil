@@ -1,6 +1,6 @@
 {
   "name": "anvil",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Product Requirements Document management application for Capabilities and Enablers",
   "main": "server.js",
   "author": "Darcy Davidson",
@@ -35,10 +35,12 @@
     "version:sync": "node -e \"const pkg=require('./package.json'); const clientPkg=require('./client/package.json'); clientPkg.version=pkg.version; require('fs').writeFileSync('./client/package.json', JSON.stringify(clientPkg, null, 2));\""
   },
   "dependencies": {
+    "chokidar": "^4.0.3",
     "express": "^4.18.2",
     "fs-extra": "^11.1.1",
     "marked": "^9.1.2",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

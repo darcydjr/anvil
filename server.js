@@ -19,9 +19,13 @@ const fs = require('fs-extra');
 const path = require('path');
 const { marked } = require('marked');
 const agentAPI = require('./api/agent-endpoints');
+const WebSocket = require('ws');
+const chokidar = require('chokidar');
+const http = require('http');
 
 // File watcher variable for graceful shutdown
 let fileWatcher = null;
+let wss = null; // WebSocket server
 
 // Load version from package.json
 let version;
@@ -630,9 +634,20 @@ app.get('/api/capabilities', async (req, res) => {
     const allItems = await scanProjectPaths(configPaths.projectPaths);
     const templates = await scanDirectory(configPaths.templates, 'templates');
 
-    // Separate capabilities and enablers
-    const capabilities = allItems.filter(item => item.type === 'capability');
-    const enablers = allItems.filter(item => item.type === 'enabler');
+    // Filter out non-document files and separate capabilities and enablers
+    const excludedFiles = ['SOFTWARE_DEVELOPMENT_PLAN.md', 'README.md', 'CONTRIBUTING.md', 'LICENSE', 'NOTICE'];
+    const filteredItems = allItems.filter(item => {
+      // Exclude specific files by name
+      const fileName = path.basename(item.path || '');
+      if (excludedFiles.includes(fileName)) {
+        return false;
+      }
+      // Only include items with proper document types
+      return item.type === 'capability' || item.type === 'enabler';
+    });
+
+    const capabilities = filteredItems.filter(item => item.type === 'capability');
+    const enablers = filteredItems.filter(item => item.type === 'enabler');
 
     res.json({
       capabilities,
@@ -691,9 +706,20 @@ app.get('/api/capabilities-with-dependencies', async (req, res) => {
     const allItems = await scanProjectPaths(configPaths.projectPaths);
     const templates = await scanDirectory(configPaths.templates, 'templates');
 
-    // Separate capabilities and enablers
-    const capabilities = allItems.filter(item => item.type === 'capability');
-    const enablers = allItems.filter(item => item.type === 'enabler');
+    // Filter out non-document files and separate capabilities and enablers
+    const excludedFiles = ['SOFTWARE_DEVELOPMENT_PLAN.md', 'README.md', 'CONTRIBUTING.md', 'LICENSE', 'NOTICE'];
+    const filteredItems = allItems.filter(item => {
+      // Exclude specific files by name
+      const fileName = path.basename(item.path || '');
+      if (excludedFiles.includes(fileName)) {
+        return false;
+      }
+      // Only include items with proper document types
+      return item.type === 'capability' || item.type === 'enabler';
+    });
+
+    const capabilities = filteredItems.filter(item => item.type === 'capability');
+    const enablers = filteredItems.filter(item => item.type === 'enabler');
 
     // Enhance capabilities with dependency information
     const enhancedCapabilities = await Promise.all(
@@ -2198,6 +2224,21 @@ app.get('/api/config', (req, res) => {
   }
 });
 
+// Shutdown API endpoint
+app.post('/api/shutdown', (req, res) => {
+  try {
+    res.json({ success: true, message: 'Server shutdown initiated' });
+
+    // Close server gracefully after sending response
+    setTimeout(() => {
+      gracefulShutdown();
+    }, 1000);
+  } catch (error) {
+    console.error('[SHUTDOWN] Error shutting down server:', error);
+    res.status(500).json({ error: 'Error shutting down server' });
+  }
+});
+
 // Discovery API - Analyze text and generate capabilities/enablers
 app.post('/api/discovery/analyze', async (req, res) => {
   try {
@@ -2542,6 +2583,9 @@ app.post('/api/workspaces/:id/activate', async (req, res) => {
 
     // Save to config.local.json
     await fs.writeFile('./config.local.json', JSON.stringify(config, null, 2), 'utf8');
+
+    // Update file watchers to monitor the new active workspace paths
+    setupFileWatchers();
 
     res.json({
       activeWorkspaceId: config.activeWorkspaceId,
@@ -3232,6 +3276,194 @@ app.get('*', (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+// Create HTTP server for WebSocket support
+const server = http.createServer(app);
+
+// Initialize WebSocket server
+wss = new WebSocket.Server({ server });
+
+// WebSocket connection handler
+wss.on('connection', (ws) => {
+  console.log('Client connected to WebSocket');
+
+  ws.on('close', () => {
+    console.log('Client disconnected from WebSocket');
+  });
+
+  // Send initial connection acknowledgment
+  ws.send(JSON.stringify({ type: 'connected', message: 'WebSocket connected' }));
+});
+
+// Function to broadcast file changes to all connected clients
+function broadcastFileChange(changeType, filePath) {
+  if (wss) {
+    const message = JSON.stringify({
+      type: 'file-change',
+      changeType, // 'add', 'change', 'unlink'
+      filePath
+    });
+
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
+  }
+}
+
+// Function to setup file watchers for markdown files
+function setupFileWatchers() {
+  if (fileWatcher) {
+    console.log('Closing existing file watcher...');
+    fileWatcher.close();
+  }
+
+  try {
+    const configPaths = getConfigPaths(config);
+
+    // Watch directories directly instead of using glob patterns
+    const watchPaths = configPaths.projectPaths;
+
+    console.log('Setting up file watchers for paths:', watchPaths);
+
+    // Test if directories exist
+    configPaths.projectPaths.forEach(p => {
+      console.log(`Testing directory access: ${p}`, fs.existsSync(p) ? 'EXISTS' : 'NOT FOUND');
+    });
+
+    fileWatcher = chokidar.watch(watchPaths, {
+      ignored: /(^|[\/\\])\../, // Ignore dotfiles
+      persistent: true,
+      ignoreInitial: true,
+      usePolling: false, // Try native watching first
+      awaitWriteFinish: {
+        stabilityThreshold: 300,
+        pollInterval: 100
+      },
+      depth: 10 // Allow deep nesting
+    });
+
+    fileWatcher
+      .on('ready', () => {
+        console.log('File watcher is ready. Watching for changes...');
+        console.log('Watched files:', fileWatcher.getWatched());
+      })
+      .on('add', (filePath) => {
+        console.log('File added:', filePath);
+        if (filePath.endsWith('.md')) {
+          broadcastFileChange('add', filePath);
+        }
+      })
+      .on('change', (filePath) => {
+        console.log('File changed:', filePath);
+        if (filePath.endsWith('.md')) {
+          broadcastFileChange('change', filePath);
+        }
+      })
+      .on('unlink', (filePath) => {
+        console.log('File removed:', filePath);
+        if (filePath.endsWith('.md')) {
+          broadcastFileChange('unlink', filePath);
+        }
+      })
+      .on('error', (error) => {
+        console.error('File watcher error:', error);
+        // Try polling mode if native watching fails
+        console.log('Retrying with polling mode...');
+        setupFileWatchersWithPolling();
+      });
+
+  } catch (error) {
+    console.error('Failed to setup file watchers:', error);
+    // Fallback to polling mode
+    setupFileWatchersWithPolling();
+  }
+}
+
+// Fallback function for polling mode
+function setupFileWatchersWithPolling() {
+  if (fileWatcher) {
+    fileWatcher.close();
+  }
+
+  try {
+    const configPaths = getConfigPaths(config);
+
+    // Watch directories directly instead of using glob patterns
+    const watchPaths = configPaths.projectPaths;
+
+    console.log('Setting up file watchers with POLLING for paths:', watchPaths);
+
+    fileWatcher = chokidar.watch(watchPaths, {
+      ignored: /node_modules|\.git|backup/,
+      persistent: true,
+      ignoreInitial: true,
+      usePolling: true, // Force polling mode
+      interval: 1000, // Poll every second
+      awaitWriteFinish: {
+        stabilityThreshold: 300,
+        pollInterval: 100
+      }
+    });
+
+    fileWatcher
+      .on('ready', () => {
+        console.log('File watcher (POLLING) is ready. Watching for changes...');
+      })
+      .on('add', (filePath) => {
+        console.log('File added (POLLING):', filePath);
+        if (filePath.endsWith('.md')) {
+          broadcastFileChange('add', filePath);
+        }
+      })
+      .on('change', (filePath) => {
+        console.log('File changed (POLLING):', filePath);
+        if (filePath.endsWith('.md')) {
+          broadcastFileChange('change', filePath);
+        }
+      })
+      .on('unlink', (filePath) => {
+        console.log('File removed (POLLING):', filePath);
+        if (filePath.endsWith('.md')) {
+          broadcastFileChange('unlink', filePath);
+        }
+      })
+      .on('error', (error) => {
+        console.error('File watcher (POLLING) error:', error);
+      });
+
+  } catch (error) {
+    console.error('Failed to setup file watchers with polling:', error);
+  }
+}
+
+// Graceful shutdown handling
+function gracefulShutdown() {
+  console.log('Shutting down gracefully...');
+
+  if (fileWatcher) {
+    fileWatcher.close();
+  }
+
+  if (wss) {
+    wss.clients.forEach((client) => {
+      client.close();
+    });
+    wss.close();
+  }
+
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+}
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
+
+server.listen(PORT, () => {
   console.log(`Anvil v${version.version} server running at http://localhost:${PORT}`);
+
+  // Setup file watchers after server starts
+  setupFileWatchers();
 });

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
+import { useApp } from '../contexts/AppContext'
 import { Plus, Trash2, Save, Settings as SettingsIcon, FolderOpen, Check, Edit2, ChevronDown, ChevronRight,
          Folder, BookOpen, FileText, Database, Package, GitBranch, Code, Zap, Target, Star,
          Layers, Box, Component, Archive, Briefcase, Building } from 'lucide-react'
 import './Settings.css'
 
 export default function Settings() {
+  const { refreshData } = useApp()
   const [config, setConfig] = useState(null)
   const [workspaces, setWorkspaces] = useState({ workspaces: [], activeWorkspaceId: null })
   const [loading, setLoading] = useState(true)
@@ -230,6 +232,10 @@ export default function Settings() {
       }
 
       await loadWorkspaces()
+
+      // Refresh the main application data to load capabilities/enablers from new workspace
+      refreshData()
+
       toast.success('Workspace activated')
     } catch (error) {
       toast.error(error.message)
