@@ -234,6 +234,19 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }) {
             />
           </div>
 
+          <div className="form-group">
+            <label className="form-label">Approval</label>
+            <select
+              className="form-select"
+              value={data.approval || APPROVAL_VALUES.NOT_APPROVED}
+              onChange={(e) => handleBasicChange('approval', e.target.value)}
+            >
+              {approvalOptions.map(approval => (
+                <option key={approval} value={approval}>{approval}</option>
+              ))}
+            </select>
+          </div>
+
           {workspaces.workspaces.length > 0 && (
             <div className="form-group">
               <label className="form-label">
@@ -332,19 +345,6 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }) {
                 >
                   {status}
                 </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Approval</label>
-            <select
-              className="form-select"
-              value={data.approval || APPROVAL_VALUES.NOT_APPROVED}
-              onChange={(e) => handleBasicChange('approval', e.target.value)}
-            >
-              {approvalOptions.map(approval => (
-                <option key={approval} value={approval}>{approval}</option>
               ))}
             </select>
           </div>

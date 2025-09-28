@@ -80,10 +80,10 @@ export function convertFormToMarkdown(formData, type) {
   if (type === 'capability' && formData.system) markdown += `- **System**: ${formData.system}\n`
   if (type === 'capability' && formData.component) markdown += `- **Component**: ${formData.component}\n`
   if (formData.id) markdown += `- **ID**: ${formData.id}\n`
+  markdown += `- **Approval**: ${formData.approval}\n`
   if (formData.capabilityId) markdown += `- **Capability ID**: ${formData.capabilityId}\n`
   markdown += `- **Owner**: ${formData.owner}\n`
   markdown += `- **Status**: ${formData.status}\n`
-  markdown += `- **Approval**: ${formData.approval}\n`
   markdown += `- **Priority**: ${formData.priority}\n`
   
   // Add review fields for both capabilities and enablers

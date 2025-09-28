@@ -262,6 +262,19 @@ function EnablerForm({ data, onChange, onValidationChange }) {
           </div>
 
           <div className="form-group">
+            <label className="form-label">Approval</label>
+            <select
+              className="form-select"
+              value={data.approval || APPROVAL_VALUES.NOT_APPROVED}
+              onChange={(e) => handleBasicChange('approval', e.target.value)}
+            >
+              {Object.values(APPROVAL_VALUES).map(approval => (
+                <option key={approval} value={approval}>{approval}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
             <label className="form-label">Capability ID *</label>
             <select
               className={`form-select ${validationErrors.capabilityId ? 'error' : ''}`}
@@ -306,19 +319,6 @@ function EnablerForm({ data, onChange, onValidationChange }) {
                 >
                   {status}
                 </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Approval</label>
-            <select
-              className="form-select"
-              value={data.approval || APPROVAL_VALUES.NOT_APPROVED}
-              onChange={(e) => handleBasicChange('approval', e.target.value)}
-            >
-              {Object.values(APPROVAL_VALUES).map(approval => (
-                <option key={approval} value={approval}>{approval}</option>
               ))}
             </select>
           </div>

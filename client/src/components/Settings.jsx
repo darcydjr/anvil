@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
 import { useApp } from '../contexts/AppContext'
-import { Plus, Trash2, Save, Settings as SettingsIcon, FolderOpen, Check, Edit2, ChevronDown, ChevronRight,
-         Folder, BookOpen, FileText, Database, Package, GitBranch, Code, Zap, Target, Star,
-         Layers, Box, Component, Archive, Briefcase, Building } from 'lucide-react'
+import { Plus, Trash2, Save, Settings as SettingsIcon, FolderOpen, Check, Edit2, ChevronDown, ChevronRight, Folder } from 'lucide-react'
 import './Settings.css'
 
 export default function Settings() {
@@ -18,7 +16,7 @@ export default function Settings() {
   // Workspace form state
   const [newWorkspaceName, setNewWorkspaceName] = useState('')
   const [newWorkspaceDescription, setNewWorkspaceDescription] = useState('')
-  const [newWorkspacePaths, setNewWorkspacePaths] = useState([{ path: '', icon: 'Folder' }])
+  const [newWorkspacePaths, setNewWorkspacePaths] = useState([''])
   const [newWorkspaceCopySwPlan, setNewWorkspaceCopySwPlan] = useState(true) // Default to true
   const [editingWorkspace, setEditingWorkspace] = useState(null)
   const [newProjectPath, setNewProjectPath] = useState('')
@@ -32,30 +30,6 @@ export default function Settings() {
   const [isBasicConfigExpanded, setIsBasicConfigExpanded] = useState(false)
   const [isDefaultValuesExpanded, setIsDefaultValuesExpanded] = useState(false)
 
-  // Available icons for project paths
-  const availableIcons = [
-    { name: 'Folder', component: Folder, label: 'Folder' },
-    { name: 'BookOpen', component: BookOpen, label: 'Documentation' },
-    { name: 'FileText', component: FileText, label: 'Files' },
-    { name: 'Database', component: Database, label: 'Database' },
-    { name: 'Package', component: Package, label: 'Package' },
-    { name: 'GitBranch', component: GitBranch, label: 'Git Branch' },
-    { name: 'Code', component: Code, label: 'Code' },
-    { name: 'Zap', component: Zap, label: 'API' },
-    { name: 'Target', component: Target, label: 'Requirements' },
-    { name: 'Star', component: Star, label: 'Important' },
-    { name: 'Layers', component: Layers, label: 'Architecture' },
-    { name: 'Component', component: Component, label: 'Components' },
-    { name: 'Archive', component: Archive, label: 'Archive' },
-    { name: 'Briefcase', component: Briefcase, label: 'Business' },
-    { name: 'Building', component: Building, label: 'Organization' }
-  ]
-
-  // Helper function to get icon component by name
-  const getIconComponent = (iconName) => {
-    const iconConfig = availableIcons.find(icon => icon.name === iconName)
-    return iconConfig ? iconConfig.component : Folder
-  }
 
   useEffect(() => {
     loadConfig()
@@ -185,7 +159,7 @@ export default function Settings() {
 
   // Workspace management functions
   const createWorkspace = async () => {
-    const validPaths = newWorkspacePaths.filter(p => p.path && p.path.trim())
+    const validPaths = newWorkspacePaths.filter(p => p && p.trim())
     if (!newWorkspaceName.trim() || validPaths.length === 0) {
       toast.error('Please provide workspace name and at least one project path')
       return
@@ -198,7 +172,7 @@ export default function Settings() {
         body: JSON.stringify({
           name: newWorkspaceName.trim(),
           description: newWorkspaceDescription.trim(),
-          projectPaths: validPaths,
+          projectPaths: validPaths.map(path => ({ path, icon: 'Folder' })),
           copySwPlan: newWorkspaceCopySwPlan
         })
       })
@@ -210,7 +184,7 @@ export default function Settings() {
 
       setNewWorkspaceName('')
       setNewWorkspaceDescription('')
-      setNewWorkspacePaths([{ path: '', icon: 'Folder' }])
+      setNewWorkspacePaths([''])
       setNewWorkspaceCopySwPlan(true)
       setShowCreateForm(false)
       await loadWorkspaces()
@@ -310,15 +284,10 @@ export default function Settings() {
 
   const updateWorkspacePath = (index, value) => {
     const updatedPaths = [...newWorkspacePaths]
-    updatedPaths[index] = { ...updatedPaths[index], path: value }
+    updatedPaths[index] = value
     setNewWorkspacePaths(updatedPaths)
   }
 
-  const updateWorkspacePathIcon = (index, iconName) => {
-    const updatedPaths = [...newWorkspacePaths]
-    updatedPaths[index] = { ...updatedPaths[index], icon: iconName }
-    setNewWorkspacePaths(updatedPaths)
-  }
 
   const selectDirectory = async (callback) => {
     const manualPath = prompt(
@@ -334,7 +303,7 @@ export default function Settings() {
   }
 
   const addWorkspacePath = () => {
-    setNewWorkspacePaths([...newWorkspacePaths, { path: '', icon: 'Folder' }])
+    setNewWorkspacePaths([...newWorkspacePaths, ''])
   }
 
   const removeWorkspacePath = (index) => {
@@ -348,7 +317,7 @@ export default function Settings() {
       return
     }
 
-    const validPaths = editWorkspacePaths.filter(p => p.path && p.path.trim())
+    const validPaths = editWorkspacePaths.filter(p => p && p.trim())
 
     try {
       const response = await fetch(`/api/workspaces/${editingWorkspaceId}`, {
@@ -357,7 +326,7 @@ export default function Settings() {
         body: JSON.stringify({
           name: editWorkspaceName.trim(),
           description: editWorkspaceDescription.trim(),
-          projectPaths: validPaths,
+          projectPaths: validPaths.map(path => ({ path, icon: 'Folder' })),
           copySwPlan: editWorkspaceCopySwPlan
         })
       })
@@ -386,31 +355,26 @@ export default function Settings() {
     setEditWorkspaceDescription(workspace.description || '')
     setEditWorkspaceCopySwPlan(workspace.copySwPlan !== false) // Default to true if not set
 
-    // Convert paths to path objects if they're still strings (backward compatibility)
-    const pathObjects = (workspace.projectPaths || []).map(pathItem => {
+    // Convert paths to simple strings for editing
+    const pathStrings = (workspace.projectPaths || []).map(pathItem => {
       if (typeof pathItem === 'string') {
-        return { path: pathItem, icon: 'Folder' }
+        return pathItem
       }
-      return pathItem
+      return pathItem.path || ''
     })
-    setEditWorkspacePaths(pathObjects)
+    setEditWorkspacePaths(pathStrings)
     setShowEditForm(true)
   }
 
   const updateEditWorkspacePath = (index, value) => {
     const updatedPaths = [...editWorkspacePaths]
-    updatedPaths[index] = { ...updatedPaths[index], path: value }
+    updatedPaths[index] = value
     setEditWorkspacePaths(updatedPaths)
   }
 
-  const updateEditWorkspacePathIcon = (index, iconName) => {
-    const updatedPaths = [...editWorkspacePaths]
-    updatedPaths[index] = { ...updatedPaths[index], icon: iconName }
-    setEditWorkspacePaths(updatedPaths)
-  }
 
   const addEditWorkspacePath = () => {
-    setEditWorkspacePaths([...editWorkspacePaths, { path: '', icon: 'Folder' }])
+    setEditWorkspacePaths([...editWorkspacePaths, ''])
   }
 
   const removeEditWorkspacePath = (index) => {
@@ -587,28 +551,14 @@ export default function Settings() {
                   </div>
                   <div className="form-group">
                     <label>Project Paths</label>
-                    {newWorkspacePaths.map((pathObj, index) => (
+                    {newWorkspacePaths.map((path, index) => (
                       <div key={index} className="path-input-group">
-                        <div className="path-icon-selector">
-                          <select
-                            value={pathObj.icon}
-                            onChange={(e) => updateWorkspacePathIcon(index, e.target.value)}
-                            className="icon-select"
-                            title="Select icon for this path"
-                          >
-                            {availableIcons.map(icon => (
-                              <option key={icon.name} value={icon.name}>
-                                {icon.label}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="icon-preview">
-                            {React.createElement(getIconComponent(pathObj.icon), { size: 16 })}
-                          </div>
+                        <div className="path-icon">
+                          <Folder size={16} />
                         </div>
                         <input
                           type="text"
-                          value={pathObj.path}
+                          value={path}
                           onChange={(e) => updateWorkspacePath(index, e.target.value)}
                           placeholder="e.g., ../specifications"
                           className="form-input"
@@ -644,7 +594,7 @@ export default function Settings() {
                         setShowCreateForm(false)
                         setNewWorkspaceName('')
                         setNewWorkspaceDescription('')
-                        setNewWorkspacePaths([{ path: '', icon: 'Folder' }])
+                        setNewWorkspacePaths([''])
                         setNewWorkspaceCopySwPlan(true)
                       }}
                       className="cancel-create-button"
@@ -697,28 +647,14 @@ export default function Settings() {
                   </div>
                   <div className="form-group">
                     <label>Project Paths</label>
-                    {editWorkspacePaths.map((pathObj, index) => (
+                    {editWorkspacePaths.map((path, index) => (
                       <div key={index} className="path-input-group">
-                        <div className="path-icon-selector">
-                          <select
-                            value={pathObj.icon}
-                            onChange={(e) => updateEditWorkspacePathIcon(index, e.target.value)}
-                            className="icon-select"
-                            title="Select icon for this path"
-                          >
-                            {availableIcons.map(icon => (
-                              <option key={icon.name} value={icon.name}>
-                                {icon.label}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="icon-preview">
-                            {React.createElement(getIconComponent(pathObj.icon), { size: 16 })}
-                          </div>
+                        <div className="path-icon">
+                          <Folder size={16} />
                         </div>
                         <input
                           type="text"
-                          value={pathObj.path}
+                          value={path}
                           onChange={(e) => updateEditWorkspacePath(index, e.target.value)}
                           placeholder="e.g., ../specifications"
                           className="form-input"
@@ -776,7 +712,6 @@ export default function Settings() {
                 <thead>
                   <tr>
                     <th>Name</th>
-                    <th>Description</th>
                     <th>Project Paths</th>
                     <th>Status</th>
                     <th>Actions</th>
@@ -785,15 +720,22 @@ export default function Settings() {
                 <tbody>
                   {workspaces.workspaces.length === 0 ? (
                     <tr>
-                      <td colSpan="5" className="no-workspaces-row">
+                      <td colSpan="4" className="no-workspaces-row">
                         No workspaces found. Use the button below to create one.
                       </td>
                     </tr>
                   ) : (
-                    workspaces.workspaces.map((workspace) => (
+                    workspaces.workspaces
+                      .sort((a, b) => {
+                        // Put active workspace first
+                        if (a.isActive && !b.isActive) return -1
+                        if (!a.isActive && b.isActive) return 1
+                        // Then sort alphabetically by name
+                        return a.name.localeCompare(b.name)
+                      })
+                      .map((workspace) => (
                       <tr key={workspace.id}>
                         <td>{workspace.name}</td>
-                        <td>{workspace.description || '—'}</td>
                         <td>
                           <div className="paths-mini-table">
                             <table className="mini-table">
@@ -805,16 +747,14 @@ export default function Settings() {
                                 ) : (
                                   workspace.projectPaths.map((pathItem, index) => {
                                     // Handle both string paths (legacy) and path objects with icons
-                                    const pathObj = typeof pathItem === 'string'
-                                      ? { path: pathItem, icon: 'Folder' }
-                                      : pathItem
-                                    const IconComponent = getIconComponent(pathObj.icon)
+                                    const pathStr = typeof pathItem === 'string'
+                                      ? pathItem
+                                      : pathItem.path
 
                                     return (
                                       <tr key={index}>
                                         <td className="path-value" colSpan="2">
-                                          <IconComponent size={12} />
-                                          <span>{pathObj.path}</span>
+                                          <span>{pathStr}</span>
                                         </td>
                                       </tr>
                                     )

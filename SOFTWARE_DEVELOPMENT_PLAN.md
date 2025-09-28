@@ -338,27 +338,69 @@ An Enabler is a specific technical implementation that realizes a Capability. En
 - **RESPONSE REQUIREMENT**: Must explicitly state "STOPPING due to failed pre-conditions" and explain which conditions failed
 
 ### Perform Analysis
-| Step | Action | Result |
-|------|--------|--------|
-| 1 | Verify pre-conditions | ALL must be met |
-| 2 | Set Capability Status | "In Analysis" |
-| 3 | Generate new Enablers, add Enablers to Capability List and Create the actual Enabler files, ensure you include the Technical Specifications section from the Enabler Template| Analyze the Capability and create new Enablers |
-| 4 | Configure Enablers | Apply Enabler Configuration Rules below |
+| Step | Action | Result | CRITICAL RULE |
+|------|--------|--------|---------------|
+| 1 | Verify pre-conditions | ALL must be met | NEVER SKIP |
+| 2 | **IMMEDIATELY Set Capability Status** | **"In Analysis" - DO THIS FIRST** | **MANDATORY BEFORE ANY OTHER WORK** |
+| 3 | Generate new Enablers, add Enablers to Capability List and Create MINIMAL enabler files with METADATA ONLY | Analyze the Capability and create new Enablers | ONLY AFTER STEP 2 COMPLETE |
+| 4 | Configure Enablers | Apply Enabler Configuration Rules below | ONLY AFTER STEP 3 COMPLETE | **CRITICAL**: Look at the PARENT CAPABILITY'S "Analysis Review" setting (not the enabler's setting) to determine how to configure each new enabler: 
+
+### 🚨 CRITICAL ANALYSIS PHASE LIMITATIONS 🚨
+
+  **What to Create During Analysis:**
+  - Enabler metadata section only (Name, Type, ID, Capability ID, Owner, Status, Approval, Priority, Analysis Review, Code Review)
+  - Basic Purpose statement (1-2 sentences maximum)
+  - Empty template sections with headers only
+  - Update capability enablers table
+
+  **What NOT to Create During Analysis:**
+  - ❌ Detailed technical specifications
+  - ❌ Actual requirements (FR/NFR entries with content)
+  - ❌ Implementation designs
+  - ❌ Detailed mermaid diagrams
+  - ❌ API specifications
+  - ❌ Data models
+  - ❌ Sequence diagrams
+  - ❌ Class diagrams
+
+  ### Minimal Enabler Template for Analysis Phase
+  Use the existing **Enabler Template Structure** from the STANDARDS AND CONVENTIONS section with these modifications:
+
+  **Include these sections with content:**
+  - Complete Metadata section
+  - Purpose section (ONE SENTENCE only - no implementation details)
+
+  **Include these sections but LEAVE EMPTY:**
+  - Technical Specifications (Template) - keep header, leave content empty
+  - Requirements tables - include headers only, no actual requirement entries
 
 ### Enabler Configuration Rules
 | Enabler Analysis Review Setting | Enabler Approval | Enabler Status | Enabler Priority |
 |------------------------|---------------------|-------------------|-------------------|
-| "Required" | "Pending" | "In Draft" | "High" or "Medium" or "Low" |
+| "Required" | "Pending" | "Ready for Analysis" | "High" or "Medium" or "Low" |
 | "Not Required" | "Approved" | "Ready for Analysis" | "High" or "Medium" or "Low" |
 
 ### Post-Condition Transition
-| Step | Action |
-|------|--------|
-| 1 | Set Capability Status "Ready for Design"
+| Step | Action | CRITICAL RULE |
+|------|--------|---------------|
+| 1 | Set Capability Status "Ready for Design" | **ONLY AFTER ALL ANALYSIS STEPS COMPLETE** |
+
+### 🚨 SEQUENTIAL EXECUTION RULES 🚨
+- **STEP 2 MUST BE COMPLETED FIRST**: Set status to "In Analysis" before any enabler work
+- **NO JUMPING AHEAD**: Never set status to "Ready for Design" during analysis phase
+- **STATUS REFLECTS CURRENT PHASE**: Status must accurately represent what phase you're in
+- **POST-CONDITIONS ONLY AT END**: Transition to next status only when ALL analysis work is complete
 
 ### Exit Criteria Checklist
 - [ ] All new Enablers added to Capability
+- [ ] Capability enablers table updated with new enablers
 - [ ] All Enablers have appropriate Approval and Status set following the Enabler Configuration Rules
+- [ ] Enabler metadata completed for all new enablers
+- [ ] Basic purpose statements written (implementation-agnostic)
+- [ ] Template sections created but LEFT EMPTY
+- [ ] NO detailed requirements created
+- [ ] NO technical specifications written
+- [ ] NO diagrams created (except empty placeholders)
 
 ### Critical Rules
 - Do NOT modify existing Enablers
@@ -388,8 +430,23 @@ An Enabler is a specific technical implementation that realizes a Capability. En
 |------|--------|-------------|
 | 1 | Verify pre-conditions | ALL must be met |
 | 2 | Set Capability Status | "In Design" |
-| 3 | Display the Enablers you are using in the design. Following the Enabler State Processing below and only for Enablers in Approval = "Approved"
-| 4 | Do the design by updating the Technical Specification documenting and updating All applicable sections using only the Enabler outlined in the Enabler State Processing below and only Enabler in Approval = "Approved" |
+| 3 | **MANDATORY APPROVAL CHECK**: Verify that enablers exist with Approval = "Approved" | If NO enablers have Approval = "Approved", IMMEDIATELY STOP and respond "STOPPING: No enablers are approved for design." |
+| 4 | **FILTER APPROVED ENABLERS**: Create filtered list of enablers with Approval = "Approved" AND state allowing inclusion per table below | EXCLUDE ALL enablers with Approval ≠ "Approved" regardless of state |
+| 5 | **DISPLAY DESIGN ENABLERS**: List the specific approved enablers that will be used in design | Must explicitly state which enablers are included and which are excluded |
+| 6 | **CREATE DESIGN**: Update Technical Specifications using ONLY the approved enablers from filtered list | NEVER include non-approved enablers in design documentation |
+
+ ### 🚨 CRITICAL DESIGN PHASE RULES 🚨
+
+**RULE 1 - MANDATORY APPROVAL GATE**: Design phase requires at least one enabler with Approval = "Approved". If ALL enablers have Approval = "Pending" or other status, STOP immediately.
+
+**RULE 2 - STRICT INCLUSION FILTER**: Design MUST ONLY include enablers with Approval = "Approved". Even if some enablers are approved, EXCLUDE all enablers with Approval = "Pending", "Rejected", or any other status.
+
+**RULE 3 - NO PARTIAL APPROVAL MIXING**: Never mix approved and non-approved enablers in design. Only create design documentation for the approved subset.
+
+**EXAMPLE SCENARIO**:
+- 5 total enablers: 2 have Approval = "Approved", 3 have Approval = "Pending"
+- **CORRECT**: Design only the 2 approved enablers
+- **WRONG**: Design all 5 enablers or mention the pending ones
 
 ### Enabler State Processing
 | Enabler State | Action |

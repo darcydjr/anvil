@@ -1,6 +1,6 @@
 {
   "name": "anvil",
-  "version": "2.3.0",
+  "version": "2.3.5",
   "description": "Product Requirements Document management application for Capabilities and Enablers",
   "main": "server.js",
   "author": "Darcy Davidson",
