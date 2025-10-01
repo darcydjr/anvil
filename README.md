@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-2.4.5-green.svg)]()
+[![Version](https://img.shields.io/badge/version-2.4.6-green.svg)]()
 
 ## Overview
 
@@ -256,6 +256,24 @@ Anvil supports **workspace-based configuration** for managing multiple document 
 - **mermaid**: Diagram rendering
 
 ## Release Notes & Version History
+
+### v2.4.6 - Fix Enabler Updates Not Refreshing Parent Capability ✅
+
+#### 🐛 **Critical Bug Fix: Real-Time Capability Refresh When Enabler Updated**
+- **ENABLER-CAPABILITY SYNC**: Fixed issue where updating an enabler file didn't trigger refresh of its parent capability's enabler list in the UI
+- **REAL-TIME BROADCAST**: Added `broadcastFileChange` calls after capability file updates in `updateCapabilityEnablerFields`, `removeEnablerFromCapability`, and `addEnablerToCapability` functions
+- **WEBSOCKET INTEGRATION**: Enhanced file watcher system to properly notify clients when enabler changes affect capability files programmatically
+
+#### 🔧 **Technical Implementation**
+- **SERVER.JS UPDATES**: Modified enabler sync functions to broadcast file changes for capability files after updates
+- **CAPABILITY SYNC**: Enhanced `updateCapabilityEnablerFields` function to notify clients when capability files are modified due to enabler changes
+- **REPARENTING SUPPORT**: Added broadcasting for capability file changes during enabler reparenting operations
+
+#### 🚀 **Deployment Steps Completed**
+- **VERSION UPDATE**: Updated to v2.4.6 across package.json and README
+- **CLIENT BUILD**: Rebuilt client application with latest changes
+- **SERVER RESTART**: Restarted server to apply enabler-capability sync improvements
+- **BACKWARDS COMPATIBLE**: All existing functionality preserved with improved real-time synchronization
 
 ### v2.4.5 - Template Form Field Fixes ✅
 

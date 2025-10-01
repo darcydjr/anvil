@@ -1895,6 +1895,10 @@ async function updateCapabilityEnablerFields(enablerData, capabilityId) {
         approval: enablerData.approval,
         priority: enablerData.priority
       });
+
+      // Broadcast file change for the capability file to trigger client refresh
+      broadcastFileChange('change', capabilityFile);
+      console.log('[CAPABILITY-SYNC] Broadcasted capability file change:', path.basename(capabilityFile));
     } else {
       console.log('[CAPABILITY-SYNC] Enabler row not found:', enablerData.id);
     }
@@ -3016,10 +3020,14 @@ async function removeEnablerFromCapability(capabilityId, enablerId, enablerName,
       
       updatedLines.push(line);
     }
-    
+
     // Write the updated content back
     await fs.writeFile(capabilityFile, updatedLines.join('\n'), 'utf8');
     console.log(`[REPARENTING] Updated capability file: ${capabilityFile}`);
+
+    // Broadcast file change for the capability file to trigger client refresh
+    broadcastFileChange('change', capabilityFile);
+    console.log(`[REPARENTING] Broadcasted capability file change: ${path.basename(capabilityFile)}`);
   } catch (error) {
     console.error(`[REPARENTING] Error removing enabler from capability ${capabilityId}:`, error);
   }
@@ -3105,10 +3113,14 @@ async function addEnablerToCapability(capabilityId, enablerId, enablerName, proj
         }
       });
     }
-    
+
     // Write the updated content back
     await fs.writeFile(capabilityFile, updatedLines.join('\n'), 'utf8');
     console.log(`[REPARENTING] Updated capability file: ${capabilityFile}`);
+
+    // Broadcast file change for the capability file to trigger client refresh
+    broadcastFileChange('change', capabilityFile);
+    console.log(`[REPARENTING] Broadcasted capability file change: ${path.basename(capabilityFile)}`);
   } catch (error) {
     console.error(`[REPARENTING] Error adding enabler to capability ${capabilityId}:`, error);
   }
