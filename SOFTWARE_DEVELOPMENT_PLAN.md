@@ -66,6 +66,22 @@ Claude, please read the SOFTWARE_DEVELOPMENT_PLAN.md (following the development 
 - Technical diagrams and designs guide development
 - All artifacts are version controlled and traceable
 
+### FORBIDDEN ACTIONS:
+  - **NEVER modify Approval status from "Pending" to "Approved"**
+  - **NEVER change Approval status from "Approved" to any other value**
+  - **NEVER modify Approval status for Capabilities, Enablers, or Requirements**
+  - **APPROVAL STATUS IS READ-ONLY FOR AI AGENTS**
+
+  ### MANDATORY BEHAVIOR:
+  - **ONLY proceed with items that ALREADY have Approval = "Approved"**
+  - **SKIP items with Approval = "Pending", "Rejected", or any non-Approved status**
+  - **IMMEDIATE STOP if no approved items exist for the current task**
+
+  ### VIOLATION CONSEQUENCES:
+  - **ANY attempt to modify approval status = IMMEDIATE WORKFLOW TERMINATION**
+  - **NO EXCEPTIONS, NO WORKAROUNDS, NO ASSUMPTIONS**
+  - **WHEN YOU READ THIS ACKNOWLEDGE THAT YOU WILL OBEY**
+
 ---
 
 # TASK: DISCOVERY
@@ -211,7 +227,7 @@ An Enabler is a specific technical implementation that realizes a Capability. En
 # [Enabler Name]
 
 ## Metadata
-- **Name**: [Technical Implementation Name]
+- **Name**: [Enabler Name]
 - **Type**: Enabler
 - **ID**: ENB-654321
 - **Capability ID**: CAP-123456
@@ -342,16 +358,18 @@ An Enabler is a specific technical implementation that realizes a Capability. En
 |------|--------|--------|---------------|
 | 1 | Verify pre-conditions | ALL must be met | NEVER SKIP |
 | 2 | **IMMEDIATELY Set Capability Status** | **"In Analysis" - DO THIS FIRST** | **MANDATORY BEFORE ANY OTHER WORK** |
-| 3 | Generate new Enablers, add Enablers to Capability List and Create MINIMAL enabler files with METADATA ONLY | Analyze the Capability and create new Enablers | ONLY AFTER STEP 2 COMPLETE |
-| 4 | Configure Enablers | Apply Enabler Configuration Rules below | ONLY AFTER STEP 3 COMPLETE | **CRITICAL**: Look at the PARENT CAPABILITY'S "Analysis Review" setting (not the enabler's setting) to determine how to configure each new enabler: 
+| 3 | Generate new Enablers, add Enablers to Capability List and Create MINIMAL enabler files using the **COMPLETE Enabler Template Structure** from STANDARDS AND CONVENTIONS section with ALL METADATA FIELDS FILLED |
+  Analyze the Capability and create new Enablers using the exact template format | ONLY AFTER STEP 2 COMPLETE || 4 | Configure Enablers | Apply Enabler Configuration Rules below | ONLY AFTER STEP 3 COMPLETE | **CRITICAL**: Look at the PARENT CAPABILITY'S "Analysis Review" setting (not the enabler's setting) to determine how to configure each new enabler
+| 5 | Update Capability Enabler Table | Add meaningful descriptions to each new enabler in the parent capability's enabler table | AFTER enabler metadata creation | 
 
 ### 🚨 CRITICAL ANALYSIS PHASE LIMITATIONS 🚨
 
   **What to Create During Analysis:**
-  - Enabler metadata section only (Name, Type, ID, Capability ID, Owner, Status, Approval, Priority, Analysis Review, Code Review)
+  - **COMPLETE enabler metadata section** - ALL fields from template must be present and filled
+  - ALL metadata fields: Name, Type, System, Component, ID, Capability ID, Owner, Status, Approval, Priority, Analysis Review, Code Review
   - Basic Purpose statement (1-2 sentences maximum)
   - Empty template sections with headers only
-  - Update capability enablers table
+  - Update capability enablers table with meaningful descriptions for each enabler
 
   **What NOT to Create During Analysis:**
   - ❌ Detailed technical specifications
@@ -364,15 +382,32 @@ An Enabler is a specific technical implementation that realizes a Capability. En
   - ❌ Class diagrams
 
   ### Minimal Enabler Template for Analysis Phase
-  Use the existing **Enabler Template Structure** from the STANDARDS AND CONVENTIONS section with these modifications:
+  Use the existing **COMPLETE Enabler Template Structure** from the STANDARDS AND CONVENTIONS section. COPY ALL METADATA FIELDS EXACTLY from the template with these modifications:
 
   **Include these sections with content:**
-  - Complete Metadata section
+  - Complete Metadata section (ALL fields from template - System, Component, etc.)
   - Purpose section (ONE SENTENCE only - no implementation details)
 
   **Include these sections but LEAVE EMPTY:**
   - Technical Specifications (Template) - keep header, leave content empty
   - Requirements tables - include headers only, no actual requirement entries
+
+### 🔴 METADATA FIELD VERIFICATION CHECKLIST 🔴
+Before proceeding to next step, verify enabler contains ALL these metadata fields:
+- [ ] Name
+- [ ] Type
+- [ ] System
+- [ ] Component
+- [ ] ID
+- [ ] Capability ID
+- [ ] Owner
+- [ ] Status
+- [ ] Approval
+- [ ] Priority
+- [ ] Analysis Review
+- [ ] Code Review
+
+**FAILURE TO INCLUDE ALL FIELDS = ANALYSIS FAILURE**
 
 ### Enabler Configuration Rules
 | Enabler Analysis Review Setting | Enabler Approval | Enabler Status | Enabler Priority |
@@ -394,9 +429,12 @@ An Enabler is a specific technical implementation that realizes a Capability. En
 ### Exit Criteria Checklist
 - [ ] All new Enablers added to Capability
 - [ ] Capability enablers table updated with new enablers
+- [ ] Enabler descriptions added to parent capability's enabler table
 - [ ] All Enablers have appropriate Approval and Status set following the Enabler Configuration Rules
-- [ ] Enabler metadata completed for all new enablers
+- [ ] All Enablers have COMPLETE metadata with ALL template fields present
+- [ ] Enabler metadata completed for all new enablers (ALL template fields)
 - [ ] Basic purpose statements written (implementation-agnostic)
+- [ ] Technical Overview Purpose completed for each enabler (2-3 sentences, not just basic purpose)
 - [ ] Template sections created but LEFT EMPTY
 - [ ] NO detailed requirements created
 - [ ] NO technical specifications written
@@ -590,8 +628,8 @@ An Enabler is a specific technical implementation that realizes a Capability. En
 ### Requirement Configuration Rules
 | Enabler Analysis Review Setting | Requirement Approval | Requirement Status | Requirement Priority |
 |--------------------------------|---------------------|-------------------|---------------------|
-| "Required" | "Pending" | "In Draft" | "High" or "Medium" or "Low" |
-| "Not Required" | "Approved" | "Ready for Analysis" | "High" or "Medium" or "Low" |
+| "Required" | "Pending" | "Ready for Design" | "High" or "Medium" or "Low" |
+| "Not Required" | "Approved" | "Ready for Design" | "High" or "Medium" or "Low" |
 
 ### Post-Condition Transition
 | Step | Action |
@@ -635,7 +673,7 @@ An Enabler is a specific technical implementation that realizes a Capability. En
 | 1 | Verify pre-conditions |
 | 2 | Set Enabler Status to "In Design" |
 | 3 | **Replace "Technical Specifications (Template)" header with "Technical Specifications"** - Remove the "(Template)" text from the section header and replace the template content with actual design |
-| 4 | For each Requirement with status "Ready for Implementation", add to Design and immediately update Requirement status to "Ready to Implement" |
+| 4 | For each Requirement with Approval = "Approved" AND status "Ready for Design", add to Design and immediately update Requirement status to "Ready for Implementation" |
 | 5 | **Create NEW Technical Specifications Section with actual design** - Replace template diagrams and placeholder content with real architecture, APIs, models, etc. |
 | 6 | Document any APIs that would appropriate fit in API Technical Specifications |
 | 7 | Document any Data Models in the Data Models Section |
@@ -654,7 +692,7 @@ An Enabler is a specific technical implementation that realizes a Capability. En
 ### Exit Criteria Checklist  
 - [ ] Design documented under Technical Specifications  
 - [ ] All applicable diagram sections completed  
-- [ ] All Requirements processed from "Ready for Implementation" → "Ready to Implement"  
+- [ ] All Requirements with Approval Status = "Approved" are processed from "Ready for Design" → "Ready for Implementation"  
 - [ ] Status updated to "Ready for Implementation"  
 
 ---
@@ -667,7 +705,7 @@ An Enabler is a specific technical implementation that realizes a Capability. En
 |-----------|----------------|----------------|-----------------|
 | Task 3 Completion | Must be "Passed" | Continue to next condition check | STOP - explain why you are stopping |
 | Enabler Status | "Ready for Implementation" | Continue to Implementation Process Section | SKIP to Task 5: Testing |
-| Requirement Status | "Ready to Implement" | Continue to Implementation Process Section | SKIP requirement from implementation process |
+| Requirement Status | "Ready for Implementation" | Continue to Implementation Process Section | SKIP requirement from implementation process |
 
 #### Critical Rules
 - **ABSOLUTE PROHIBITION**: Never ask user to change Pre-Conditions values  
@@ -680,9 +718,9 @@ An Enabler is a specific technical implementation that realizes a Capability. En
 | Step | Action |
 |------|--------|
 | 1 | Set Enabler Status to "In Implementation" |
-| 2 | For each Requirement, check if Requirement Approval = "Approved" AND Requirement Status = "Ready to Implement" |
+| 2 | For each Requirement, check if Requirement Approval = "Approved" AND Requirement Status = "Ready for Implementation" |
 | 2 | If approved and in correct state, continue to implementation steps; if not, skip and perform no other tasks |
-| 3 | Implement the requirement ONLY IF Requirement Status = "Ready to Implement" |
+| 3 | Implement the requirement ONLY IF Requirement Status = "Ready for Implementation" |
 | 4 | Set Requirement Status to "Implemented" |
 
 ### Post-Condition Transition
@@ -691,8 +729,8 @@ An Enabler is a specific technical implementation that realizes a Capability. En
 | 1 | Set Enabler Status "Implemented" |
 
 ### Exit Criteria Checklist
-- [ ] Implementation completed for all approved requirements in "Ready to Implement" state  
-- [ ] Requirement Status updated from "Ready to Implement" → "Implemented"  
+- [ ] Implementation completed for all approved requirements in "Ready for Implementation" state  
+- [ ] Requirement Status updated from "Ready for Implementation" → "Implemented"  
 - [ ] Unapproved or out-of-state requirements skipped  
 - [ ] Enabler Status set to "Implemented"  
 
@@ -831,51 +869,43 @@ Elements that are **driving** should be named as **verbs** or **action phrases**
 
 ```mermaid
 flowchart TD
-    %% Driving Elements (Verbs) - Active Orchestrators
-    V1["Log Startup<br/>(VERB)<br/>🎯 Driver"]
-    V2["Authenticate User<br/>(VERB)<br/>🎯 Driver"]
-    V3["Process Payment<br/>(VERB)<br/>🎯 Driver"]
-    V4["Generate Report<br/>(VERB)<br/>🎯 Driver"]
+    %% Internal Organization
+    subgraph ORG1 ["Internal Organization"]
 
-    %% Driven Elements (Nouns) - Passive Services
-    N1["Logging<br/>(NOUN)<br/>🔧 Service"]
-    N2["Authentication<br/>(NOUN)<br/>🔧 Service"]
-    N3["Payment Gateway<br/>(NOUN)<br/>🔧 Service"]
-    N4["Database Storage<br/>(NOUN)<br/>🔧 Service"]
+        subgraph DOMAIN1 ["Current Domain"]
+            CURRENT["Current Capability<br/>Primary Business Function<br/>🎯"]
+        end
 
-    %% Dependencies Flow
-    V1 ──> N1
-    V2 ──> N2
-    V3 ──> N3
-    V4 ──> N4
+        subgraph DOMAIN2 ["Supporting Domain"]
+            INT1["Supporting Capability A<br/>Core Service<br/>⚙️"]
+            INT2["Supporting Capability B<br/>Data Management<br/>📊"]
+            INT3["Supporting Capability C<br/>Business Logic<br/>🔧"]
+        end
+    end
 
-    %% Cross-dependencies (Verbs can use multiple Nouns)
-    V1 ──> N4
-    V2 ──> N4
-    V3 ──> N2
-    V4 ──> N2
+    %% External Organization
+    subgraph ORG2 ["External Organization"]
+        EXT1["External Capability A<br/>Third-party Service<br/>🌐"]
+        EXT2["External Capability B<br/>Integration Point<br/>🔗"]
+    end
+
+    %% Internal Dependencies Flow
+    INT1 --> CURRENT
+    CURRENT --> INT2
+    INT2 --> INT3
+
+    %% External Dependencies Flow
+    EXT1 --> CURRENT
+    CURRENT --> EXT2
 
     %% Styling
-    classDef verb fill:#e3f2fd,stroke:#1976d2,stroke-width:3px,color:#1976d2
-    classDef noun fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#7b1fa2
+    classDef current fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
+    classDef internal fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef external fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
 
-    class V1,V2,V3,V4 verb
-    class N1,N2,N3,N4 noun
-
-    %% Grouping
-    subgraph DRIVERS ["🎯 DRIVING ELEMENTS (Verbs/Actions)"]
-        V1
-        V2
-        V3
-        V4
-    end
-
-    subgraph SERVICES ["🔧 DRIVEN ELEMENTS (Nouns/Services)"]
-        N1
-        N2
-        N3
-        N4
-    end
+    class CURRENT current
+    class INT1,INT2,INT3 internal
+    class EXT1,EXT2 external
 ```
 
 **Key Insights from the Diagram:**
@@ -927,7 +957,7 @@ This naming strategy provides several benefits:
 ## Document Templates
 
 ### Capability Template Structure:
-```markdown
+<!-- START CAPABILITY TEMPLATE -->
 # [Capability Name]
 
 ## Metadata
@@ -942,8 +972,29 @@ This naming strategy provides several benefits:
 - **Priority**: [High/Medium/Low]
 - **Analysis Review**: [Required/Not Required]
 
-## Purpose
+
+## Technical Overview 
+###  Purpose
 [Clear business value statement]
+
+## Enablers
+| ID | Name | Status | Priority |
+|----|------|--------|----------|
+| ENB-XXXXXX | [Enabler Name] | [Status] | [Priority] |
+
+## Dependencies
+
+### Internal Upstream Dependency
+
+| Capability ID | Description |
+|---------------|-------------|
+| | |
+
+### Internal Downstream Impact
+
+| Capability ID | Description |
+|---------------|-------------|
+| | |
 
 ## Technical Specifications (Template)
 
@@ -1004,59 +1055,125 @@ flowchart TD
         EXT2
     end
 ```
+<!-- END CAPABILITY TEMPLATE -->
 
-## Enablers
-| ID | Name | Status | Priority |
-|----|------|--------|----------|
-| ENB-XXXXXX | [Enabler Name] | [Status] | [Priority] |
-```
-
-### Enabler Template Structure:
-```markdown
+## Enabler Template Structure:
+<!-- START ENABLER TEMPLATE -->
 # [Enabler Name]
 
 ## Metadata
-- **Name**: [Technical Implementation Name]
+- **Name**: [Enabler Name]
 - **Type**: Enabler
 - **ID**: ENB-XXXXXX
 - **Capability ID**: CAP-XXXXXX
-- **Owner**: [Team/Person]
-- **Status**: [Current State]
+- **Owner**: Product Team
+- **Status**: In Draft
 - **Approval**: Not Approved
-- **Priority**: [High/Medium/Low]
-- **Analysis Review**: [Required/Not Required]
-- **Code Review**: [Required/Not Required]
+- **Priority**: High
+- **Analysis Review**: Required
+- **Code Review**: Not Required
 
-## Purpose
-[Technical function description]
+## Technical Overview
+### Purpose
+[What is the purpose?]
+
+## Functional Requirements
+| ID | Name | Requirement | Status | Priority | Approval |
+|----|-------------|--------|----------|----------|----------|
+| FR-XXXXXX | [Name] | [Requirement Description] | [Status] | [Priority] | [Approval] |
+
+<!-- Requirement Field Definitions:
+- **ID**: Unique identifier following format FR-XXXXXX (Functional) or NFR-XXXXXX (Non-Functional)
+- **Name**: Descriptive name for this specific requirement (e.g., "User Login Validation", "Response Time Limit", "Data Encryption")
+- **Requirement**: Detailed description of what must be achieved
+- **Priority**: Business priority (High/Medium/Low)
+- **Status**: Current workflow state (In Draft, Ready for Analysis, etc.)
+- **Approval**: Authorization status (Pending, Approved, Rejected)
+-->
+
+## Non-Functional Requirements
+| ID | Name | Requirement | Type | Status | Priority | Approval |
+|----|-------------|--------|----------|----------|----------|----------|
+| NFR-XXXXXX | [Name] | [Requirement Description] | [Type] | [Status] | [Priority] | [Approval] |
+
+<!-- ### Requirement Field Definitions:
+- **Type**: Category of requirement - only for NFRs (Performance, Security, Usability, Compatibility, Scalability, etc.)
+-->
 
 ## Technical Specifications (Template)
-### Enabler Dependency Flow Diagram
-[Mermaid diagram showing enabler-to-enabler relationships]
 
-### API Technical Specifications
-[API endpoints and interfaces]
+### Enabler Dependency Flow Diagram
+```mermaid
+flowchart TD
+    ENB_XXXXXX["ENB-XXXXXX<br/>[Enabler Name]<br/>📡"]
+
+    %% Add your dependency flows here
+
+    classDef enabler fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    class ENB_XXXXXX enabler
+```
+### API Technical Specifications (if applicable)
+
+| API Type | Operation | Channel / Endpoint | Description | Request / Publish Payload | Response / Subscribe Data |
+|----------|-----------|---------------------|-------------|----------------------------|----------------------------|
+| | | | | | |
 
 ### Data Models
-[Database schemas and data structures]
+```mermaid
+erDiagram
+    Entity {
+        string id PK
+        string name
+        string description
+    }
 
-### Class Diagrams
-[UML class diagrams for code structure]
-
-### Sequence Diagrams
-[Interaction flows between components]
-
-## Requirements
-### Functional Requirements
-| ID | Requirement | Status | Priority |
-|----|-------------|--------|----------|
-| FR-XXXXXX | [Requirement Description] | [Status] | [Priority] |
-
-### Non-Functional Requirements
-| ID | Requirement | Status | Priority |
-|----|-------------|--------|----------|
-| NFR-XXXXXX | [Requirement Description] | [Status] | [Priority] |
+    %% Add relationships and more entities here
 ```
+### Class Diagrams
+```mermaid
+classDiagram
+    class ENB_XXXXXX_Class {
+        +String property
+        +method() void
+    }
+
+    %% Add more classes and relationships here
+```
+### Sequence Diagrams
+```mermaid
+sequenceDiagram
+    participant A as Actor
+    participant S as System
+
+    A->>S: Request
+    S-->>A: Response
+
+    %% Add more interactions here
+```
+### Dataflow Diagrams
+```mermaid
+flowchart TD
+    Input[Input Data] --> Process[Process]
+    Process --> Output[Output Data]
+
+    %% Add your dataflow diagrams here
+```
+### State Diagrams
+```mermaid
+stateDiagram-v2
+    [*] --> Initial
+    Initial --> Processing
+    Processing --> Complete
+    Complete --> [*]
+
+    %% Add more states and transitions here
+```
+## External Dependencies
+[External dependencies, APIs, services]
+
+## Testing Strategy
+[How this enabler will be tested]
+<!-- END ENABLER TEMPLATE -->
 
 ---
 

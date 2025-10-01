@@ -262,7 +262,7 @@ export default function DocumentView() {
     const parser = new DOMParser()
     const doc = parser.parseFromString(html, 'text/html')
 
-    // Find elements that contain "Analysis Review" text
+    // Find elements that contain "Code Review" text
     const walker = doc.createTreeWalker(
       doc.body,
       NodeFilter.SHOW_TEXT,
@@ -272,7 +272,7 @@ export default function DocumentView() {
 
     let node
     while (node = walker.nextNode()) {
-      if (node.textContent.includes('Analysis Review')) {
+      if (node.textContent.includes('Code Review')) {
         // Find the parent element (likely a paragraph or table cell)
         let parentElement = node.parentElement
 
@@ -350,10 +350,13 @@ export default function DocumentView() {
   }, [loadDocument])
 
   useEffect(() => {
-    if (document?.html) {
-      renderMermaidDiagrams()
+    if (enhancedHtml) {
+      // Small delay to ensure DOM is updated with new content
+      setTimeout(() => {
+        renderMermaidDiagrams()
+      }, 100)
     }
-  }, [document?.html])
+  }, [enhancedHtml])
 
   // WebSocket listener for file changes affecting the current document
   useEffect(() => {

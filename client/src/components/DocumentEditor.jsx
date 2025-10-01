@@ -69,12 +69,15 @@ export default function DocumentEditor() {
       try {
         let template;
         
-        // Use unified enabler template endpoint for enablers
+        // Use unified template endpoints for both capabilities and enablers
         if (type === 'enabler') {
           const response = await fetch(`/api/enabler-template/${capabilityId || ''}`);
           template = await response.json();
+        } else if (type === 'capability') {
+          const response = await fetch('/api/capability-template');
+          template = await response.json();
         } else {
-          // Use regular template file for capabilities
+          // Use regular template file for other types
           const templatePath = `templates/${type}-template.md`
           template = await apiService.getFile(templatePath)
         }
@@ -93,11 +96,17 @@ export default function DocumentEditor() {
           }
         }
         if (type === 'capability') {
-          parsed.id = generateId('CAP')
+          // Only generate new ID if template doesn't have one
+          if (!parsed.id) {
+            parsed.id = generateId('CAP')
+          }
           // Include config data for path selection
           parsed.lastSelectedCapabilityPath = config?.lastSelectedCapabilityPath
         } else if (type === 'enabler') {
-          parsed.id = generateId('ENB')
+          // Only generate new ID if template doesn't have one
+          if (!parsed.id) {
+            parsed.id = generateId('ENB')
+          }
           if (capabilityId) {
             parsed.capabilityId = capabilityId
           }

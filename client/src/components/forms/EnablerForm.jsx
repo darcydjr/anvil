@@ -19,9 +19,9 @@ function EnablerForm({ data, onChange, onValidationChange }) {
   useEffect(() => {
     const errors = {}
 
-    // Capability ID is required
-    if (!data.capabilityId) {
-      errors.capabilityId = 'Capability ID is required'
+    // Name is required
+    if (!data.name || data.name.trim() === '') {
+      errors.name = 'Name is required'
     }
 
     setValidationErrors(errors)
@@ -30,7 +30,7 @@ function EnablerForm({ data, onChange, onValidationChange }) {
     if (onValidationChange) {
       onValidationChange(Object.keys(errors).length === 0, errors)
     }
-  }, [data.capabilityId, onValidationChange])
+  }, [data.name, onValidationChange])
 
   // Initialize state listener for enabler
   useEffect(() => {
@@ -262,6 +262,25 @@ function EnablerForm({ data, onChange, onValidationChange }) {
           </div>
 
           <div className="form-group">
+            <label className="form-label">Capability ID</label>
+            <select
+              className="form-select"
+              value={data.capabilityId || ''}
+              onChange={(e) => handleBasicChange('capabilityId', e.target.value)}
+            >
+              <option value="">Select a capability...</option>
+              {availableCapabilities.map((cap) => (
+                <option key={cap.id} value={cap.id}>
+                  {cap.id} - {cap.title}
+                </option>
+              ))}
+            </select>
+            {validationErrors.capabilityId && (
+              <span className="error-message">{validationErrors.capabilityId}</span>
+            )}
+          </div>
+
+          <div className="form-group">
             <label className="form-label">Approval</label>
             <select
               className="form-select"
@@ -272,26 +291,6 @@ function EnablerForm({ data, onChange, onValidationChange }) {
                 <option key={approval} value={approval}>{approval}</option>
               ))}
             </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Capability ID *</label>
-            <select
-              className={`form-select ${validationErrors.capabilityId ? 'error' : ''}`}
-              value={data.capabilityId || ''}
-              onChange={(e) => handleBasicChange('capabilityId', e.target.value)}
-              required
-            >
-              <option value="">Select a capability *</option>
-              {availableCapabilities.map((cap) => (
-                <option key={cap.id} value={cap.id}>
-                  {cap.id} - {cap.title}
-                </option>
-              ))}
-            </select>
-            {validationErrors.capabilityId && (
-              <span className="error-message">{validationErrors.capabilityId}</span>
-            )}
           </div>
 
           <div className="form-group">

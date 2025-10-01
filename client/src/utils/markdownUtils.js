@@ -14,31 +14,56 @@ export function parseMarkdownToForm(markdown, type) {
     codeReview: DEFAULT_VALUES.CODE_REVIEW
   }
 
-  // Extract metadata
-  for (const line of lines) {
-    const nameMatch = line.match(/^-\s*\*\*Name\*\*:\s*(.+)$/);
-    const ownerMatch = line.match(/^-\s*\*\*Owner\*\*:\s*(.+)$/);
-    const statusMatch = line.match(/^-\s*\*\*Status\*\*:\s*(.+)$/);
-    const approvalMatch = line.match(/^-\s*\*\*Approval\*\*:\s*(.+)$/);
-    const priorityMatch = line.match(/^-\s*\*\*Priority\*\*:\s*(.+)$/);
-    const analysisReviewMatch = line.match(/^-\s*\*\*Analysis Review\*\*:\s*(.+)$/);
-    const codeReviewMatch = line.match(/^-\s*\*\*Code Review\*\*:\s*(.+)$/);
-    const idMatch = line.match(/^-\s*\*\*ID\*\*:\s*(.+)$/);
-    const capabilityIdMatch = line.match(/^-\s*\*\*Capability ID\*\*:\s*(.+)$/);
-    const systemMatch = line.match(/^-\s*\*\*System\*\*:\s*(.+)$/);
-    const componentMatch = line.match(/^-\s*\*\*Component\*\*:\s*(.+)$/);
+  // Extract title from H1 heading as fallback for name
+  const titleMatch = markdown.match(/^#\s+(.+)$/m);
+  if (titleMatch) {
+    result.name = titleMatch[1];
+  }
 
-    if (nameMatch) result.name = nameMatch[1];
-    if (ownerMatch) result.owner = ownerMatch[1];
-    if (statusMatch) result.status = statusMatch[1];
-    if (approvalMatch) result.approval = approvalMatch[1];
-    if (priorityMatch) result.priority = priorityMatch[1];
-    if (analysisReviewMatch) result.analysisReview = analysisReviewMatch[1];
-    if (codeReviewMatch) result.codeReview = codeReviewMatch[1];
-    if (idMatch) result.id = idMatch[1];
-    if (capabilityIdMatch) result.capabilityId = capabilityIdMatch[1];
-    if (systemMatch) result.system = systemMatch[1];
-    if (componentMatch) result.component = componentMatch[1];
+  // Extract metadata (metadata Name field will override title if present)
+  // Skip lines that are inside HTML comments to avoid parsing template documentation
+  let insideComment = false;
+  for (const line of lines) {
+    // Check for HTML comment start/end
+    if (line.trim().startsWith('<!--')) {
+      insideComment = true;
+      continue;
+    }
+    if (line.trim().endsWith('-->') || line.trim().includes('-->')) {
+      insideComment = false;
+      continue;
+    }
+
+    // Skip lines inside comments
+    if (insideComment) {
+      continue;
+    }
+
+    // Trim whitespace and make regex more flexible
+    const trimmedLine = line.trim();
+    const nameMatch = trimmedLine.match(/^-\s*\*\*Name\*\*:\s*(.+)$/);
+    const ownerMatch = trimmedLine.match(/^-\s*\*\*Owner\*\*:\s*(.+)$/);
+    const statusMatch = trimmedLine.match(/^-\s*\*\*Status\*\*:\s*(.+)$/);
+    const approvalMatch = trimmedLine.match(/^-\s*\*\*Approval\*\*:\s*(.+)$/);
+    const priorityMatch = trimmedLine.match(/^-\s*\*\*Priority\*\*:\s*(.+)$/);
+    const analysisReviewMatch = trimmedLine.match(/^-\s*\*\*Analysis Review\*\*:\s*(.+)$/);
+    const codeReviewMatch = trimmedLine.match(/^-\s*\*\*Code Review\*\*:\s*(.+)$/);
+    const idMatch = trimmedLine.match(/^-\s*\*\*ID\*\*:\s*(.+)$/);
+    const capabilityIdMatch = trimmedLine.match(/^-\s*\*\*Capability ID\*\*:\s*(.+)$/);
+    const systemMatch = trimmedLine.match(/^-\s*\*\*System\*\*:\s*(.+)$/);
+    const componentMatch = trimmedLine.match(/^-\s*\*\*Component\*\*:\s*(.+)$/);
+
+    if (nameMatch) result.name = nameMatch[1].trim();
+    if (ownerMatch) result.owner = ownerMatch[1].trim();
+    if (statusMatch) result.status = statusMatch[1].trim();
+    if (approvalMatch) result.approval = approvalMatch[1].trim();
+    if (priorityMatch) result.priority = priorityMatch[1].trim();
+    if (analysisReviewMatch) result.analysisReview = analysisReviewMatch[1].trim();
+    if (codeReviewMatch) result.codeReview = codeReviewMatch[1].trim();
+    if (idMatch) result.id = idMatch[1].trim();
+    if (capabilityIdMatch) result.capabilityId = capabilityIdMatch[1].trim();
+    if (systemMatch) result.system = systemMatch[1].trim();
+    if (componentMatch) result.component = componentMatch[1].trim();
   }
 
   // Extract Technical Overview for both capabilities and enablers

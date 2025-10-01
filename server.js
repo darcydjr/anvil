@@ -284,6 +284,7 @@ async function scanDirectory(dirPath, baseUrl = '') {
     } else if (file.endsWith('.md')) {
       const content = await fs.readFile(fullPath, 'utf8');
       const title = extractTitle(content);
+      const name = extractName(content);
       const description = extractDescription(content);
       const type = extractType(content);
       const id = extractId(content);
@@ -304,7 +305,7 @@ async function scanDirectory(dirPath, baseUrl = '') {
       }
 
       const item = {
-        name: file,
+        name: name || file,
         title: title || file.replace('.md', ''),
         description: description,
         type: itemType,
@@ -485,6 +486,23 @@ function extractSystem(content) {
   return match ? match[1].trim() : null;
 }
 
+// Extract all metadata from content into a single object
+function extractMetadata(content) {
+  return {
+    id: extractId(content),
+    name: extractName(content),
+    title: extractTitle(content),
+    description: extractDescription(content),
+    type: extractType(content),
+    status: extractStatus(content),
+    approval: extractApproval(content),
+    priority: extractPriority(content),
+    system: extractSystem(content),
+    component: extractComponent(content),
+    capabilityId: extractCapabilityId(content)
+  };
+}
+
 // ID Generation Functions (Server-side)
 // Replicates client-side logic for generating unique IDs
 
@@ -603,20 +621,23 @@ function extractComponent(content) {
 app.get('/api/enabler-template/:capabilityId?', async (req, res) => {
   try {
     const { capabilityId } = req.params;
-    
+
+    // Generate a unique enabler ID for the template
+    const generatedId = await generateEnablerId();
+
     // Create a temporary enabler object with placeholders
     const placeholderEnabler = {
       name: '[Enabler Name]',
-      id: 'ENB-XXXXXX',
+      id: generatedId,
       status: 'In Draft',
       approval: 'Not Approved',
       priority: 'High',
       description: '[What is the purpose?]'
     };
     
-    // Generate template content using the same function as capability form
+    // Generate template content using the template generator that extracts from SOFTWARE_DEVELOPMENT_PLAN.md
     const templateContent = await generateEnablerContentFromTemplate(
-      placeholderEnabler, 
+      placeholderEnabler,
       capabilityId || 'CAP-XXXXXX (Parent Capability)'
     );
     
@@ -625,6 +646,32 @@ app.get('/api/enabler-template/:capabilityId?', async (req, res) => {
   } catch (error) {
     console.error('[ENABLER-TEMPLATE-API] Error serving template:', error);
     res.status(500).json({ error: 'Error loading enabler template: ' + error.message });
+  }
+});
+
+app.get('/api/capability-template', async (req, res) => {
+  try {
+    // Generate a unique capability ID for the template
+    const generatedId = await generateCapabilityId();
+
+    // Create a temporary capability object with placeholders
+    const placeholderCapability = {
+      name: '[Capability Name]',
+      id: generatedId,
+      status: 'In Draft',
+      approval: 'Not Approved',
+      priority: 'High',
+      description: '[Clear business value statement explaining what business problem this solves]'
+    };
+
+    // Generate template content using the template generator that extracts from SOFTWARE_DEVELOPMENT_PLAN.md
+    const templateContent = await generateCapabilityContentFromTemplate(placeholderCapability);
+
+    console.log('[CAPABILITY-TEMPLATE-API] Serving unified template, length:', templateContent.length, 'chars');
+    res.json({ content: templateContent });
+  } catch (error) {
+    console.error('[CAPABILITY-TEMPLATE-API] Error serving template:', error);
+    res.status(500).json({ error: 'Error loading capability template: ' + error.message });
   }
 });
 
@@ -1208,7 +1255,14 @@ app.get('/api/links/capabilities', async (req, res) => {
   try {
     const configPaths = getConfigPaths(config);
     const allItems = await scanProjectPaths(configPaths.projectPaths);
-    const capabilities = allItems.filter(item => item.type === 'capability');
+
+    // Filter to only include files that end with -capability.md
+    const capabilities = allItems.filter(item => {
+      if (item.type !== 'capability') return false;
+
+      const fileName = path.basename(item.path || '');
+      return fileName.endsWith('-capability.md');
+    });
 
     const capabilitiesWithIds = await Promise.all(
       capabilities.map(async (cap) => {
@@ -1538,8 +1592,11 @@ app.post('/api/capability-with-enablers/*', async (req, res) => {
     // Create enabler files for each enabler with content
     if (enablers && enablers.length > 0) {
       for (const enabler of enablers) {
-        if (enabler.id && enabler.name) {
+        // Skip enablers with placeholder IDs
+        if (enabler.id && enabler.name && enabler.id !== 'ENB-XXXXXX') {
           await createEnablerFile(enabler, capabilityId);
+        } else if (enabler.id === 'ENB-XXXXXX') {
+          console.log('[CAPABILITY-ENABLERS] Skipping enabler creation - placeholder ID detected:', enabler.id);
         }
       }
     }
@@ -1548,7 +1605,7 @@ app.post('/api/capability-with-enablers/*', async (req, res) => {
     res.json({
       success: true,
       title,
-      enablersCreated: enablers.filter(e => e.id && e.name).length
+      enablersCreated: enablers.filter(e => e.id && e.name && e.id !== 'ENB-XXXXXX').length
     });
   } catch (error) {
     console.error('[CAPABILITY-ENABLERS] Error saving capability with enablers:', error);
@@ -1878,12 +1935,177 @@ async function findCapabilityDirectory(capabilityId) {
   }
 }
 
+async function extractEnablerTemplateFromSoftwarePlan() {
+  try {
+    console.log('[ENABLER-TEMPLATE] Starting template extraction from SOFTWARE_DEVELOPMENT_PLAN.md');
+
+    // ALWAYS use the SOFTWARE_DEVELOPMENT_PLAN.md file relative to server working directory
+    const swPlanPath = path.join(process.cwd(), 'SOFTWARE_DEVELOPMENT_PLAN.md');
+    console.log('[ENABLER-TEMPLATE] Using SOFTWARE_DEVELOPMENT_PLAN.md file relative to server:', swPlanPath);
+
+    if (await fs.pathExists(swPlanPath)) {
+      const swPlanContent = await fs.readFile(swPlanPath, 'utf8');
+
+      const enablerTemplateStart = swPlanContent.indexOf('### Enabler Template Structure:');
+      if (enablerTemplateStart !== -1) {
+        const startMarker = swPlanContent.indexOf('<!-- START ENABLER TEMPLATE -->', enablerTemplateStart);
+        if (startMarker !== -1) {
+          const endMarker = swPlanContent.indexOf('<!-- END ENABLER TEMPLATE -->', startMarker);
+          if (endMarker !== -1) {
+            const templateStart = swPlanContent.indexOf('\n', startMarker) + 1;
+            const templateEnd = endMarker;
+            const templateContent = swPlanContent.substring(templateStart, templateEnd);
+            console.log('[ENABLER-TEMPLATE] Successfully extracted template from SOFTWARE_DEVELOPMENT_PLAN.md');
+            return templateContent;
+          }
+        }
+      }
+    }
+
+    console.warn('[ENABLER-TEMPLATE] SOFTWARE_DEVELOPMENT_PLAN.md not found or does not contain enabler template');
+    throw new Error('SOFTWARE_DEVELOPMENT_PLAN.md not found or does not contain enabler template');
+
+  } catch (error) {
+    console.error('[ENABLER-TEMPLATE] Error extracting template from SOFTWARE_DEVELOPMENT_PLAN.md:', error);
+    throw error;
+  }
+}
+
+async function extractCapabilityTemplateFromSoftwarePlan() {
+  try {
+    // ALWAYS use the SOFTWARE_DEVELOPMENT_PLAN.md file relative to server working directory
+    const swPlanPath = path.join(process.cwd(), 'SOFTWARE_DEVELOPMENT_PLAN.md');
+    console.log('[CAPABILITY-TEMPLATE] Using SOFTWARE_DEVELOPMENT_PLAN.md file relative to server:', swPlanPath);
+
+    if (await fs.pathExists(swPlanPath)) {
+      const swPlanContent = await fs.readFile(swPlanPath, 'utf8');
+
+      const capabilityTemplateStart = swPlanContent.indexOf('### Capability Template Structure:');
+      if (capabilityTemplateStart !== -1) {
+        const startMarker = swPlanContent.indexOf('<!-- START CAPABILITY TEMPLATE -->', capabilityTemplateStart);
+        if (startMarker !== -1) {
+          const endMarker = swPlanContent.indexOf('<!-- END CAPABILITY TEMPLATE -->', startMarker);
+          if (endMarker !== -1) {
+            const templateStart = swPlanContent.indexOf('\n', startMarker) + 1;
+            const templateEnd = endMarker;
+            const templateContent = swPlanContent.substring(templateStart, templateEnd);
+            console.log('[CAPABILITY-TEMPLATE] Successfully extracted template from SOFTWARE_DEVELOPMENT_PLAN.md');
+            return templateContent;
+          }
+        }
+      }
+    }
+
+    throw new Error('SOFTWARE_DEVELOPMENT_PLAN.md not found or does not contain capability template');
+
+  } catch (error) {
+    console.error('[CAPABILITY-TEMPLATE] Error extracting template from SOFTWARE_DEVELOPMENT_PLAN.md:', error);
+    throw error;
+  }
+}
+
+async function generateCapabilityContentFromTemplate(capability) {
+  try {
+    // Extract the capability template from SOFTWARE_DEVELOPMENT_PLAN.md
+    let templateContent = await extractCapabilityTemplateFromSoftwarePlan();
+    console.log('[CAPABILITY-TEMPLATE] Template extracted from SOFTWARE_DEVELOPMENT_PLAN.md, length:', templateContent.length, 'chars');
+
+    const currentDate = new Date().toISOString().split('T')[0];
+
+    // Define replacement map for safer template processing
+    const replacements = {
+      // Basic placeholders
+      '\\[Capability Name\\]': capability.name || '[Capability Name]',
+      'CAP-XXXXXX': capability.id || 'CAP-XXXXXX',
+      'YYYY-MM-DD': currentDate,
+      'X\\.Y': '1.0',
+      '\\[Clear business value statement explaining what business problem this solves\\]': capability.description || '[Clear business value statement explaining what business problem this solves]',
+
+      // Title replacement
+      '^# \\[Capability Name\\]': `# ${capability.name || '[Capability Name]'}`,
+
+      // Metadata section replacements
+      '- \\*\\*Name\\*\\*: \\[Business Function Name\\]': `- **Name**: ${capability.name || '[Business Function Name]'}`,
+      '- \\*\\*ID\\*\\*: CAP-XXXXXX': `- **ID**: ${capability.id || 'CAP-XXXXXX'}`,
+      '- \\*\\*Status\\*\\*: \\[Current State\\]': `- **Status**: ${capability.status || 'In Draft'}`,
+      '- \\*\\*Approval\\*\\*: Not Approved': `- **Approval**: ${capability.approval || 'Not Approved'}`,
+      '- \\*\\*Priority\\*\\*: \\[High/Medium/Low\\]': `- **Priority**: ${capability.priority || 'High'}`,
+      '- \\*\\*Analysis Review\\*\\*: \\[Required/Not Required\\]': `- **Analysis Review**: ${config.defaults?.analysisReview || 'Required'}`,
+      '- \\*\\*Owner\\*\\*: \\[Team/Person\\]': `- **Owner**: ${config.defaults?.owner || 'Product Team'}`,
+      '- \\*\\*Created Date\\*\\*: YYYY-MM-DD': `- **Created Date**: ${currentDate}`,
+      '- \\*\\*Last Updated\\*\\*: YYYY-MM-DD': `- **Last Updated**: ${currentDate}`,
+      '- \\*\\*Version\\*\\*: X\\.Y': `- **Version**: ${version.version}`
+    }
+
+    // Apply replacements with validation
+    try {
+      for (const [pattern, replacement] of Object.entries(replacements)) {
+        const regex = new RegExp(pattern, pattern.startsWith('^') ? 'm' : 'g')
+        templateContent = templateContent.replace(regex, replacement)
+      }
+
+      // Validate that critical fields were replaced
+      if (capability.name && templateContent.includes('[Capability Name]')) {
+        console.warn('[TEMPLATE] Warning: Some [Capability Name] placeholders may not have been replaced')
+      }
+      if (capability.id && templateContent.includes('CAP-XXXXXX')) {
+        console.warn('[TEMPLATE] Warning: Some CAP-XXXXXX placeholders may not have been replaced')
+      }
+    } catch (replacementError) {
+      console.error('[TEMPLATE] Error during template replacement:', replacementError)
+      // Continue with partially replaced template rather than failing completely
+    }
+
+    console.log('[CAPABILITY-TEMPLATE] Template generation completed successfully')
+    return templateContent;
+
+  } catch (error) {
+    console.error('[CAPABILITY-TEMPLATE] Error generating template:', error);
+    // Fallback to a basic template if SOFTWARE_DEVELOPMENT_PLAN.md template extraction fails
+    const currentDate = new Date().toISOString().split('T')[0];
+    return `# ${capability.name || '[Capability Name]'}
+
+## Metadata
+- **Name**: ${capability.name || '[Business Function Name]'}
+- **Type**: Capability
+- **System**: [System Name]
+- **Component**: [Component Name]
+- **ID**: ${capability.id || 'CAP-XXXXXX'}
+- **Owner**: ${config.defaults?.owner || 'Product Team'}
+- **Status**: ${capability.status || 'In Draft'}
+- **Approval**: ${capability.approval || 'Not Approved'}
+- **Priority**: ${capability.priority || 'High'}
+- **Analysis Review**: ${config.defaults?.analysisReview || 'Required'}
+
+## Purpose
+${capability.description || '[Clear business value statement explaining what business problem this solves]'}
+
+## Technical Specifications (Template)
+
+### Capability Dependency Flow Diagram
+[Diagram showing capability relationships]
+
+## Enablers
+| ID | Name | Status | Priority |
+|----|------|--------|----------|
+| ENB-XXXXXX | [Enabler Name] | [Status] | [Priority] |
+
+## Dependencies
+[List other capabilities this depends on]
+
+## Success Criteria
+[Measurable criteria for determining when this capability is successfully implemented]
+
+## Risks and Assumptions
+[Key risks and assumptions for this capability]`;
+  }
+}
+
 async function generateEnablerContentFromTemplate(enabler, capabilityId) {
   try {
-    // Try to load the enabler template
-    const templatePath = path.join(__dirname, 'templates', 'enabler-template.md');
-    let templateContent = await fs.readFile(templatePath, 'utf8');
-    console.log('[ENABLER-TEMPLATE] Template loaded, length:', templateContent.length, 'chars');
+    // Extract the enabler template from SOFTWARE_DEVELOPMENT_PLAN.md
+    let templateContent = await extractEnablerTemplateFromSoftwarePlan();
+    console.log('[ENABLER-TEMPLATE] Template extracted from SOFTWARE_DEVELOPMENT_PLAN.md, length:', templateContent.length, 'chars');
     
     const currentDate = new Date().toISOString().split('T')[0];
     

@@ -170,7 +170,13 @@ export default function Sidebar() {
                     <span>{groupKey}</span>
                   </div>
                   <div className="capability-group-items">
-                    {groupCapabilities.map((capability) => {
+                    {groupCapabilities
+                      .sort((a, b) => {
+                        const nameA = (a.title || a.name || '').toLowerCase()
+                        const nameB = (b.title || b.name || '').toLowerCase()
+                        return nameA.localeCompare(nameB)
+                      })
+                      .map((capability) => {
                       const isActive = selectedDocument?.type === 'capability' && selectedDocument?.path === capability.path
                       const isAssociated = associatedCapabilityId && capability.id === associatedCapabilityId
 
@@ -212,7 +218,13 @@ export default function Sidebar() {
         
         {expandedSections.enablers && (
           <div className="sidebar-items">
-            {filteredEnablers.map((enabler) => (
+            {filteredEnablers
+              .sort((a, b) => {
+                const nameA = (a.title || a.name || '').toLowerCase()
+                const nameB = (b.title || b.name || '').toLowerCase()
+                return nameA.localeCompare(nameB)
+              })
+              .map((enabler) => (
               <div
                 key={enabler.path}
                 className={`sidebar-item ${selectedDocument?.type === 'enabler' && selectedDocument?.path === enabler.path ? 'active' : ''} ${selectedCapability ? 'indented' : ''} ${enabler.status === 'Implemented' ? 'implemented' : ''}`}

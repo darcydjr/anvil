@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-2.3.5-green.svg)]()
+[![Version](https://img.shields.io/badge/version-2.4.5-green.svg)]()
 
 ## Overview
 
@@ -256,6 +256,119 @@ Anvil supports **workspace-based configuration** for managing multiple document 
 - **mermaid**: Diagram rendering
 
 ## Release Notes & Version History
+
+### v2.4.5 - Template Form Field Fixes ✅
+
+#### 🐛 **Critical Bug Fixes: Template Form Field Issues**
+- **ENABLER FORM FIX**: Fixed enabler form showing explanatory requirement text ("Descriptive name for this specific requirement...") in name field by properly commenting field definitions in template
+- **CAPABILITY ID AUTO-GENERATION**: Fixed capability template endpoint to generate unique IDs instead of showing "CAP-XXXXXX" placeholder
+- **TEMPLATE COMMENT PROCESSING**: HTML comments in templates now properly prevent explanatory text from being processed as form content
+- **UNIQUE ID GENERATION**: Each new capability now receives a properly generated unique ID (e.g., CAP-602488, CAP-136929)
+
+#### ⚙️ **Infrastructure Enhancements**
+- **SERVER TEMPLATE GENERATION**: Updated `/api/capability-template` endpoint to call `generateCapabilityId()` function for unique ID creation
+- **WORKSPACE TEMPLATE FIXES**: Fixed enabler template field definitions in workspace SOFTWARE_DEVELOPMENT_PLAN.md files
+- **COMMENT PRESERVATION**: Field definition comments preserved for documentation while preventing form field contamination
+- **TEMPLATE CONSISTENCY**: Ensured both root and workspace template files maintain consistent field definition handling
+
+#### 🔄 **Version Management**
+- **VERSION BUMP**: Updated from 2.4.4 to 2.4.5 across all package.json files
+- **CLIENT REBUILD**: Rebuilt React client application with template fixes
+- **SERVER RESTART**: Restarted server to apply template generation improvements
+- **BACKWARDS COMPATIBLE**: All existing functionality preserved with improved template handling
+
+### v2.4.3 - Copy-to-Clipboard for Claude Commands ✅
+
+#### ✨ **Enhancement: Copy-to-Clipboard Functionality in Software Development Plan**
+- **COPY BUTTONS**: Added copy-to-clipboard buttons to code blocks containing "Claude, please" commands in the Software Development Plan
+- **SMART DETECTION**: Automatically detects code blocks with Claude commands and adds copy icons in the upper right corner
+- **VISUAL FEEDBACK**: Copy button changes to a checkmark when successfully copied with smooth animations
+- **TOAST NOTIFICATIONS**: User-friendly success/error messages when copying to clipboard
+
+#### ⚙️ **Infrastructure Enhancements**
+- **ENHANCED MARKDOWN RENDERER**: Created sophisticated MarkdownRenderer component in Plan.jsx that properly handles code blocks
+- **CODEBLOCK COMPONENT**: New CodeBlock component with integrated copy functionality and hover effects
+- **CLIPBOARD API**: Utilizes modern navigator.clipboard API for secure clipboard access
+- **CSS STYLING**: Added responsive copy button styling with backdrop blur and hover animations
+
+#### 🎨 **User Experience Improvements**
+- **INTUITIVE INTERFACE**: Copy buttons appear only on relevant code blocks to avoid visual clutter
+- **RESPONSIVE DESIGN**: Copy buttons work well on both desktop and mobile devices
+- **ACCESSIBILITY**: Copy buttons include proper title attributes and ARIA compliance
+- **SMOOTH ANIMATIONS**: Subtle hover effects and state transitions for better user feedback
+
+#### 🔄 **Version Management**
+- **VERSION BUMP**: Updated from 2.4.2 to 2.4.3 across all package.json files
+- **BUILD OPTIMIZATION**: Rebuilt client with enhanced Plan component functionality
+- **BACKWARDS COMPATIBLE**: All existing functionality preserved with added convenience features
+
+### v2.4.2 - Navigation Panel Alphabetical Sorting ✅
+
+#### ✨ **Enhancement: Alphabetical Sorting in Navigation Panel**
+- **CAPABILITY SORTING**: Implemented alphabetical sorting for capabilities within each system/component group in the navigation panel
+- **ENABLER SORTING**: Added alphabetical sorting for enablers in the navigation panel for improved organization
+- **CASE-INSENSITIVE SORTING**: Sorting is case-insensitive and uses localeCompare for proper alphabetical ordering
+- **IMPROVED NAVIGATION**: Enhanced user experience with predictable, organized navigation structure
+
+#### ⚙️ **Infrastructure Enhancements**
+- **SIDEBAR COMPONENT**: Enhanced Sidebar.jsx with sorting logic for both capabilities and enablers
+- **DYNAMIC SORTING**: Sorting is applied dynamically when rendering navigation items without affecting data fetching
+- **RESPONSIVE SORTING**: Maintains existing functionality while adding organized display order
+- **FALLBACK HANDLING**: Proper handling of missing names/titles with fallback to empty string for consistent sorting
+
+#### 🔄 **Version Management**
+- **VERSION BUMP**: Updated from 2.4.1 to 2.4.2 across all package.json files
+- **BUILD OPTIMIZATION**: Rebuilt client with alphabetical sorting implementation
+- **BACKWARDS COMPATIBLE**: All existing functionality preserved with enhanced navigation organization
+
+### v2.4.1 - Capability ID Edit Mode Fix ✅
+
+#### 🐛 **Critical Bug Fix: Capability ID Preservation in Edit Mode**
+- **TEMPLATE ID PRESERVATION**: Fixed DocumentEditor.jsx to preserve existing IDs when loading templates for editing instead of generating new ones
+- **CONDITIONAL ID GENERATION**: Modified initializeNewDocument function to only generate new IDs if the template doesn't already contain an ID
+- **EDIT MODE INTEGRITY**: Capability edit mode now correctly displays the actual capability ID from the document instead of a generated default
+- **TEMPLATE HANDLING**: Enhanced template processing logic to maintain document integrity during edit operations
+
+#### ⚙️ **Infrastructure Enhancements**
+- **ID VALIDATION LOGIC**: Added conditional checks to prevent overriding existing IDs during template-based document initialization
+- **EDIT VS CREATE DISTINCTION**: Improved logic separation between creating new documents and editing existing ones
+- **DATA CONSISTENCY**: Ensured form data populated from existing documents maintains all original metadata fields
+
+#### 🔄 **Version Management**
+- **VERSION BUMP**: Updated from 2.4.0 to 2.4.1 across all package.json files
+- **BUILD OPTIMIZATION**: Rebuilt client with ID preservation fix
+- **BACKWARDS COMPATIBLE**: All existing functionality preserved with improved edit mode reliability
+
+### v2.4.0 - Navigation Panel Capability Display Fix ✅
+
+#### 🐛 **Critical Bug Fix: Capability Name Display**
+- **METADATA EXTRACTION**: Fixed missing `extractName` function call in `scanDirectory` function in server.js that was causing capability names to not display properly in navigation panel
+- **NAME FIELD PROCESSING**: Added proper extraction and assignment of the Name metadata field to capability objects returned from API
+- **NAVIGATION CONSISTENCY**: Capability navigation panel now correctly displays capability names from metadata instead of falling back to file names
+- **SIDEBAR DISPLAY**: Fixed Sidebar.jsx display logic that relies on `capability.name` field being properly populated from document metadata
+
+#### ⚙️ **Infrastructure Enhancements**
+- **EXTRACT METADATA FUNCTION**: Created comprehensive `extractMetadata` function to consolidate all metadata field extraction in a single reusable function
+- **API DATA CONSISTENCY**: Ensured all capability objects returned from `/api/capabilities` endpoint include complete metadata including name, id, title, and other fields
+- **SERVER-SIDE PROCESSING**: Enhanced server-side metadata processing to match client-side expectations for navigation and display components
+
+#### 🔄 **Version Management**
+- **VERSION BUMP**: Updated from 2.3.9 to 2.4.0 across all package.json files
+- **BUILD OPTIMIZATION**: Rebuilt client and server with navigation fix
+- **BACKWARDS COMPATIBLE**: All existing functionality preserved with improved navigation reliability
+
+### v2.3.7 - Template Structure Optimization ✅
+
+#### 🎯 **Template Processing Improvements**
+- **STREAMLINED TEMPLATE STRUCTURE**: Removed ```markdown code blocks from Capability and Enabler templates in SOFTWARE_DEVELOPMENT_PLAN.md for cleaner processing
+- **HTML COMMENT MARKERS**: Templates now use only HTML comment boundaries (<!-- START TEMPLATE --> / <!-- END TEMPLATE -->) for improved server parsing
+- **MERMAID DIAGRAM FIXES**: Fixed mermaid diagram rendering issues in capability templates by correcting markdown structure
+- **SERVER OPTIMIZATION**: Updated template extraction logic to handle cleaner template structure without markdown block dependencies
+
+#### ⚙️ **Infrastructure Enhancements**
+- **TEMPLATE BOUNDARY DETECTION**: Enhanced server code to reliably extract templates using HTML comment markers
+- **DIAGRAM RENDERING**: Improved mermaid diagram support in capability creation workflow
+- **VERSION SYNCHRONIZATION**: Updated package.json versions across client and server for consistency
 
 ### v2.3.0 - Reactive UI with Real-Time File Updates ✅
 
