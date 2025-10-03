@@ -178,6 +178,19 @@ function EnablerForm({ data, onChange, onValidationChange }) {
     onChange({ [field]: newArray })
   }, [data, onChange])
 
+  // Function to approve all requirements in a specific field
+  const approveAllRequirements = useCallback((field) => {
+    const fieldData = data[field] || []
+    if (fieldData.length === 0) return
+
+    const newArray = fieldData.map(req => ({
+      ...req,
+      approval: APPROVAL_VALUES.APPROVED
+    }))
+
+    onChange({ [field]: newArray })
+  }, [data, onChange])
+
   // Memoize templates and dropdown options
   const templates = useMemo(() => ({
     functionalReq: { 
@@ -479,6 +492,15 @@ function EnablerForm({ data, onChange, onValidationChange }) {
               <Plus size={14} />
               Add Functional Requirement
             </button>
+            <button
+              type="button"
+              onClick={() => approveAllRequirements('functionalRequirements')}
+              className="btn btn-success btn-sm"
+              disabled={!data.functionalRequirements || data.functionalRequirements.length === 0}
+              style={{ marginLeft: '10px' }}
+            >
+              Approve All
+            </button>
           </div>
         </div>
       </div>
@@ -593,6 +615,15 @@ function EnablerForm({ data, onChange, onValidationChange }) {
             >
               <Plus size={14} />
               Add Non-Functional Requirement
+            </button>
+            <button
+              type="button"
+              onClick={() => approveAllRequirements('nonFunctionalRequirements')}
+              className="btn btn-success btn-sm"
+              disabled={!data.nonFunctionalRequirements || data.nonFunctionalRequirements.length === 0}
+              style={{ marginLeft: '10px' }}
+            >
+              Approve All
             </button>
           </div>
         </div>

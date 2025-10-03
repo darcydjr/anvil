@@ -39,12 +39,12 @@ This document provides comprehensive guidance for Claude Code to discover, analy
 
 **For Discovery (Documentation Only):**
 ```
-Claude, please read the SOFTWARE_DEVELOPMENT_PLAN.md and perform DISCOVERY ONLY on this project. Create specifications documentation but DO NOT implement anything.
+Claude, stay strictly within your current working directory and its subdirectories. Read the SOFTWARE_DEVELOPMENT_PLAN.md, perform DISCOVERY within this boundary only, and create specifications documentation without IMPLEMENTING anything. No parent directory access allowed. STOP IMMEDIATELY if you attempt to read files outside the current directory tree.
 ```
 
 **For Implementation (After Discovery Complete):**
 ```
-Claude, please read the SOFTWARE_DEVELOPMENT_PLAN.md (following the development plan exactly) and develop the application  specified in the specifications folder.
+Claude, please read the SOFTWARE_DEVELOPMENT_PLAN.md in the specifications folder (following the development plan exactly) and develop the application which is specified in the specifications folder.
 
 ```
 
@@ -71,6 +71,11 @@ Claude, please read the SOFTWARE_DEVELOPMENT_PLAN.md (following the development 
   - **NEVER change Approval status from "Approved" to any other value**
   - **NEVER modify Approval status for Capabilities, Enablers, or Requirements**
   - **APPROVAL STATUS IS READ-ONLY FOR AI AGENTS**
+  
+  ## DISCOVERY EXCEPTION:
+  - During DISCOVERY tasks only, AI agents MAY set initial Approval status to "Approved" for newly created documents
+  - This exception applies ONLY to document creation during Discovery phase
+  - This exception does NOT apply to modifying existing documents outside of Discovery  
 
   ### MANDATORY BEHAVIOR:
   - **ONLY proceed with items that ALREADY have Approval = "Approved"**
@@ -199,8 +204,8 @@ An Enabler is a specific technical implementation that realizes a Capability. En
 - **Component**: [Component Name]
 - **ID**: CAP-123456
 - **Owner**: [Team/Person]
-- **Status**: In Draft
-- **Approval**: Not Approved
+- **Status**: Implemented
+- **Approval**: Approved
 - **Priority**: [High/Medium/Low]
 - **Analysis Review**: [Required/Not Required]
 
@@ -210,7 +215,7 @@ An Enabler is a specific technical implementation that realizes a Capability. En
 ## Enablers
 | ID | Name | Status | Priority |
 |----|----|-----|---------|
-| ENB-654321 | [Enabler Name] | In Draft | [Priority] |
+| ENB-654321 | [Enabler Name] | Implemented | [Priority] |
 
 ## Dependencies
 [List other capabilities this depends on]
@@ -232,8 +237,8 @@ An Enabler is a specific technical implementation that realizes a Capability. En
 - **ID**: ENB-654321
 - **Capability ID**: CAP-123456
 - **Owner**: [Team/Person]
-- **Status**: In Draft
-- **Approval**: Not Approved
+- **Status**: Implemented
+- **Approval**: Approved
 - **Priority**: [High/Medium/Low]
 - **Analysis Review**: [Required/Not Required]
 - **Code Review**: [Required/Not Required]
@@ -245,12 +250,12 @@ An Enabler is a specific technical implementation that realizes a Capability. En
 ### Functional Requirements
 | ID | Requirement | Status | Priority |
 |----|------------|--------|----------|
-| FR-789012 | [Requirement Description] | In Draft | [Priority] |
+| FR-789012 | [Requirement Description] | Implemented | Must Have |
 
 ### Non-Functional Requirements
 | ID | Requirement | Status | Priority |
 |----|------------|--------|----------|
-| NFR-345678 | [NFR Description] | In Draft | [Priority] |
+| NFR-345678 | [NFR Description] | Implemented | Must Have |
 
 ## Technical Specifications (Template)
 [Detailed technical implementation details]
@@ -270,6 +275,16 @@ An Enabler is a specific technical implementation that realizes a Capability. En
 5. **Maintain relationships** - Always specify capabilityId in enabler metadata
 6. **Follow collision detection** - Use provided algorithm to ensure unique IDs
 
+ ### Discovery Document Configuration Rules
+  **DISCOVERY EXCEPTION**: When creating documents during Discovery phase:
+  - **Capability Status**: Set to "Implemented"
+  - **Capability Approval**: Set to "Approved"
+  - **Enabler Status**: Set to "Implemented"
+  - **Enabler Approval**: Set to "Approved"
+  - **Requirement Status**: Set to "Implemented"
+  - **Requirement Approval**: Set to "Approved"
+
+  **Rationale**: Discovery documents represent existing functionality being documented, not new features being planned.
 
 ---
 
@@ -385,7 +400,7 @@ An Enabler is a specific technical implementation that realizes a Capability. En
   Use the existing **COMPLETE Enabler Template Structure** from the STANDARDS AND CONVENTIONS section. COPY ALL METADATA FIELDS EXACTLY from the template with these modifications:
 
   **Include these sections with content:**
-  - Complete Metadata section (ALL fields from template - System, Component, etc.)
+  - Complete Metadata section (ALL fields from template)
   - Purpose section (ONE SENTENCE only - no implementation details)
 
   **Include these sections but LEAVE EMPTY:**
@@ -396,8 +411,6 @@ An Enabler is a specific technical implementation that realizes a Capability. En
 Before proceeding to next step, verify enabler contains ALL these metadata fields:
 - [ ] Name
 - [ ] Type
-- [ ] System
-- [ ] Component
 - [ ] ID
 - [ ] Capability ID
 - [ ] Owner

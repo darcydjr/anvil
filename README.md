@@ -100,12 +100,12 @@ Once you have your specifications ready in Anvil:
 
    **For Discovery (Documentation Only):**
    ```
-   Claude, please read the SOFTWARE_DEVELOPMENT_PLAN.md and perform DISCOVERY ONLY on this project. Create specifications documentation but DO NOT implement anything.
+   Claude, please read the SOFTWARE_DEVELOPMENT_PLAN.md in the specifications folder and perform DISCOVERY ONLY on this project. Create specifications documentation but DO NOT implement anything.
    ```
 
    **For Implementation (After Discovery Complete):**
    ```
-   Claude, please read the SOFTWARE_DEVELOPMENT_PLAN.md and develop the application specified in the specifications folder.
+   Claude, please read the SOFTWARE_DEVELOPMENT_PLAN.md in the specifications folder and develop the application specified in the specifications folder.
    ```
 
 ## Implementation Workflow

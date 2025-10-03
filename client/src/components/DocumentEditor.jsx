@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { apiService } from '../services/apiService'
 import { useApp } from '../contexts/AppContext'
 import { Save, ArrowLeft, Eye, Code, Plus } from 'lucide-react'
@@ -14,6 +14,7 @@ import './DocumentEditor.css'
 export default function DocumentEditor() {
   const { type, '*': path, capabilityId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { refreshData, config, capabilities, enablers, setSelectedDocument } = useApp()
   
   const [document, setDocument] = useState(null)
@@ -109,6 +110,22 @@ export default function DocumentEditor() {
           }
           if (capabilityId) {
             parsed.capabilityId = capabilityId
+          }
+
+          // If enabler data was passed via navigation state, use it to pre-populate
+          if (location.state?.enablerData) {
+            const enablerData = location.state.enablerData
+            Object.assign(parsed, {
+              id: enablerData.id || parsed.id,
+              name: enablerData.name || '',
+              description: enablerData.description || '',
+              status: enablerData.status || parsed.status,
+              approval: enablerData.approval || parsed.approval,
+              priority: enablerData.priority || parsed.priority,
+              owner: enablerData.owner || parsed.owner,
+              developer: enablerData.developer || parsed.developer,
+              capabilityId: capabilityId || enablerData.capabilityId || parsed.capabilityId
+            })
           }
         }
 

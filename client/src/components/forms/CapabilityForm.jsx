@@ -1,13 +1,16 @@
 import React, { useEffect, useRef, useCallback, useMemo, useState } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, FileText } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useApp } from '../../contexts/AppContext'
 import { generateEnablerId } from '../../utils/idGenerator'
 import { stateListenerManager } from '../../utils/stateListeners'
 import { STATUS_VALUES, APPROVAL_VALUES, PRIORITY_VALUES, REVIEW_VALUES } from '../../utils/constants'
 import { apiService } from '../../services/apiService'
+import toast from 'react-hot-toast'
 
 function CapabilityForm({ data, onChange, isNew = false, currentPath = null }) {
   const { capabilities, enablers } = useApp()
+  const navigate = useNavigate()
   const stateListenerRef = useRef(null)
   const [workspaces, setWorkspaces] = useState({ workspaces: [], activeWorkspaceId: null })
   const [originalPath, setOriginalPath] = useState(null)
@@ -150,6 +153,27 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }) {
     newArray.splice(index, 1)
     onChange({ [field]: newArray })
   }, [data, onChange])
+
+  const handleCreateEnablerDocument = useCallback((enabler, index) => {
+    if (!enabler.id || !enabler.name) {
+      toast.error('Enabler must have an ID and name before creating document')
+      return
+    }
+
+    if (!data.id) {
+      toast.error('Please save the capability first before creating enabler documents')
+      return
+    }
+
+    // Navigate to create enabler with capability context
+    navigate(`/create/enabler/for/${data.id}`, {
+      state: {
+        enablerData: enabler,
+        capabilityId: data.id,
+        capabilityName: data.name
+      }
+    })
+  }, [navigate, data.id, data.name])
 
   // Memoize templates to prevent recreating on every render
   const templates = useMemo(() => ({
@@ -471,13 +495,25 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }) {
                     </select>
                   </td>
                   <td>
-                    <button
-                      type="button"
-                      onClick={() => removeArrayItem('enablers', index)}
-                      className="remove-row-btn"
-                    >
-                      <Trash2 size={12} />
-                    </button>
+                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleCreateEnablerDocument(enabler, index)}
+                        className="btn btn-sm btn-success"
+                        title="Create enabler document"
+                        disabled={!enabler.id || !enabler.name || !data.id}
+                      >
+                        <FileText size={12} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeArrayItem('enablers', index)}
+                        className="remove-row-btn"
+                        title="Remove from list"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

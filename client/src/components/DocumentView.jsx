@@ -262,39 +262,31 @@ export default function DocumentView() {
     const parser = new DOMParser()
     const doc = parser.parseFromString(html, 'text/html')
 
-    // Find elements that contain "Code Review" text
-    const walker = doc.createTreeWalker(
-      doc.body,
-      NodeFilter.SHOW_TEXT,
-      null,
-      false
-    )
+    // Find the metadata section (look for h2 containing "Metadata")
+    const headings = doc.querySelectorAll('h2')
+    let metadataSection = null
 
-    let node
-    while (node = walker.nextNode()) {
-      if (node.textContent.includes('Code Review')) {
-        // Find the parent element (likely a paragraph or table cell)
-        let parentElement = node.parentElement
+    for (const heading of headings) {
+      if (heading.textContent.toLowerCase().includes('metadata')) {
+        metadataSection = heading
+        break
+      }
+    }
 
-        // Navigate up to find a suitable container (p, td, div)
-        while (parentElement && !['P', 'TD', 'DIV', 'LI'].includes(parentElement.tagName)) {
-          parentElement = parentElement.parentElement
-        }
+    if (metadataSection) {
+      // Find the list that follows the metadata heading
+      let currentElement = metadataSection.nextElementSibling
+      while (currentElement && currentElement.tagName !== 'UL') {
+        currentElement = currentElement.nextElementSibling
+      }
 
-        if (parentElement) {
-          // Create the file path element
-          const filePathElement = doc.createElement('li')
-          filePathElement.innerHTML = `<strong>Specification Path:</strong> ${displayPath}`
+      if (currentElement && currentElement.tagName === 'UL') {
+        // Create the file path element
+        const filePathElement = doc.createElement('li')
+        filePathElement.innerHTML = `<strong>Specification Path:</strong> ${displayPath}`
 
-          // Insert after the parent element
-          if (parentElement.nextSibling) {
-            parentElement.parentNode.insertBefore(filePathElement, parentElement.nextSibling)
-          } else {
-            parentElement.parentNode.appendChild(filePathElement)
-          }
-
-          break // Only add once
-        }
+        // Add it to the end of the metadata list
+        currentElement.appendChild(filePathElement)
       }
     }
 
