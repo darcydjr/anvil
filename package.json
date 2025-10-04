@@ -1,6 +1,6 @@
 {
   "name": "anvil",
-  "version": "2.4.6",
+  "version": "2.4.7",
   "description": "Product Requirements Document management application for Capabilities and Enablers",
   "main": "server.js",
   "author": "Darcy Davidson",
@@ -35,10 +35,23 @@
     "version:sync": "node -e \"const pkg=require('./package.json'); const clientPkg=require('./client/package.json'); clientPkg.version=pkg.version; require('fs').writeFileSync('./client/package.json', JSON.stringify(clientPkg, null, 2));\""
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-native-community/slider": "^5.0.1",
+    "@react-navigation/bottom-tabs": "^7.4.7",
+    "@react-navigation/native": "^7.1.17",
+    "@react-navigation/stack": "^7.4.8",
     "chokidar": "^4.0.3",
+    "expo-file-system": "^19.0.16",
+    "expo-mail-composer": "^15.0.7",
+    "expo-print": "^15.0.7",
+    "expo-sharing": "^14.0.7",
+    "expo-sms": "^14.0.7",
     "express": "^4.18.2",
     "fs-extra": "^11.1.1",
     "marked": "^9.1.2",
+    "react-native-safe-area-context": "^5.6.1",
+    "react-native-screens": "^4.16.0",
+    "react-native-slider": "^0.11.0",
     "uuid": "^9.0.0",
     "ws": "^8.18.3"
   },

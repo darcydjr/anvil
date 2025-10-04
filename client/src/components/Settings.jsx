@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
 import { useApp } from '../contexts/AppContext'
-import { Plus, Trash2, Save, Settings as SettingsIcon, FolderOpen, Check, Edit2, ChevronDown, ChevronRight, Folder } from 'lucide-react'
+import { useTheme } from '../contexts/ThemeContext'
+import { Plus, Trash2, Save, Settings as SettingsIcon, FolderOpen, Check, Edit2, ChevronDown, ChevronRight, Folder, Moon, Sun } from 'lucide-react'
 import './Settings.css'
 
 export default function Settings() {
   const { refreshData } = useApp()
+  const { theme, toggleTheme, isDark } = useTheme()
   const [config, setConfig] = useState(null)
   const [workspaces, setWorkspaces] = useState({ workspaces: [], activeWorkspaceId: null })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [newImportPath, setNewImportPath] = useState('')
-  const [newImportName, setNewImportName] = useState('')
 
   // Workspace form state
   const [newWorkspaceName, setNewWorkspaceName] = useState('')
@@ -85,60 +85,6 @@ export default function Settings() {
     }
   }
 
-  const addImportedComponent = () => {
-    if (!newImportName.trim() || !newImportPath.trim()) {
-      toast.error('Please provide both name and path for the imported component')
-      return
-    }
-
-    if (!config.importedComponents) {
-      config.importedComponents = []
-    }
-
-    // Check for duplicate names
-    if (config.importedComponents.some(comp => comp.name === newImportName.trim())) {
-      toast.error('A component with this name already exists')
-      return
-    }
-
-    const newComponent = {
-      id: Date.now().toString(),
-      name: newImportName.trim(),
-      path: newImportPath.trim(),
-      enabled: true,
-      addedDate: new Date().toISOString()
-    }
-
-    setConfig({
-      ...config,
-      importedComponents: [...config.importedComponents, newComponent]
-    })
-
-    setNewImportName('')
-    setNewImportPath('')
-    toast.success('Imported component added')
-  }
-
-  const removeImportedComponent = (id) => {
-    if (!config.importedComponents) return
-
-    setConfig({
-      ...config,
-      importedComponents: config.importedComponents.filter(comp => comp.id !== id)
-    })
-    toast.success('Imported component removed')
-  }
-
-  const toggleComponentEnabled = (id) => {
-    if (!config.importedComponents) return
-
-    setConfig({
-      ...config,
-      importedComponents: config.importedComponents.map(comp =>
-        comp.id === id ? { ...comp, enabled: !comp.enabled } : comp
-      )
-    })
-  }
 
   const updateConfigField = (field, value) => {
     setConfig({
@@ -407,6 +353,36 @@ export default function Settings() {
       </div>
 
       <div className="settings-content">
+        {/* Theme Settings */}
+        <section className="settings-section">
+          <h2>Appearance</h2>
+          <p className="section-description">
+            Choose between light and dark mode for the application interface.
+          </p>
+          <div className="form-group">
+            <label>Theme</label>
+            <div className="theme-toggle-container">
+              <button
+                onClick={toggleTheme}
+                className="theme-toggle-button"
+                title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+              >
+                <div className="theme-toggle-option">
+                  <Sun size={20} />
+                  <span>Light</span>
+                </div>
+                <div className="theme-toggle-slider" data-active={!isDark}>
+                  <div className="theme-toggle-thumb" />
+                </div>
+                <div className="theme-toggle-option">
+                  <Moon size={20} />
+                  <span>Dark</span>
+                </div>
+              </button>
+            </div>
+          </div>
+        </section>
+
         {/* Basic Configuration */}
         <section className="settings-section">
           <div
@@ -825,121 +801,7 @@ export default function Settings() {
           </div>
         </section>
 
-        {/* Imported Components */}
-        <section className="settings-section">
-          <h2>Imported Components</h2>
-          <p className="section-description">
-            Import specifications from other Anvil projects to view and reference their capabilities and enablers.
-          </p>
 
-          {/* Add New Import */}
-          <div className="import-form">
-            <h3>Add New Import</h3>
-            <div className="import-inputs">
-              <div className="form-group">
-                <label>Component Name</label>
-                <input
-                  type="text"
-                  value={newImportName}
-                  onChange={(e) => setNewImportName(e.target.value)}
-                  placeholder="e.g., Authentication Service"
-                  className="form-input"
-                />
-              </div>
-              <div className="form-group">
-                <label>Specifications Path</label>
-                <input
-                  type="text"
-                  value={newImportPath}
-                  onChange={(e) => setNewImportPath(e.target.value)}
-                  placeholder="e.g., /path/to/other-project/specifications"
-                  className="form-input"
-                />
-              </div>
-              <button
-                onClick={addImportedComponent}
-                className="add-import-button"
-              >
-                <Plus size={16} />
-                Add Import
-              </button>
-            </div>
-          </div>
-
-          {/* Imported Components List */}
-          <div className="imported-components-list">
-            <h3>Current Imports</h3>
-            {!config.importedComponents || config.importedComponents.length === 0 ? (
-              <div className="no-imports">
-                No imported components. Add one above to get started.
-              </div>
-            ) : (
-              <div className="imports-table">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Path</th>
-                      <th>Status</th>
-                      <th>Added</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {config.importedComponents.map((component) => (
-                      <tr key={component.id}>
-                        <td>{component.name}</td>
-                        <td className="path-cell">{component.path}</td>
-                        <td>
-                          <label className="toggle-switch">
-                            <input
-                              type="checkbox"
-                              checked={component.enabled}
-                              onChange={() => toggleComponentEnabled(component.id)}
-                            />
-                            <span className="toggle-slider"></span>
-                          </label>
-                          <span className={`status-text ${component.enabled ? 'enabled' : 'disabled'}`}>
-                            {component.enabled ? 'Enabled' : 'Disabled'}
-                          </span>
-                        </td>
-                        <td>{new Date(component.addedDate).toLocaleDateString()}</td>
-                        <td>
-                          <button
-                            onClick={() => removeImportedComponent(component.id)}
-                            className="remove-button"
-                            title="Remove import"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Templates Configuration */}
-        <section className="settings-section">
-          <h2>Templates Configuration</h2>
-          <p className="section-description">
-            Templates are shared across all workspaces and define the structure for new documents.
-          </p>
-
-          <div className="form-group">
-            <label>Templates Path</label>
-            <input
-              type="text"
-              value={config.templates || ''}
-              onChange={(e) => updateConfigField('templates', e.target.value)}
-              className="form-input"
-              placeholder="./templates"
-            />
-          </div>
-        </section>
       </div>
     </div>
   )
