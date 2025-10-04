@@ -353,35 +353,6 @@ export default function Settings() {
       </div>
 
       <div className="settings-content">
-        {/* Theme Settings */}
-        <section className="settings-section">
-          <h2>Appearance</h2>
-          <p className="section-description">
-            Choose between light and dark mode for the application interface.
-          </p>
-          <div className="form-group">
-            <label>Theme</label>
-            <div className="theme-toggle-container">
-              <button
-                onClick={toggleTheme}
-                className="theme-toggle-button"
-                title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-              >
-                <div className="theme-toggle-option">
-                  <Sun size={20} />
-                  <span>Light</span>
-                </div>
-                <div className="theme-toggle-slider" data-active={!isDark}>
-                  <div className="theme-toggle-thumb" />
-                </div>
-                <div className="theme-toggle-option">
-                  <Moon size={20} />
-                  <span>Dark</span>
-                </div>
-              </button>
-            </div>
-          </div>
-        </section>
 
         {/* Basic Configuration */}
         <section className="settings-section">
@@ -475,6 +446,36 @@ export default function Settings() {
               </div>
             </div>
           )}
+        </section>
+
+        {/* Theme Settings */}
+        <section className="settings-section">
+          <h2>Appearance</h2>
+          <p className="section-description">
+            Choose between light and dark mode for the application interface.
+          </p>
+          <div className="form-group">
+            <label>Theme</label>
+            <div className="theme-toggle-container">
+              <button
+                onClick={toggleTheme}
+                className="theme-toggle-button"
+                title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+              >
+                <div className="theme-toggle-option">
+                  <Sun size={20} />
+                  <span>Light</span>
+                </div>
+                <div className="theme-toggle-slider" data-active={!isDark}>
+                  <div className="theme-toggle-thumb" />
+                </div>
+                <div className="theme-toggle-option">
+                  <Moon size={20} />
+                  <span>Dark</span>
+                </div>
+              </button>
+            </div>
+          </div>
         </section>
 
         {/* Workspaces */}

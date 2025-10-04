@@ -11,7 +11,7 @@
   justify-content: center;
   padding: 3rem;
   text-align: center;
-  color: #6c757d;
+  color: var(--text-muted);
   height: 100%;
 }
 
@@ -32,7 +32,7 @@
   align-items: center;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .document-title-section {
@@ -40,7 +40,7 @@
 }
 
 .document-display-title {
-  color: #4a90e2;
+  color: var(--accent-primary);
   font-size: 2rem;
   font-weight: 600;
   margin: 0;
@@ -64,7 +64,7 @@
 
 /* Make links in capabilities/enablers clickable */
 .document-content a[href^="#"] {
-  color: #4a90e2;
+  color: var(--accent-primary);
   text-decoration: none;
   cursor: pointer;
 }
@@ -82,13 +82,13 @@
 }
 
 .document-content th {
-  background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+  background: var(--accent-primary);
   color: white;
   font-weight: 500;
 }
 
 .document-content tr:hover {
-  background-color: #f8f9ff;
+  background-color: var(--bg-tertiary);
 }
 
 /* Ensure all content elements use full width */

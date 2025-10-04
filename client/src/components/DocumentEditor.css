@@ -22,12 +22,12 @@
   align-items: center;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .editor-title h3 {
   margin: 0;
-  color: #2c3e50;
+  color: var(--text-primary);
   text-transform: capitalize;
 }
 
@@ -65,18 +65,20 @@
   flex: 1;
   width: 100%;
   padding: 1rem;
-  border: 1px solid #ced4da;
+  border: 1px solid var(--border-light);
   border-radius: 6px;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 0.9rem;
   line-height: 1.6;
   resize: none;
   outline: none;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
 .markdown-textarea:focus {
-  border-color: #4a90e2;
+  border-color: var(--accent-primary);
   box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
 }
 
@@ -99,14 +101,14 @@
 .form-section {
   margin-bottom: 2rem;
   padding: 1.5rem;
-  background: #f8f9fa;
+  background: var(--bg-tertiary);
   border-radius: 8px;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--border-color);
 }
 
 .form-section h4 {
   margin: 0 0 1rem 0;
-  color: #495057;
+  color: var(--text-secondary);
   font-size: 1.1rem;
   display: flex;
   align-items: center;
@@ -120,21 +122,22 @@
 .editable-table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  background: var(--bg-secondary);
   border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px var(--shadow);
 }
 
 .editable-table th,
 .editable-table td {
   padding: 0.75rem;
   text-align: left;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
 }
 
 .editable-table th {
-  background: #4a90e2;
+  background: var(--accent-primary);
   color: white;
   font-weight: 500;
   font-size: 0.875rem;
@@ -149,9 +152,11 @@
 .editable-table textarea {
   width: 100%;
   padding: 0.5rem;
-  border: 1px solid #ced4da;
+  border: 1px solid var(--border-light);
   border-radius: 3px;
   font-size: 0.875rem;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
 }
 
 .editable-table textarea {
