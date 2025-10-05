@@ -283,14 +283,7 @@ async function scanDirectory(dirPath, baseUrl = '') {
       }
     } else if (file.endsWith('.md')) {
       const content = await fs.readFile(fullPath, 'utf8');
-      const title = extractTitle(content);
-      const name = extractName(content);
-      const description = extractDescription(content);
-      const type = extractType(content);
-      const id = extractId(content);
-      const capabilityId = extractCapabilityId(content);
-      const system = extractSystem(content);
-      const component = extractComponent(content);
+      const metadata = extractMetadata(content);
 
       // Determine type based on filename or explicit type field
       let itemType = 'document'
@@ -300,33 +293,55 @@ async function scanDirectory(dirPath, baseUrl = '') {
         itemType = 'capability'
       } else if (file.includes('-enabler.md')) {
         itemType = 'enabler'
-      } else if (type) {
-        itemType = type
+      } else if (metadata.type) {
+        itemType = metadata.type
       }
 
       const item = {
-        name: name || file,
-        title: title || file.replace('.md', ''),
-        description: description,
+        name: metadata.name || file,
+        title: metadata.title || file.replace('.md', ''),
+        description: metadata.description,
         type: itemType,
         path: baseUrl ? `${baseUrl.replace(/^\//, '')}/${file}` : file,
         projectPath: dirPath // Add source project path for workspace support
       };
 
-      if (id) {
-        item.id = id;
+      if (metadata.id) {
+        item.id = metadata.id;
       }
 
-      if (capabilityId) {
-        item.capabilityId = capabilityId;
+      if (metadata.capabilityId) {
+        item.capabilityId = metadata.capabilityId;
       }
 
-      if (system) {
-        item.system = system;
+      if (metadata.system) {
+        item.system = metadata.system;
       }
 
-      if (component) {
-        item.component = component;
+      if (metadata.component) {
+        item.component = metadata.component;
+      }
+
+      if (metadata.status) {
+        item.status = metadata.status;
+      }
+
+      if (metadata.approval) {
+        item.approval = metadata.approval;
+      }
+
+      if (metadata.priority) {
+        item.priority = metadata.priority;
+      }
+
+      // Add requirements for enablers
+      if (itemType === 'enabler') {
+        if (metadata.functionalRequirements) {
+          item.functionalRequirements = metadata.functionalRequirements;
+        }
+        if (metadata.nonFunctionalRequirements) {
+          item.nonFunctionalRequirements = metadata.nonFunctionalRequirements;
+        }
       }
 
       items.push(item);
@@ -488,7 +503,7 @@ function extractSystem(content) {
 
 // Extract all metadata from content into a single object
 function extractMetadata(content) {
-  return {
+  const metadata = {
     id: extractId(content),
     name: extractName(content),
     title: extractTitle(content),
@@ -501,6 +516,15 @@ function extractMetadata(content) {
     component: extractComponent(content),
     capabilityId: extractCapabilityId(content)
   };
+
+  // For enabler files, also parse requirements tables
+  const type = extractType(content);
+  if (type === 'enabler') {
+    metadata.functionalRequirements = extractFunctionalRequirements(content);
+    metadata.nonFunctionalRequirements = extractNonFunctionalRequirements(content);
+  }
+
+  return metadata;
 }
 
 // ID Generation Functions (Server-side)
@@ -614,6 +638,94 @@ async function generateEnablerId() {
 function extractComponent(content) {
   const match = content.match(/^-\s*\*\*Component\*\*:\s*(.+)$/m);
   return match ? match[1].trim() : null;
+}
+
+// Parse Functional Requirements table from markdown content
+function extractFunctionalRequirements(content) {
+  const requirements = [];
+
+  // Look for the Functional Requirements section
+  const functionalSection = content.match(/## Functional Requirements\s*\n([\s\S]*?)(?=\n##|\n#|$)/i);
+  if (!functionalSection) {
+    console.log('[DEBUG] No Functional Requirements section found');
+    return requirements;
+  }
+
+  const tableContent = functionalSection[1];
+  console.log('[DEBUG] Functional Requirements table content:', tableContent.substring(0, 200));
+
+  // Parse the table rows (skip header and separator rows)
+  const lines = tableContent.split('\n');
+  console.log('[DEBUG] Processing', lines.length, 'lines');
+  for (const line of lines) {
+    // Skip empty lines, headers, and separator lines
+    if (!line.trim() || line.includes('---') || line.includes('ID') || line.includes('Requirement')) {
+      console.log('[DEBUG] Skipping line:', line.substring(0, 50));
+      continue;
+    }
+
+    // Parse table row
+    const columns = line.split('|').map(col => col.trim()).filter(col => col);
+    console.log('[DEBUG] Parsed columns for line:', line.substring(0, 50), '-> columns:', columns.length, columns);
+    if (columns.length >= 5) {
+      const requirement = {
+        id: columns[0] || '',
+        name: columns[1] || '',
+        requirement: columns[2] || '', // Requirement is column 2
+        priority: columns[3] || '',
+        status: columns[4] || '',
+        approval: columns[5] || 'Not Approved'
+      };
+
+      // Only add non-empty requirements
+      if (requirement.id || requirement.name) {
+        requirements.push(requirement);
+      }
+    }
+  }
+
+  return requirements;
+}
+
+// Parse Non-Functional Requirements table from markdown content
+function extractNonFunctionalRequirements(content) {
+  const requirements = [];
+
+  // Look for the Non-Functional Requirements section
+  const nfrSection = content.match(/## Non-Functional Requirements\s*\n([\s\S]*?)(?=\n##|\n#|$)/i);
+  if (!nfrSection) return requirements;
+
+  const tableContent = nfrSection[1];
+
+  // Parse the table rows (skip header and separator rows)
+  const lines = tableContent.split('\n');
+  for (const line of lines) {
+    // Skip empty lines, headers, and separator lines
+    if (!line.trim() || line.includes('---') || line.includes('Type') || line.includes('Requirement')) {
+      continue;
+    }
+
+    // Parse table row
+    const columns = line.split('|').map(col => col.trim()).filter(col => col);
+    if (columns.length >= 6) {
+      const requirement = {
+        id: columns[0] || '',
+        name: columns[1] || '',
+        type: columns[2] || '', // NFR Type is column 2
+        requirement: columns[3] || '', // Requirement is column 3
+        priority: columns[4] || '',
+        status: columns[5] || '',
+        approval: columns[6] || 'Not Approved'
+      };
+
+      // Only add non-empty requirements
+      if (requirement.id || requirement.name || requirement.type) {
+        requirements.push(requirement);
+      }
+    }
+  }
+
+  return requirements;
 }
 
 // API Routes

@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-2.4.7-green.svg)]()
+[![Version](https://img.shields.io/badge/version-2.5.1-green.svg)]()
 
 ## Overview
 
@@ -28,6 +28,38 @@ Product development has two distinct sides:
 - **Right Side (Technical Implementation)**: Technical Capabilities and Enablers - the domain of Engineers and Architects
 
 Anvil focuses exclusively on the right side, helping engineering teams define, organize, and manage the technical capabilities that enable product experiences. A new platform is coming soon for the left side that will marry **Experiences and Features** (Product Managers) with **Technical Capabilities and Enablers** (Engineers) to build the architectural runway needed to support exceptional user experiences.
+
+## What's New in v2.5.1
+
+### 🔧 **Critical Bug Fix: Requirements Search Functionality**
+- **REQUIREMENTS PARSING FIX**: Fixed critical case sensitivity bug preventing requirements from being parsed and searchable
+- **ENABLER FILE PARSING**: Requirements are now properly extracted from enabler markdown files during server startup
+- **SEARCH INTEGRATION**: Requirements now appear in search results when searching for requirement text content
+- **DEBUG CLEANUP**: Removed temporary debug logging from server to improve performance
+
+### 🧪 **Technical Implementation**
+- **SERVER METADATA EXTRACTION**: Fixed `extractMetadata` function case sensitivity issue (`'Enabler'` vs `'enabler'`)
+- **REQUIREMENTS EXTRACTION**: Enhanced enabler file processing to include functional and non-functional requirements
+- **SEARCH COVERAGE**: Complete search functionality now covers capabilities, enablers, and requirements
+- **CLEAN CODEBASE**: Removed debug console.log statements for production-ready performance
+
+## What's New in v2.5.0
+
+### 🔍 Global Search Functionality
+- **Smart Search**: Search across all capabilities, enablers, and requirements with automatic regex pattern matching
+- **Instant Results**: Real-time search results displayed in the navigation sidebar
+- **Context Navigation**: Click on any search result to navigate directly to the document or requirement
+- **Comprehensive Coverage**: Searches through titles, IDs, descriptions, and requirement content
+
+### 🎛️ Enhanced Navigation Controls
+- **Enabler Filtering**: New toggle button next to "Enablers" section to show all enablers or filter by selected capability
+- **Visual Indicators**: Clear filter icons (Filter/FilterX) to show current filtering state
+- **Contextual Display**: Filter toggle only appears when a capability is selected
+
+### ✅ Improved Approval Workflows
+- **Bulk Enabler Approval**: New "Approve All" button in capability forms to approve all enablers at once
+- **Consistent Interface**: Approval buttons follow the same pattern as existing requirement approval functionality
+- **Streamlined Workflow**: Speeds up approval processes for large capabilities with multiple enablers
 
 ### Core Principles
 
@@ -103,10 +135,44 @@ Once you have your specifications ready in Anvil:
    Claude, please read the SOFTWARE_DEVELOPMENT_PLAN.md in the specifications folder and perform DISCOVERY ONLY on this project. Create specifications documentation but DO NOT implement anything.
    ```
 
+   **For Reverse Engineering Existing Applications:**
+   ```
+   Claude, I have an existing application that I want to reverse engineer and add new capabilities to. Please analyze the codebase, create capability and enabler specifications, and then suggest new capabilities I can add.
+   ```
+
    **For Implementation (After Discovery Complete):**
    ```
    Claude, please read the SOFTWARE_DEVELOPMENT_PLAN.md in the specifications folder and develop the application specified in the specifications folder.
    ```
+
+### Discovery Mode: Reverse Engineering Made Easy
+
+**Discovery** in Anvil is designed for **reverse engineering existing applications** and quickly understanding their technical architecture to add new capabilities. This powerful workflow allows you to:
+
+#### 🔍 **Analyze Existing Codebases**
+- **Code Analysis**: Claude automatically scans your existing application files
+- **Architecture Discovery**: Identifies current technical capabilities and enablers
+- **Dependency Mapping**: Understands how components interact and depend on each other
+- **Pattern Recognition**: Discovers existing patterns and conventions in your codebase
+
+#### 📋 **Generate Specifications Documentation**
+- **Auto-Generated Capabilities**: Creates capability documents based on existing functionality
+- **Enabler Identification**: Breaks down complex features into manageable enablers
+- **Requirements Extraction**: Identifies functional and non-functional requirements from code
+- **Technical Specifications**: Documents APIs, data models, and system architecture
+
+#### 🚀 **Plan New Capabilities**
+- **Gap Analysis**: Identifies areas where new capabilities can be added
+- **Extension Points**: Suggests logical places to add new features
+- **Architectural Runway**: Plans the technical foundation needed for new capabilities
+- **Implementation Roadmap**: Provides a clear path from current state to desired features
+
+#### 💡 **Use Cases for Discovery Mode**
+- **Legacy Application Modernization**: Understand and document existing systems before enhancement
+- **Team Onboarding**: Quickly get new developers up to speed on complex codebases
+- **Feature Planning**: Identify where new capabilities can be added to existing applications
+- **Technical Debt Assessment**: Understand current architecture before refactoring
+- **Compliance Documentation**: Generate technical specifications for audit requirements
 
 ## Implementation Workflow
 
@@ -171,6 +237,9 @@ Claude Code will automatically:
 - **Light/Dark Mode**: Toggle between light and dark themes in Settings
 - Mobile-responsive design
 - Hover effects and active states for navigation items
+- **Search Functionality**: Global search across capabilities, enablers, and requirements with regex-based matching
+- **Enabler Filtering**: Toggle to show all enablers or filter by selected capability
+- **Approval Management**: Bulk approval features for enablers and requirements
 
 ### Document Creation & Management
 - **Create New Capabilities**: Generate new capability documents from templates
@@ -257,6 +326,26 @@ Anvil supports **workspace-based configuration** for managing multiple document 
 - **mermaid**: Diagram rendering
 
 ## Release Notes & Version History
+
+### v2.5.1 - Requirements Search Bug Fix ✅
+
+#### 🔧 **Critical Bug Fix: Requirements Search Functionality**
+- **CASE SENSITIVITY FIX**: Fixed critical bug in server.js where `extractMetadata` function was checking for uppercase 'Enabler' while `extractType` returns lowercase 'enabler'
+- **REQUIREMENTS PARSING**: Requirements from enabler files are now properly parsed and included in search functionality
+- **SEARCH COMPLETION**: All three document types (capabilities, enablers, requirements) now fully searchable
+- **DEBUG CLEANUP**: Removed temporary debug console.log statements for production performance
+
+#### 🧪 **Technical Implementation**
+- **SERVER.JS FIX**: Changed condition from `if (type === 'Enabler')` to `if (type === 'enabler')` in extractMetadata function
+- **REQUIREMENTS EXTRACTION**: Fixed functional and non-functional requirements extraction from enabler markdown files
+- **SEARCH INTEGRATION**: Requirements now appear in sidebar search results when searching requirement text
+- **PERFORMANCE OPTIMIZATION**: Cleaned debug logging for faster server response times
+
+#### 🚀 **Deployment Steps Completed**
+- **VERSION UPDATE**: Updated to v2.5.1 across package.json and README
+- **SERVER RESTART**: Restarted server to apply requirements parsing fix
+- **SEARCH VALIDATION**: Confirmed requirements now searchable (Log Application Start, Display HTML Content, etc.)
+- **BACKWARDS COMPATIBLE**: All existing functionality preserved with enhanced search coverage
 
 ### v2.4.6 - Fix Enabler Updates Not Refreshing Parent Capability ✅
 

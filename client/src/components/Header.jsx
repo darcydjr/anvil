@@ -1,12 +1,12 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings, HelpCircle, Bot, Lightbulb, Clipboard } from 'lucide-react'
+import { Settings, HelpCircle, Bot, Lightbulb, Clipboard, Search } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { version } from '../../../package.json'
 import './Header.css'
 
 export default function Header() {
-  const { config, setSelectedCapability } = useApp()
+  const { config, setSelectedCapability, searchTerm, setSearchTerm } = useApp()
   const navigate = useNavigate()
 
   const handleLogoClick = () => {
@@ -38,6 +38,20 @@ export default function Header() {
             </div>
           </div>
         </div>
+
+        <div className="header-search">
+          <div className="search-container">
+            <Search size={16} className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search capabilities, enablers, requirements..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+          </div>
+        </div>
+
         <div className="header-right">
           <div className="level-build-row">
             <div className="level-display">LEVEL {majorVersion}</div>

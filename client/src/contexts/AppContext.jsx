@@ -12,7 +12,9 @@ const initialState = {
   loading: false,
   error: null,
   config: null,
-  navigationHistory: []
+  navigationHistory: [],
+  searchTerm: '',
+  searchResults: { capabilities: [], enablers: [], requirements: [] }
 }
 
 function appReducer(state, action) {
@@ -65,7 +67,13 @@ function appReducer(state, action) {
     
     case 'CLEAR_HISTORY':
       return { ...state, navigationHistory: [] }
-    
+
+    case 'SET_SEARCH_TERM':
+      return { ...state, searchTerm: action.payload }
+
+    case 'SET_SEARCH_RESULTS':
+      return { ...state, searchResults: action.payload }
+
     default:
       return state
   }
@@ -127,6 +135,88 @@ export function AppProvider({ children }) {
     loadData()
   }, [loadData])
 
+  const setSearchTerm = useCallback((term) => {
+    dispatch({ type: 'SET_SEARCH_TERM', payload: term })
+
+    if (!term.trim()) {
+      dispatch({ type: 'SET_SEARCH_RESULTS', payload: { capabilities: [], enablers: [], requirements: [] } })
+      return
+    }
+
+    // Create a regex pattern that's user-friendly (case insensitive, matches partial words)
+    try {
+      const searchRegex = new RegExp(term.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+
+      // Search capabilities
+      const matchingCapabilities = state.capabilities.filter(cap =>
+        searchRegex.test(cap.title || cap.name || '') ||
+        searchRegex.test(cap.id || '') ||
+        searchRegex.test(cap.purpose || '') ||
+        searchRegex.test(cap.system || '') ||
+        searchRegex.test(cap.component || '')
+      )
+
+      // Search enablers
+      const matchingEnablers = state.enablers.filter(enabler =>
+        searchRegex.test(enabler.title || enabler.name || '') ||
+        searchRegex.test(enabler.id || '') ||
+        searchRegex.test(enabler.purpose || '') ||
+        searchRegex.test(enabler.capabilityId || '')
+      )
+
+      // Search requirements (within enablers)
+      const matchingRequirements = []
+      state.enablers.forEach(enabler => {
+        // Search functional requirements
+        if (enabler.functionalRequirements) {
+          enabler.functionalRequirements.forEach(req => {
+            if (searchRegex.test(req.id || '') ||
+                searchRegex.test(req.name || '') ||
+                searchRegex.test(req.requirement || '')) {
+              matchingRequirements.push({
+                ...req,
+                type: 'functional',
+                enablerName: enabler.title || enabler.name,
+                enablerPath: enabler.path,
+                enablerID: enabler.id
+              })
+            }
+          })
+        }
+
+        // Search non-functional requirements
+        if (enabler.nonFunctionalRequirements) {
+          enabler.nonFunctionalRequirements.forEach(req => {
+            if (searchRegex.test(req.id || '') ||
+                searchRegex.test(req.name || '') ||
+                searchRegex.test(req.requirement || '') ||
+                searchRegex.test(req.type || '')) {
+              matchingRequirements.push({
+                ...req,
+                type: 'non-functional',
+                enablerName: enabler.title || enabler.name,
+                enablerPath: enabler.path,
+                enablerID: enabler.id
+              })
+            }
+          })
+        }
+      })
+
+      dispatch({
+        type: 'SET_SEARCH_RESULTS',
+        payload: {
+          capabilities: matchingCapabilities,
+          enablers: matchingEnablers,
+          requirements: matchingRequirements
+        }
+      })
+    } catch (error) {
+      console.warn('Invalid search term:', error)
+      dispatch({ type: 'SET_SEARCH_RESULTS', payload: { capabilities: [], enablers: [], requirements: [] } })
+    }
+  }, [state.capabilities, state.enablers])
+
   useEffect(() => {
     loadData()
     loadConfig()
@@ -167,7 +257,8 @@ export function AppProvider({ children }) {
     addToHistory,
     goBack,
     clearHistory,
-    refreshData
+    refreshData,
+    setSearchTerm
   }
 
   return (

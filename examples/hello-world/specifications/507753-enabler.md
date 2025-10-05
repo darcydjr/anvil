@@ -5,10 +5,10 @@
 - **Name**: Event Logging
 - **Type**: Enabler
 - **ID**: ENB-507753
+- **Approval**: Approved
 - **Capability ID**: CAP-997490
 - **Owner**: Product Team
 - **Status**: Ready for Design
-- **Approval**: Approved
 - **Priority**: High
 - **Analysis Review**: Not Required
 - **Code Review**: Not Required
@@ -105,3 +105,4 @@ stateDiagram-v2
     
     %% Add more states and transitions here
 ```
+

@@ -175,6 +175,19 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }) {
     })
   }, [navigate, data.id, data.name])
 
+  // Function to approve all enablers
+  const approveAllEnablers = useCallback(() => {
+    const enablerData = data.enablers || []
+    if (enablerData.length === 0) return
+
+    const newArray = enablerData.map(enabler => ({
+      ...enabler,
+      approval: APPROVAL_VALUES.APPROVED
+    }))
+
+    onChange({ enablers: newArray })
+  }, [data, onChange])
+
   // Memoize templates to prevent recreating on every render
   const templates = useMemo(() => ({
     upstream: { id: '', description: '' },
@@ -527,6 +540,15 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }) {
             >
               <Plus size={14} />
               Add Enabler
+            </button>
+            <button
+              type="button"
+              onClick={approveAllEnablers}
+              className="btn btn-success btn-sm"
+              disabled={!data.enablers || data.enablers.length === 0}
+              style={{ marginLeft: '10px' }}
+            >
+              Approve All
             </button>
           </div>
         </div>

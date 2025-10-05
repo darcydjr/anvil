@@ -5,10 +5,10 @@
 - **Name**: Application Lifecycle Logging
 - **Type**: Enabler
 - **ID**: ENB-212431
+- **Approval**: Approved
 - **Capability ID**: CAP-230875
 - **Owner**: Product Team
 - **Status**: Ready for Design
-- **Approval**: Approved
 - **Priority**: High
 - **Analysis Review**: Not Required
 - **Code Review**: Not Required

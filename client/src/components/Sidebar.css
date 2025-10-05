@@ -40,6 +40,88 @@
   backdrop-filter: blur(2px);
 }
 
+/* Search Results Styles */
+.search-results {
+  padding-top: 1rem;
+}
+
+.search-results-header h4 {
+  font-size: 1rem;
+  color: #4a90e2;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e0e6ed;
+}
+
+.search-section {
+  margin-bottom: 1.5rem;
+}
+
+.search-section h5 {
+  font-size: 0.875rem;
+  color: #666;
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.requirement-item {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  padding: 0.75rem !important;
+}
+
+.requirement-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.requirement-name {
+  font-weight: 500;
+  color: #2c5aa0;
+}
+
+.requirement-details {
+  color: #666;
+  font-size: 0.75rem;
+  text-transform: capitalize;
+}
+
+.item-id {
+  color: #666;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+}
+
+.no-results {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #666;
+}
+
+.no-results p {
+  margin: 0;
+  font-style: italic;
+}
+
+/* Filter toggle button */
+.filter-toggle {
+  margin-right: 0.5rem !important;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+  border-color: #545b62;
+}
+
 .sidebar-section {
   margin-bottom: 1.5rem;
 }
