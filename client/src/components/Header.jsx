@@ -23,14 +23,14 @@ export default function Header() {
   const majorVersion = version.split('.')[0]
 
   return (
-    <header className="p-6 mb-4 bg-background border-b border-border">
+    <header className="p-4 bg-background border-border">
       <div className="flex justify-between items-center relative">
         <div className="flex items-center gap-4 flex-1">
           <div className="flex items-center gap-4 cursor-pointer transition-opacity duration-150 ease-in-out hover:opacity-80" onClick={handleLogoClick}>
             <img
               src="/logo.png"
               alt="Anvil Logo"
-              className="w-[100px] h-[100px] object-contain"
+              className="w-[80px] h-[80px] object-contain"
               onError={(e) => {
                 e.target.style.display = 'none'
               }}
@@ -45,7 +45,6 @@ export default function Header() {
         </div>
         <div className="flex gap-4 items-center flex-1 justify-end">
           <div className="flex items-center gap-2">
-            <ThemeToggle />
             <ButtonGroup>
               <Button
                 variant="outline"
@@ -93,6 +92,7 @@ export default function Header() {
                 <Settings size={20} />
               </Button>
             </ButtonGroup>
+            <ThemeToggle />
           </div>
         </div>
       </div>

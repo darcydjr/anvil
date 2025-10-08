@@ -238,7 +238,7 @@ export default function Sidebar() {
               return (
                 <div
                   key={enabler.path}
-                  className={`flex items-center gap-3 py-3 px-3 rounded-md cursor-pointer transition-all duration-150 ease-in-out text-foreground text-sm ${
+                  className={`flex items-center gap-3 py-3 px-3 cursor-pointer transition-all duration-150 ease-in-out text-foreground text-sm ${
                     isActive
                       ? 'bg-primary/80 text-primary-foreground backdrop-blur-sm'
                       : 'hover:bg-accent hover:text-accent-foreground hover:backdrop-blur-sm'
