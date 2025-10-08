@@ -26,12 +26,12 @@
   ],
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
+    "prod": "npm run build && node server.js",
+    "dev": "concurrently \"nodemon server.js\" \"cd client && npm run dev\"",
     "client": "cd client && npm run dev",
     "build": "cd client && npm run build",
     "build:start": "npm run build && npm start",
     "install:all": "npm install && cd client && npm install",
-    "dev:full": "concurrently \"npm run dev\" \"npm run client\"",
     "version:sync": "node -e \"const pkg=require('./package.json'); const clientPkg=require('./client/package.json'); clientPkg.version=pkg.version; require('fs').writeFileSync('./client/package.json', JSON.stringify(clientPkg, null, 2));\""
   },
   "dependencies": {
@@ -43,7 +43,10 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.14",
+    "autoprefixer": "^10.4.21",
     "concurrently": "^8.2.2",
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "tailwindcss": "^4.1.14"
   }
 }

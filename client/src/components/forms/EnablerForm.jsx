@@ -236,48 +236,47 @@ function EnablerForm({ data, onChange, onValidationChange }) {
   ]
 
   return (
-    <div className="enabler-form">
+    <div className="space-y-6">
       {/* Basic Information */}
-      <div className="form-section">
-        <h4>Basic Information</h4>
-        <div className="form-grid">
-          <div className="form-group">
-            <label className="form-label">Name *</label>
+      <div className="bg-card rounded-lg border border-border p-6 space-y-4">
+        <h4 className="text-lg font-semibold text-foreground">Basic Information</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">Name *</label>
             <input
               type="text"
-              className="form-input"
+              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
               value={data.name || ''}
               onChange={(e) => handleBasicChange('name', e.target.value)}
               placeholder="Enabler name"
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Type</label>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">Type</label>
             <input
               type="text"
-              className="form-input"
+              className="w-full px-3 py-2 bg-muted border border-border rounded-md text-muted-foreground cursor-not-allowed"
               value="Enabler"
               readOnly
-              style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">ID</label>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">ID</label>
             <input
               type="text"
-              className="form-input"
+              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
               value={data.id || ''}
               onChange={(e) => handleBasicChange('id', e.target.value)}
               placeholder="ENB-1000"
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Capability ID</label>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">Capability ID</label>
             <select
-              className="form-select"
+              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
               value={data.capabilityId || ''}
               onChange={(e) => handleBasicChange('capabilityId', e.target.value)}
             >
@@ -289,14 +288,14 @@ function EnablerForm({ data, onChange, onValidationChange }) {
               ))}
             </select>
             {validationErrors.capabilityId && (
-              <span className="error-message">{validationErrors.capabilityId}</span>
+              <span className="text-xs text-destructive">{validationErrors.capabilityId}</span>
             )}
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Approval</label>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">Approval</label>
             <select
-              className="form-select"
+              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
               value={data.approval || APPROVAL_VALUES.NOT_APPROVED}
               onChange={(e) => handleBasicChange('approval', e.target.value)}
             >
@@ -306,21 +305,21 @@ function EnablerForm({ data, onChange, onValidationChange }) {
             </select>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Owner</label>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">Owner</label>
             <input
               type="text"
-              className="form-input"
+              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
               value={data.owner || ''}
               onChange={(e) => handleBasicChange('owner', e.target.value)}
               placeholder="Product Team"
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Status</label>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">Status</label>
             <select
-              className="form-select"
+              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
               value={data.status || STATUS_VALUES.ENABLER.READY_FOR_ANALYSIS}
               onChange={(e) => handleBasicChange('status', e.target.value)}
             >
@@ -335,10 +334,10 @@ function EnablerForm({ data, onChange, onValidationChange }) {
             </select>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Priority</label>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">Priority</label>
             <select
-              className="form-select"
+              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
               value={data.priority || PRIORITY_VALUES.CAPABILITY_ENABLER.HIGH}
               onChange={(e) => handleBasicChange('priority', e.target.value)}
             >
@@ -348,10 +347,10 @@ function EnablerForm({ data, onChange, onValidationChange }) {
             </select>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Analysis Review</label>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">Analysis Review</label>
             <select
-              className="form-select"
+              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
               value={data.analysisReview || REVIEW_VALUES.REQUIRED}
               onChange={(e) => handleBasicChange('analysisReview', e.target.value)}
             >
@@ -361,12 +360,10 @@ function EnablerForm({ data, onChange, onValidationChange }) {
             </select>
           </div>
 
-
-
-          <div className="form-group">
-            <label className="form-label">Code Review</label>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">Code Review</label>
             <select
-              className="form-select"
+              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
               value={data.codeReview || REVIEW_VALUES.NOT_REQUIRED}
               onChange={(e) => handleBasicChange('codeReview', e.target.value)}
             >
@@ -379,12 +376,12 @@ function EnablerForm({ data, onChange, onValidationChange }) {
       </div>
 
       {/* Technical Overview */}
-      <div className="form-section">
-        <h4>Technical Overview</h4>
-        <div className="form-group">
-          <label className="form-label">Purpose</label>
+      <div className="bg-card rounded-lg border border-border p-6 space-y-4">
+        <h4 className="text-lg font-semibold text-foreground">Technical Overview</h4>
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-foreground">Purpose</label>
           <textarea
-            className="form-textarea"
+            className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent resize-y"
             value={data.purpose || ''}
             onChange={(e) => handleBasicChange('purpose', e.target.value)}
             placeholder="What is the purpose?"
@@ -394,49 +391,53 @@ function EnablerForm({ data, onChange, onValidationChange }) {
       </div>
 
       {/* Functional Requirements */}
-      <div className="form-section">
-        <h4>Functional Requirements</h4>
-        <div className="table-container">
-          <table className="editable-table">
+      <div className="bg-card rounded-lg border border-border p-6 space-y-4">
+        <h4 className="text-lg font-semibold text-foreground">Functional Requirements</h4>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
             <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Requirement</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Approval</th>
-                <th>Actions</th>
+              <tr className="border-b border-border">
+                <th className="text-left p-2 text-sm font-medium text-foreground">ID</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground">Name</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground">Requirement</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground">Priority</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground">Status</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground">Approval</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground">Actions</th>
               </tr>
             </thead>
             <tbody>
               {(data.functionalRequirements || []).map((req, index) => (
-                <tr key={index}>
-                  <td>
+                <tr key={index} className="border-b border-border hover:bg-accent">
+                  <td className="p-2">
                     <input
                       type="text"
+                      className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                       value={req.id || ''}
                       onChange={(e) => handleArrayChange('functionalRequirements', index, 'id', e.target.value)}
                       placeholder="FR-123456"
                     />
                   </td>
-                  <td>
+                  <td className="p-2">
                     <input
                       type="text"
+                      className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                       value={req.name || ''}
                       onChange={(e) => handleArrayChange('functionalRequirements', index, 'name', e.target.value)}
                       placeholder="Requirement name"
                     />
                   </td>
-                  <td>
+                  <td className="p-2">
                     <textarea
+                      className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-y"
                       value={req.requirement || ''}
                       onChange={(e) => handleArrayChange('functionalRequirements', index, 'requirement', e.target.value)}
                       placeholder="Describe the functional requirement"
                     />
                   </td>
-                  <td>
+                  <td className="p-2">
                     <select
+                      className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                       value={req.priority || PRIORITY_VALUES.REQUIREMENT.MUST_HAVE}
                       onChange={(e) => handleArrayChange('functionalRequirements', index, 'priority', e.target.value)}
                     >
@@ -445,8 +446,9 @@ function EnablerForm({ data, onChange, onValidationChange }) {
                       ))}
                     </select>
                   </td>
-                  <td>
+                  <td className="p-2">
                     <select
+                      className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                       value={req.status || STATUS_VALUES.REQUIREMENT.IN_DRAFT}
                       onChange={(e) => handleArrayChange('functionalRequirements', index, 'status', e.target.value)}
                     >
@@ -460,8 +462,9 @@ function EnablerForm({ data, onChange, onValidationChange }) {
                       ))}
                     </select>
                   </td>
-                  <td>
+                  <td className="p-2">
                     <select
+                      className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                       value={req.approval || APPROVAL_VALUES.NOT_APPROVED}
                       onChange={(e) => handleArrayChange('functionalRequirements', index, 'approval', e.target.value)}
                     >
@@ -470,11 +473,11 @@ function EnablerForm({ data, onChange, onValidationChange }) {
                       ))}
                     </select>
                   </td>
-                  <td>
+                  <td className="p-2">
                     <button
                       type="button"
                       onClick={() => removeArrayItem('functionalRequirements', index)}
-                      className="remove-row-btn"
+                      className="p-1 bg-destructive text-destructive-foreground rounded hover:bg-destructive/90 transition-colors"
                     >
                       <Trash2 size={12} />
                     </button>
@@ -483,11 +486,11 @@ function EnablerForm({ data, onChange, onValidationChange }) {
               ))}
             </tbody>
           </table>
-          <div className="table-actions">
+          <div className="mt-4 flex gap-2">
             <button
               type="button"
               onClick={() => addArrayItem('functionalRequirements', templates.functionalReq)}
-              className="add-row-btn"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
             >
               <Plus size={14} />
               Add Functional Requirement
@@ -495,9 +498,8 @@ function EnablerForm({ data, onChange, onValidationChange }) {
             <button
               type="button"
               onClick={() => approveAllRequirements('functionalRequirements')}
-              className="btn btn-success btn-sm"
+              className="px-4 py-2 bg-chart-2 text-white rounded-md hover:bg-chart-2/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               disabled={!data.functionalRequirements || data.functionalRequirements.length === 0}
-              style={{ marginLeft: '10px' }}
             >
               Approve All
             </button>
@@ -506,43 +508,46 @@ function EnablerForm({ data, onChange, onValidationChange }) {
       </div>
 
       {/* Non-Functional Requirements */}
-      <div className="form-section">
-        <h4>Non-Functional Requirements</h4>
-        <div className="table-container">
-          <table className="editable-table">
+      <div className="bg-card rounded-lg border border-border p-6 space-y-4">
+        <h4 className="text-lg font-semibold text-foreground">Non-Functional Requirements</h4>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
             <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Requirement</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Approval</th>
-                <th>Actions</th>
+              <tr className="border-b border-border">
+                <th className="text-left p-2 text-sm font-medium text-foreground">ID</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground">Name</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground">Type</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground">Requirement</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground">Priority</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground">Status</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground">Approval</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground">Actions</th>
               </tr>
             </thead>
             <tbody>
               {(data.nonFunctionalRequirements || []).map((req, index) => (
-                <tr key={index}>
-                  <td>
+                <tr key={index} className="border-b border-border hover:bg-accent">
+                  <td className="p-2">
                     <input
                       type="text"
+                      className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                       value={req.id || ''}
                       onChange={(e) => handleArrayChange('nonFunctionalRequirements', index, 'id', e.target.value)}
                       placeholder="NFR-123456"
                     />
                   </td>
-                  <td>
+                  <td className="p-2">
                     <input
                       type="text"
+                      className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                       value={req.name || ''}
                       onChange={(e) => handleArrayChange('nonFunctionalRequirements', index, 'name', e.target.value)}
                       placeholder="Requirement name"
                     />
                   </td>
-                  <td>
+                  <td className="p-2">
                     <select
+                      className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                       value={req.type || ''}
                       onChange={(e) => handleArrayChange('nonFunctionalRequirements', index, 'type', e.target.value)}
                     >
@@ -552,15 +557,17 @@ function EnablerForm({ data, onChange, onValidationChange }) {
                       ))}
                     </select>
                   </td>
-                  <td>
+                  <td className="p-2">
                     <textarea
+                      className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-y"
                       value={req.requirement || ''}
                       onChange={(e) => handleArrayChange('nonFunctionalRequirements', index, 'requirement', e.target.value)}
                       placeholder="Describe the non-functional requirement"
                     />
                   </td>
-                  <td>
+                  <td className="p-2">
                     <select
+                      className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                       value={req.priority || PRIORITY_VALUES.REQUIREMENT.MUST_HAVE}
                       onChange={(e) => handleArrayChange('nonFunctionalRequirements', index, 'priority', e.target.value)}
                     >
@@ -569,8 +576,9 @@ function EnablerForm({ data, onChange, onValidationChange }) {
                       ))}
                     </select>
                   </td>
-                  <td>
+                  <td className="p-2">
                     <select
+                      className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                       value={req.status || STATUS_VALUES.REQUIREMENT.IN_DRAFT}
                       onChange={(e) => handleArrayChange('nonFunctionalRequirements', index, 'status', e.target.value)}
                     >
@@ -584,8 +592,9 @@ function EnablerForm({ data, onChange, onValidationChange }) {
                       ))}
                     </select>
                   </td>
-                  <td>
+                  <td className="p-2">
                     <select
+                      className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                       value={req.approval || APPROVAL_VALUES.NOT_APPROVED}
                       onChange={(e) => handleArrayChange('nonFunctionalRequirements', index, 'approval', e.target.value)}
                     >
@@ -594,11 +603,11 @@ function EnablerForm({ data, onChange, onValidationChange }) {
                       ))}
                     </select>
                   </td>
-                  <td>
+                  <td className="p-2">
                     <button
                       type="button"
                       onClick={() => removeArrayItem('nonFunctionalRequirements', index)}
-                      className="remove-row-btn"
+                      className="p-1 bg-destructive text-destructive-foreground rounded hover:bg-destructive/90 transition-colors"
                     >
                       <Trash2 size={12} />
                     </button>
@@ -607,11 +616,11 @@ function EnablerForm({ data, onChange, onValidationChange }) {
               ))}
             </tbody>
           </table>
-          <div className="table-actions">
+          <div className="mt-4 flex gap-2">
             <button
               type="button"
               onClick={() => addArrayItem('nonFunctionalRequirements', templates.nonFunctionalReq)}
-              className="add-row-btn"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
             >
               <Plus size={14} />
               Add Non-Functional Requirement
@@ -619,9 +628,8 @@ function EnablerForm({ data, onChange, onValidationChange }) {
             <button
               type="button"
               onClick={() => approveAllRequirements('nonFunctionalRequirements')}
-              className="btn btn-success btn-sm"
+              className="px-4 py-2 bg-chart-2 text-white rounded-md hover:bg-chart-2/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               disabled={!data.nonFunctionalRequirements || data.nonFunctionalRequirements.length === 0}
-              style={{ marginLeft: '10px' }}
             >
               Approve All
             </button>

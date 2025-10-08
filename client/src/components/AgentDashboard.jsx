@@ -21,7 +21,6 @@ import {
   Workflow
 } from 'lucide-react';
 import axios from 'axios';
-import './AgentDashboard.css';
 
 const AgentDashboard = () => {
   const [agents, setAgents] = useState([]);
@@ -134,36 +133,39 @@ const AgentDashboard = () => {
   };
 
   const renderAgentsTab = () => (
-    <div className="agents-grid">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {agents.map(agent => {
         const IconComponent = agentIcons[agent.id] || Bot;
         return (
           <div
             key={agent.id}
-            className={`agent-card ${selectedAgent?.id === agent.id ? 'selected' : ''}`}
+            className={`bg-card rounded-lg border-2 p-6 cursor-pointer transition-all duration-200 ${selectedAgent?.id === agent.id ? 'border-primary shadow-lg' : 'border-border hover:border-border/80 hover:shadow-md'}`}
             onClick={() => setSelectedAgent(agent)}
           >
-            <div className="agent-header">
-              <IconComponent size={24} />
-              <h3>{agent.id.replace(/-/g, ' ')}</h3>
+            <div className="flex items-center gap-3 mb-4">
+              <IconComponent size={24} className="text-primary" />
+              <h3 className="text-lg font-semibold text-foreground capitalize">{agent.id.replace(/-/g, ' ')}</h3>
             </div>
-            <div className={`agent-status status-${getStatusColor(agent.status)}`}>
+            <div className={`flex items-center gap-2 mb-4 px-3 py-2 rounded-md text-sm font-medium ${getStatusColor(agent.status) === 'success' ? 'bg-green-100 text-green-800' : getStatusColor(agent.status) === 'warning' ? 'bg-yellow-100 text-yellow-800' : 'bg-muted text-foreground'}`}>
               {getStatusIcon(agent.status)}
               <span>{agent.status}</span>
             </div>
-            <div className="agent-capabilities">
-              <h4>Capabilities:</h4>
-              <ul>
+            <div className="mb-4">
+              <h4 className="text-sm font-semibold text-foreground mb-2">Capabilities:</h4>
+              <ul className="text-sm text-muted-foreground space-y-1">
                 {agent.capabilities.slice(0, 3).map((cap, idx) => (
-                  <li key={idx}>{cap}</li>
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span>{cap}</span>
+                  </li>
                 ))}
                 {agent.capabilities.length > 3 && (
-                  <li>+{agent.capabilities.length - 3} more</li>
+                  <li className="text-muted-foreground italic">+{agent.capabilities.length - 3} more</li>
                 )}
               </ul>
             </div>
-            <div className="agent-meta">
-              <small>Version: {agent.metadata?.version || '1.0.0'}</small>
+            <div className="text-xs text-muted-foreground">
+              Version: {agent.metadata?.version || '1.0.0'}
             </div>
           </div>
         );
@@ -296,82 +298,88 @@ const AgentDashboard = () => {
 
   if (loading) {
     return (
-      <div className="agent-dashboard loading">
-        <RefreshCw className="spin" size={32} />
-        <p>Loading agent system...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+        <RefreshCw className="w-12 h-12 text-primary animate-spin" size={32} />
+        <p className="mt-4 text-muted-foreground">Loading agent system...</p>
       </div>
     );
   }
 
   return (
-    <div className="agent-dashboard">
-      <div className="dashboard-header">
-        <h2>
+    <div className="max-w-7xl mx-auto p-6">
+      <div className="bg-card rounded-lg shadow-md border border-border mb-6 p-4 flex items-center justify-between">
+        <h2 className="flex items-center gap-3 text-2xl font-bold text-foreground">
           <Bot size={24} />
           Agent Control Center
         </h2>
         <button
-          className="btn btn-secondary"
+          className="flex items-center gap-2 px-4 py-2 bg-muted text-foreground rounded-md hover:bg-muted/80 transition-colors"
           onClick={loadAgentData}
         >
           <RefreshCw size={16} /> Refresh
         </button>
       </div>
 
-      <div className="agent-notice">
-        <AlertCircle size={20} />
-        <p className="agent-notice-text">
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3 mb-6">
+        <AlertCircle size={20} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+        <p className="text-sm text-yellow-800">
           <strong>Feature Not Yet Implemented:</strong> The Agent Control Center is currently under development.
           AI agent management and workflow automation will be available in a future release.
         </p>
       </div>
 
-      <div className="dashboard-tabs">
-        <button
-          className={`tab ${activeTab === 'agents' ? 'active' : ''}`}
-          onClick={() => setActiveTab('agents')}
-        >
-          <Bot size={16} /> Agents ({agents.length})
-        </button>
-        <button
-          className={`tab ${activeTab === 'workflows' ? 'active' : ''}`}
-          onClick={() => setActiveTab('workflows')}
-        >
-          <Workflow size={16} /> Workflows ({workflows.length})
-        </button>
-        <button
-          className={`tab ${activeTab === 'jobs' ? 'active' : ''}`}
-          onClick={() => setActiveTab('jobs')}
-        >
-          <Activity size={16} /> Jobs ({activeJobs.length})
-        </button>
+      <div className="bg-card rounded-lg shadow-md border border-border mb-6">
+        <div className="flex border-b border-border">
+          <button
+            className={`flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'agents' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}`}
+            onClick={() => setActiveTab('agents')}
+          >
+            <Bot size={16} /> Agents ({agents.length})
+          </button>
+          <button
+            className={`flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'workflows' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}`}
+            onClick={() => setActiveTab('workflows')}
+          >
+            <Workflow size={16} /> Workflows ({workflows.length})
+          </button>
+          <button
+            className={`flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'jobs' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}`}
+            onClick={() => setActiveTab('jobs')}
+          >
+            <Activity size={16} /> Jobs ({activeJobs.length})
+          </button>
+        </div>
       </div>
 
-      <div className="dashboard-content">
+      <div className="p-6">
         {activeTab === 'agents' && renderAgentsTab()}
         {activeTab === 'workflows' && renderWorkflowsTab()}
         {activeTab === 'jobs' && renderJobsTab()}
       </div>
 
       {executionResult && (
-        <div className={`execution-result ${executionResult.success ? 'success' : 'error'}`}>
+        <div className={`fixed bottom-4 right-4 max-w-md rounded-lg shadow-lg border-2 p-4 ${executionResult.success ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'}`}>
           <button
-            className="close-btn"
+            className="absolute top-2 right-2 text-muted-foreground hover:text-foreground text-xl font-bold"
             onClick={() => setExecutionResult(null)}
           >
             ×
           </button>
           {executionResult.success ? (
-            <div>
-              <CheckCircle size={20} />
-              <p>Workflow started successfully</p>
-              <small>Job ID: {executionResult.jobId}</small>
+            <div className="flex items-start gap-3">
+              <CheckCircle size={20} className="text-green-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-green-800">Workflow started successfully</p>
+                <small className="text-green-700">Job ID: {executionResult.jobId}</small>
+              </div>
             </div>
           ) : (
-            <div>
-              <AlertCircle size={20} />
-              <p>Execution failed</p>
-              <small>{executionResult.error}</small>
+            <div className="flex items-start gap-3">
+              <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-red-800">Execution failed</p>
+                <small className="text-red-700">{executionResult.error}</small>
+              </div>
             </div>
           )}
         </div>

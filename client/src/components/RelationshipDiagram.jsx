@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react'
 import mermaid from 'mermaid'
 import { useApp } from '../contexts/AppContext'
-import './RelationshipDiagram.css'
 
 export default function RelationshipDiagram() {
   const { loadDataWithDependencies, loading } = useApp()
@@ -279,10 +278,10 @@ graph TB
 
   if (loading || diagramLoading) {
     return (
-      <div className="relationship-diagram">
-        <div className="diagram-loading">
-          <div className="spinner"></div>
-          <p>Loading relationship diagram...</p>
+      <div className="bg-card rounded-lg shadow-md border border-border p-6 mb-8">
+        <div className="flex flex-col items-center justify-center py-8">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-muted-foreground">Loading relationship diagram...</p>
         </div>
       </div>
     )
@@ -292,18 +291,18 @@ graph TB
   const enablers = diagramData?.enablers || []
 
   return (
-    <div className="relationship-diagram">
-      <div className="diagram-header">
-        <h3>System Architecture</h3>
-        <p>
+    <div className="bg-card rounded-lg shadow-md border border-border p-6 mb-8">
+      <div className="mb-4">
+        <h3 className="text-2xl font-semibold text-foreground mb-1">System Architecture</h3>
+        <p className="text-sm text-muted-foreground">
           {capabilities.length === 0
             ? 'Template showing capability dependencies'
             : `${capabilities.length} capabilities with dependency relationships`
           }
         </p>
       </div>
-      <div className="diagram-container">
-        <div ref={mermaidRef} className="mermaid-diagram" />
+      <div className="bg-muted rounded-lg p-4 overflow-x-auto">
+        <div ref={mermaidRef} className="mermaid" />
       </div>
     </div>
   )

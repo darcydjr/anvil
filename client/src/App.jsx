@@ -17,6 +17,7 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AppProvider } from './contexts/AppContext'
+import { ThemeProvider } from './components/ThemeProvider'
 import Layout from './components/Layout'
 import Dashboard from './components/Dashboard'
 import DocumentView from './components/DocumentView'
@@ -25,26 +26,30 @@ import Settings from './components/Settings'
 import AgentDashboard from './components/AgentDashboard'
 import Discovery from './components/Discovery'
 import Plan from './components/Plan'
+import ManageWorkspaces from './components/ManageWorkspaces'
 
 function App() {
   return (
-    <AppProvider>
-      <Router>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/agents" element={<AgentDashboard />} />
-            <Route path="/discovery" element={<Discovery />} />
-            <Route path="/plan" element={<Plan />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/view/:type/*" element={<DocumentView />} />
-            <Route path="/edit/:type/*" element={<DocumentEditor />} />
-            <Route path="/create/:type" element={<DocumentEditor />} />
-            <Route path="/create/:type/for/:capabilityId" element={<DocumentEditor />} />
-          </Routes>
-        </Layout>
-      </Router>
-    </AppProvider>
+    <ThemeProvider>
+      <AppProvider>
+        <Router>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/agents" element={<AgentDashboard />} />
+              <Route path="/discovery" element={<Discovery />} />
+              <Route path="/plan" element={<Plan />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/manage-workspaces" element={<ManageWorkspaces />} />
+              <Route path="/view/:type/*" element={<DocumentView />} />
+              <Route path="/edit/:type/*" element={<DocumentEditor />} />
+              <Route path="/create/:type" element={<DocumentEditor />} />
+              <Route path="/create/:type/for/:capabilityId" element={<DocumentEditor />} />
+            </Routes>
+          </Layout>
+        </Router>
+      </AppProvider>
+    </ThemeProvider>
   )
 }
 

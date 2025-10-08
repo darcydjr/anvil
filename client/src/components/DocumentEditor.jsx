@@ -9,7 +9,6 @@ import { generateCapabilityId, generateEnablerId } from '../utils/idGenerator'
 import { nameToFilename, namesGenerateDifferentFilenames, idToFilename } from '../utils/fileUtils'
 import CapabilityForm from './forms/CapabilityForm'
 import EnablerForm from './forms/EnablerForm'
-import './DocumentEditor.css'
 
 export default function DocumentEditor() {
   const { type, '*': path, capabilityId } = useParams()
@@ -405,66 +404,68 @@ export default function DocumentEditor() {
 
   if (loading) {
     return (
-      <div className="editor-loading">
-        <div className="spinner"></div>
-        <p>Loading editor...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-muted-foreground">Loading editor...</p>
       </div>
     )
   }
 
   return (
-    <div className="document-editor">
-      <div className="editor-header">
-        <div className="editor-title">
-          <h3>{isNew ? `Create ${type}` : `Edit ${type}`}</h3>
-        </div>
-        
-        <div className="editor-actions">
-          <div className="mode-switcher">
-            <button 
-              className={`btn btn-sm ${editMode === 'form' ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => handleModeSwitch('form')}
-            >
-              <Eye size={14} />
-              Form
+    <div className="min-h-screen bg-background">
+      <div className="bg-card border-b border-border shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-semibold text-foreground">{isNew ? `Create ${type}` : `Edit ${type}`}</h3>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="flex rounded-md border border-border overflow-hidden">
+              <button
+                className={`flex items-center gap-1 px-3 py-2 text-sm ${editMode === 'form' ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground hover:bg-accent hover:text-accent-foreground'} transition-colors`}
+                onClick={() => handleModeSwitch('form')}
+              >
+                <Eye size={14} />
+                Form
+              </button>
+              <button
+                className={`flex items-center gap-1 px-3 py-2 text-sm border-l border-border ${editMode === 'markdown' ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground hover:bg-accent hover:text-accent-foreground'} transition-colors`}
+                onClick={() => handleModeSwitch('markdown')}
+              >
+                <Code size={14} />
+                Markdown
+              </button>
+            </div>
+
+            <button onClick={handleBack} className="flex items-center gap-2 px-3 py-2 text-sm bg-muted text-muted-foreground rounded-md hover:bg-accent hover:text-accent-foreground transition-colors">
+              <ArrowLeft size={16} />
+              Back
             </button>
-            <button 
-              className={`btn btn-sm ${editMode === 'markdown' ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => handleModeSwitch('markdown')}
+
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 px-4 py-2 text-sm bg-chart-2 text-white rounded-md hover:bg-chart-2/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Code size={14} />
-              Markdown
+              {saving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save size={16} />
+                  Save
+                </>
+              )}
             </button>
           </div>
-          
-          <button onClick={handleBack} className="btn btn-secondary btn-sm">
-            <ArrowLeft size={16} />
-            Back
-          </button>
-          
-          <button 
-            onClick={handleSave} 
-            disabled={saving}
-            className="btn btn-success btn-sm"
-          >
-            {saving ? (
-              <>
-                <div className="spinner"></div>
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save size={16} />
-                Save
-              </>
-            )}
-          </button>
         </div>
       </div>
 
-      <div className="editor-content">
+      <div className="max-w-7xl mx-auto p-6">
         {editMode === 'form' ? (
-          <div className="form-editor">
+          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
             {type === 'capability' && (
               <CapabilityForm
                 data={formData}
@@ -481,20 +482,20 @@ export default function DocumentEditor() {
               />
             )}
             {type === 'template' && (
-              <div className="template-editor">
-                <div className="form-group">
-                  <label className="form-label">Template Name</label>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Template Name</label>
                   <input
                     type="text"
-                    className="form-input"
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                     value={formData.name || ''}
                     onChange={(e) => handleFormDataChange({ name: e.target.value })}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Template Content</label>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Template Content</label>
                   <textarea
-                    className="form-textarea"
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent font-mono text-sm"
                     style={{ minHeight: '400px' }}
                     value={markdownContent}
                     onChange={(e) => setMarkdownContent(e.target.value)}
@@ -504,9 +505,9 @@ export default function DocumentEditor() {
             )}
           </div>
         ) : (
-          <div className="markdown-editor">
+          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
             <textarea
-              className="markdown-textarea"
+              className="w-full h-[600px] px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent font-mono text-sm resize-none"
               value={markdownContent}
               onChange={(e) => setMarkdownContent(e.target.value)}
               placeholder="Enter markdown content..."

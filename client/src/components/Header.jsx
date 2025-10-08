@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { Settings, HelpCircle, Bot, Lightbulb, Clipboard } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { version } from '../../../package.json'
-import './Header.css'
+import WorkspaceSelector from './WorkspaceSelector'
+import { Button } from './ui/button'
+import { ButtonGroup } from './ui/button-group'
+import { ThemeToggle } from './ui/theme-toggle'
 
 export default function Header() {
   const { config, setSelectedCapability } = useApp()
@@ -20,65 +23,76 @@ export default function Header() {
   const majorVersion = version.split('.')[0]
 
   return (
-    <header className="header">
-      <div className="header-content">
-        <div className="header-logo" onClick={handleLogoClick}>
-          <img 
-            src="/logo.png" 
-            alt="Anvil Logo" 
-            className="logo-image"
-            onError={(e) => {
-              e.target.style.display = 'none'
-            }}
-          />
-          <div className="header-title-section">
-            <h1>Anvil</h1>
-            <div className="header-subtitle">
-              {config?.description || 'Product Specifications Driven Development'}
-            </div>
+    <header className="p-6 mb-4 bg-background border-b border-border">
+      <div className="flex justify-between items-center relative">
+        <div className="flex items-center gap-4 flex-1">
+          <div className="flex items-center gap-4 cursor-pointer transition-opacity duration-150 ease-in-out hover:opacity-80" onClick={handleLogoClick}>
+            <img
+              src="/logo.png"
+              alt="Anvil Logo"
+              className="w-[100px] h-[100px] object-contain"
+              onError={(e) => {
+                e.target.style.display = 'none'
+              }}
+            />
+          </div>
+          <WorkspaceSelector />
+        </div>
+        <div className="flex justify-center items-center flex-1 absolute left-1/2 -translate-x-1/2">
+          <div className="text-2xl whitespace-nowrap font-semibold text-foreground">
+            {config?.description || 'Product Specifications Driven Development'}
           </div>
         </div>
-        <div className="header-right">
-          <div className="level-build-row">
-            <div className="level-display">LEVEL {majorVersion}</div>
-            <div className="build-version">BUILD v{version}</div>
-          </div>
-          <div className="header-actions">
-            <button
-              className="agents-button"
-              onClick={() => navigate('/agents')}
-              title="Agent Dashboard"
-            >
-              <Bot size={20} />
-            </button>
-            <button
-              className="discovery-button"
-              onClick={() => navigate('/discovery')}
-              title="Discovery - AI Analysis"
-            >
-              <Lightbulb size={20} />
-            </button>
-            <button
-              className="plan-button"
-              onClick={() => window.open('/SOFTWARE_DEVELOPMENT_PLAN.md', '_blank')}
-              title="Software Development Plan"
-            >
-              <Clipboard size={20} />
-            </button>
-            <button
-              className="help-button"
-              onClick={() => window.open('/README.md', '_blank')}
-              title="Documentation"
-            >
-              <HelpCircle size={20} />
-            </button>
-            <button
-              className="settings-button"
-              onClick={() => navigate('/settings')}
-              title="Settings"
-            >
-              <Settings size={20} />
-            </button>
+        <div className="flex gap-4 items-center flex-1 justify-end">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <ButtonGroup>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => navigate('/agents')}
+                title="Agent Dashboard"
+                className="text-primary hover:bg-primary/10 hover:text-primary/80 transition-colors"
+              >
+                <Bot size={20} />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => navigate('/discovery')}
+                title="Discovery - AI Analysis"
+                className="text-primary hover:bg-primary/10 hover:text-primary/80 transition-colors"
+              >
+                <Lightbulb size={20} />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => window.open('/SOFTWARE_DEVELOPMENT_PLAN.md', '_blank')}
+                title="Software Development Plan"
+                className="text-primary hover:bg-primary/10 hover:text-primary/80 transition-colors"
+              >
+                <Clipboard size={20} />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => window.open('/README.md', '_blank')}
+                title="Documentation"
+                className="text-primary hover:bg-primary/10 hover:text-primary/80 transition-colors"
+              >
+                <HelpCircle size={20} />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => navigate('/settings')}
+                title="Settings"
+                className="text-primary hover:bg-primary/10 hover:text-primary/80 transition-colors"
+              >
+                <Settings size={20} />
+              </Button>
+            </ButtonGroup>
           </div>
         </div>
       </div>

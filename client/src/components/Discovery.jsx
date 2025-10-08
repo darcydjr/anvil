@@ -3,7 +3,6 @@ import { Lightbulb, FileText, Zap, Eye, EyeOff, Send, Loader, AlertCircle } from
 import { marked } from 'marked'
 import { apiService } from '../services/apiService'
 import toast from 'react-hot-toast'
-import './Discovery.css'
 
 export default function Discovery() {
   const [inputText, setInputText] = useState('')
@@ -81,37 +80,37 @@ export default function Discovery() {
   }
 
   return (
-    <div className="discovery-container">
-      <div className="discovery-header">
-        <div className="discovery-title">
-          <Lightbulb size={24} />
-          <h1>Discovery</h1>
+    <div className="max-w-7xl mx-auto p-6">
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Lightbulb size={24} className="text-chart-4" />
+          <h1 className="text-3xl font-bold text-foreground">Discovery</h1>
         </div>
-        <div className="discovery-notice">
-          <AlertCircle size={20} />
-          <p className="discovery-notice-text">
+        <div className="bg-chart-4/10 border border-chart-4/30 rounded-lg p-4 flex items-start gap-3 mb-4">
+          <AlertCircle size={20} className="text-chart-4 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-foreground">
             <strong>Feature Not Yet Implemented:</strong> This Discovery feature is currently under development.
             The AI analysis and document generation functionality will be available in a future release.
           </p>
         </div>
-        <p className="discovery-subtitle">
+        <p className="text-muted-foreground">
           Enter or paste text/markdown describing your project requirements. AI will analyze and generate Capabilities, Enablers, and Requirements.
         </p>
       </div>
 
-      <div className="discovery-content">
-        <div className="input-section">
-          <div className="input-header">
-            <div className="input-tabs">
+      <div className="space-y-6">
+        <div className="bg-card rounded-lg shadow-md border border-border">
+          <div className="border-b border-border p-4 flex items-center justify-between">
+            <div className="flex rounded-md border border-border overflow-hidden">
               <button
-                className={`tab ${!previewMode ? 'active' : ''}`}
+                className={`flex items-center gap-2 px-4 py-2 text-sm ${!previewMode ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground hover:bg-accent hover:text-accent-foreground'} transition-colors`}
                 onClick={() => setPreviewMode(false)}
               >
                 <FileText size={16} />
                 Edit
               </button>
               <button
-                className={`tab ${previewMode ? 'active' : ''}`}
+                className={`flex items-center gap-2 px-4 py-2 text-sm border-l border-border ${previewMode ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground hover:bg-accent hover:text-accent-foreground'} transition-colors`}
                 onClick={() => setPreviewMode(true)}
               >
                 {previewMode ? <Eye size={16} /> : <EyeOff size={16} />}
@@ -119,13 +118,13 @@ export default function Discovery() {
               </button>
             </div>
             <button
-              className="analyze-button"
+              className="flex items-center gap-2 px-4 py-2 bg-chart-3 text-white rounded-md hover:bg-chart-3/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleAnalyze}
               disabled={analyzing || !inputText.trim()}
             >
               {analyzing ? (
                 <>
-                  <Loader size={16} className="spinning" />
+                  <Loader size={16} className="animate-spin" />
                   Analyzing...
                 </>
               ) : (
@@ -137,15 +136,15 @@ export default function Discovery() {
             </button>
           </div>
 
-          <div className="input-content">
+          <div className="p-6">
             {previewMode ? (
               <div
-                className="markdown-preview"
+                className="prose prose-lg max-w-none"
                 dangerouslySetInnerHTML={renderPreview()}
               />
             ) : (
               <textarea
-                className="discovery-input"
+                className="w-full h-96 px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-foreground font-mono text-sm resize-none placeholder:text-muted-foreground"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder="Enter your project description, requirements, or paste markdown here...
@@ -172,11 +171,11 @@ We need to build an online shopping platform with user authentication, product c
         </div>
 
         {results && (
-          <div className="results-section">
-            <div className="results-header">
-              <h2>Analysis Results</h2>
+          <div className="bg-card rounded-lg shadow-md border border-border p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-semibold text-foreground">Analysis Results</h2>
               <button
-                className="create-documents-button"
+                className="flex items-center gap-2 px-4 py-2 bg-chart-2 text-white rounded-md hover:bg-chart-2/90 transition-colors"
                 onClick={handleCreateDocuments}
               >
                 <Send size={16} />
@@ -184,17 +183,17 @@ We need to build an online shopping platform with user authentication, product c
               </button>
             </div>
 
-            <div className="results-content">
+            <div className="space-y-6">
               {results.capabilities && results.capabilities.length > 0 && (
-                <div className="result-group">
-                  <h3>Capabilities ({results.capabilities.length})</h3>
-                  <div className="result-items">
+                <div>
+                  <h3 className="text-xl font-semibold text-foreground mb-4">Capabilities ({results.capabilities.length})</h3>
+                  <div className="space-y-4">
                     {results.capabilities.map((cap, index) => (
-                      <div key={index} className="result-item capability-item">
-                        <h4>{cap.name}</h4>
-                        <p>{cap.description}</p>
+                      <div key={index} className="bg-primary/10 border border-primary/30 rounded-lg p-4">
+                        <h4 className="text-lg font-semibold text-foreground mb-2">{cap.name}</h4>
+                        <p className="text-foreground mb-2">{cap.description}</p>
                         {cap.enablers && cap.enablers.length > 0 && (
-                          <div className="nested-enablers">
+                          <div className="text-sm text-muted-foreground">
                             <strong>Enablers:</strong> {cap.enablers.join(', ')}
                           </div>
                         )}
@@ -205,17 +204,17 @@ We need to build an online shopping platform with user authentication, product c
               )}
 
               {results.enablers && results.enablers.length > 0 && (
-                <div className="result-group">
-                  <h3>Enablers ({results.enablers.length})</h3>
-                  <div className="result-items">
+                <div>
+                  <h3 className="text-xl font-semibold text-foreground mb-4">Enablers ({results.enablers.length})</h3>
+                  <div className="space-y-4">
                     {results.enablers.map((enabler, index) => (
-                      <div key={index} className="result-item enabler-item">
-                        <h4>{enabler.name}</h4>
-                        <p>{enabler.description}</p>
+                      <div key={index} className="bg-chart-2/10 border border-chart-2/30 rounded-lg p-4">
+                        <h4 className="text-lg font-semibold text-foreground mb-2">{enabler.name}</h4>
+                        <p className="text-foreground mb-2">{enabler.description}</p>
                         {enabler.requirements && enabler.requirements.length > 0 && (
-                          <div className="nested-requirements">
+                          <div className="text-sm text-muted-foreground">
                             <strong>Requirements:</strong>
-                            <ul>
+                            <ul className="list-disc list-inside mt-2 space-y-1">
                               {enabler.requirements.map((req, reqIndex) => (
                                 <li key={reqIndex}>{req}</li>
                               ))}
@@ -229,10 +228,10 @@ We need to build an online shopping platform with user authentication, product c
               )}
 
               {results.summary && (
-                <div className="result-group">
-                  <h3>Analysis Summary</h3>
-                  <div className="result-summary">
-                    <p>{results.summary}</p>
+                <div>
+                  <h3 className="text-xl font-semibold text-foreground mb-4">Analysis Summary</h3>
+                  <div className="bg-muted border border-border rounded-lg p-4">
+                    <p className="text-foreground">{results.summary}</p>
                   </div>
                 </div>
               )}

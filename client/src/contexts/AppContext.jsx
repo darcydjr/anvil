@@ -12,7 +12,9 @@ const initialState = {
   loading: false,
   error: null,
   config: null,
-  navigationHistory: []
+  navigationHistory: [],
+  workspaces: [],
+  activeWorkspaceId: null
 }
 
 function appReducer(state, action) {
@@ -65,7 +67,14 @@ function appReducer(state, action) {
     
     case 'CLEAR_HISTORY':
       return { ...state, navigationHistory: [] }
-    
+
+    case 'SET_WORKSPACES':
+      return {
+        ...state,
+        workspaces: action.payload.workspaces || [],
+        activeWorkspaceId: action.payload.activeWorkspaceId || null
+      }
+
     default:
       return state
   }
@@ -127,9 +136,42 @@ export function AppProvider({ children }) {
     loadData()
   }, [loadData])
 
+  const loadWorkspaces = useCallback(async () => {
+    try {
+      const response = await fetch('/api/workspaces')
+      const data = await response.json()
+      dispatch({ type: 'SET_WORKSPACES', payload: data })
+    } catch (error) {
+      console.error('Failed to load workspaces:', error)
+    }
+  }, [])
+
+  const activateWorkspace = useCallback(async (workspaceId) => {
+    try {
+      const response = await fetch(`/api/workspaces/${workspaceId}/activate`, {
+        method: 'POST'
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to activate workspace')
+      }
+
+      await loadWorkspaces()
+      // Refresh the main application data to load capabilities/enablers from new workspace
+      loadData()
+
+      return true
+    } catch (error) {
+      console.error('Failed to activate workspace:', error)
+      return false
+    }
+  }, [loadWorkspaces, loadData])
+
   useEffect(() => {
     loadData()
     loadConfig()
+    loadWorkspaces()
 
     // Connect to WebSocket and setup file change listeners
     websocketService.connect()
@@ -167,7 +209,9 @@ export function AppProvider({ children }) {
     addToHistory,
     goBack,
     clearHistory,
-    refreshData
+    refreshData,
+    loadWorkspaces,
+    activateWorkspace
   }
 
   return (

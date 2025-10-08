@@ -6,7 +6,6 @@ import { websocketService } from '../services/websocketService'
 import { Edit, Trash2, ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { renderMermaidDiagrams } from '../utils/mermaidUtils'
-import './DocumentView.css'
 
 export default function DocumentView() {
   console.log('[DocumentView] Component is starting to execute...')
@@ -402,18 +401,18 @@ export default function DocumentView() {
 
   if (loading) {
     return (
-      <div className="document-loading">
-        <div className="spinner"></div>
-        <p>Loading document...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-muted-foreground">Loading document...</p>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="document-error">
-        <p>Error loading document: {error}</p>
-        <button onClick={() => navigate('/')} className="btn btn-primary">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-destructive/10 p-6">
+        <p className="text-destructive mb-4">Error loading document: {error}</p>
+        <button onClick={() => navigate('/')} className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
           Back to Dashboard
         </button>
       </div>
@@ -421,32 +420,32 @@ export default function DocumentView() {
   }
 
   return (
-    <div className="document-view">
-      <div className="document-header">
-        <div className="document-title-section">
+    <div className="max-w-5xl mx-auto p-6">
+      <div className="bg-card rounded-lg shadow-sm border border-border mb-6 p-4 flex items-center justify-between">
+        <div className="flex-1">
           {document?.title && type !== 'template' && (
-            <h1 className="document-display-title">
+            <h1 className="text-2xl font-bold text-foreground">
               {document.title} | {type === 'capability' ? 'Capability' : type === 'enabler' ? 'Enabler' : ''}
             </h1>
           )}
         </div>
-        <div className="document-actions">
-          <button onClick={handleBack} className="btn btn-secondary btn-sm">
+        <div className="flex items-center gap-2">
+          <button onClick={handleBack} className="flex items-center gap-2 px-3 py-2 text-sm bg-muted text-muted-foreground rounded-md hover:bg-accent hover:text-accent-foreground transition-colors">
             <ArrowLeft size={16} />
             Back
           </button>
           {type === 'template' ? (
-            <button onClick={handleEdit} className="btn btn-primary btn-sm">
+            <button onClick={handleEdit} className="flex items-center gap-2 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
               <Edit size={16} />
               Edit
             </button>
           ) : (
             <>
-              <button onClick={handleEdit} className="btn btn-primary btn-sm">
+              <button onClick={handleEdit} className="flex items-center gap-2 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
                 <Edit size={16} />
                 Edit
               </button>
-              <button onClick={handleDelete} className="btn btn-danger btn-sm">
+              <button onClick={handleDelete} className="flex items-center gap-2 px-3 py-2 text-sm bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 transition-colors">
                 <Trash2 size={16} />
                 Delete
               </button>
@@ -456,7 +455,7 @@ export default function DocumentView() {
       </div>
 
       <div
-        className="document-content markdown-content"
+        className="bg-card rounded-lg shadow-sm border border-border p-6 prose prose-lg max-w-none"
         dangerouslySetInnerHTML={{ __html: enhancedHtml || document?.html }}
       />
     </div>

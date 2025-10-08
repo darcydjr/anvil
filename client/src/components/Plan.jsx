@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Save, RotateCcw, Eye, Edit3, Copy, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { apiService } from '../services/apiService';
-import './Plan.css';
 
 export default function Plan() {
   const [content, setContent] = useState('');
@@ -67,93 +66,93 @@ export default function Plan() {
 
   if (loading) {
     return (
-      <div className="plan-container">
-        <div className="plan-loading">
-          <div className="loading-spinner"></div>
-          <p>Loading Software Development Plan...</p>
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-muted-foreground">Loading Software Development Plan...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="plan-container">
-      <div className="plan-header">
-        <div className="plan-title">
-          <h1>Software Development Plan</h1>
-          <p>Comprehensive guide for discovering, analyzing, designing, implementing, testing, refactoring, and retiring software applications</p>
-        </div>
-        <div className="plan-actions">
-          <button
-            className={`plan-mode-button ${!isEditing ? 'active' : ''}`}
-            onClick={() => setIsEditing(false)}
-            title="Preview Mode"
-          >
-            <Eye size={16} />
-            Preview
-          </button>
-          <button
-            className={`plan-mode-button ${isEditing ? 'active' : ''}`}
-            onClick={() => setIsEditing(true)}
-            title="Edit Mode"
-          >
-            <Edit3 size={16} />
-            Edit
-          </button>
-          {isEditing && (
-            <>
+    <div className="max-w-7xl mx-auto p-6">
+      <div className="bg-card rounded-lg shadow-md border border-border mb-6">
+        <div className="p-6 border-b border-border flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Software Development Plan</h1>
+            <p className="text-muted-foreground">Comprehensive guide for discovering, analyzing, designing, implementing, testing, refactoring, and retiring software applications</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex rounded-md border border-border overflow-hidden">
               <button
-                className="plan-reset-button"
-                onClick={handleReset}
-                disabled={!hasChanges}
-                title="Reset Changes"
+                className={`flex items-center gap-2 px-3 py-2 text-sm ${!isEditing ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground hover:bg-accent hover:text-accent-foreground'} transition-colors`}
+                onClick={() => setIsEditing(false)}
+                title="Preview Mode"
               >
-                <RotateCcw size={16} />
-                Reset
+                <Eye size={16} />
+                Preview
               </button>
               <button
-                className="plan-save-button"
-                onClick={handleSave}
-                disabled={!hasChanges || saving}
-                title="Save Changes"
+                className={`flex items-center gap-2 px-3 py-2 text-sm border-l border-border ${isEditing ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground hover:bg-accent hover:text-accent-foreground'} transition-colors`}
+                onClick={() => setIsEditing(true)}
+                title="Edit Mode"
               >
-                <Save size={16} />
-                {saving ? 'Saving...' : 'Save'}
+                <Edit3 size={16} />
+                Edit
               </button>
-            </>
-          )}
+            </div>
+            {isEditing && (
+              <>
+                <button
+                  className="flex items-center gap-2 px-3 py-2 text-sm bg-muted text-foreground rounded-md hover:bg-muted/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleReset}
+                  disabled={!hasChanges}
+                  title="Reset Changes"
+                >
+                  <RotateCcw size={16} />
+                  Reset
+                </button>
+                <button
+                  className="flex items-center gap-2 px-3 py-2 text-sm bg-chart-2 text-white rounded-md hover:bg-chart-2/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleSave}
+                  disabled={!hasChanges || saving}
+                  title="Save Changes"
+                >
+                  <Save size={16} />
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+              </>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div className="plan-content">
-        {isEditing ? (
-          <div className="plan-editor">
+        <div className="p-6">
+          {isEditing ? (
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="plan-textarea"
+              className="w-full h-[600px] px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-foreground font-mono text-sm resize-none placeholder:text-muted-foreground"
               placeholder="Enter your Software Development Plan content..."
               spellCheck={false}
             />
-          </div>
-        ) : (
-          <div className="plan-preview">
-            <div className="markdown-content">
+          ) : (
+            <div className="prose prose-lg max-w-none">
               {content ? (
                 <MarkdownRenderer content={content} onCopy={handleCopyToClipboard} copiedIndex={copiedIndex} />
               ) : (
-                <p>No content available</p>
+                <p className="text-muted-foreground">No content available</p>
               )}
             </div>
+          )}
+        </div>
+
+        {hasChanges && (
+          <div className="bg-chart-4/10 border-t border-chart-4/30 p-3 text-center">
+            <p className="text-sm text-foreground font-medium">You have unsaved changes</p>
           </div>
         )}
       </div>
-
-      {hasChanges && (
-        <div className="plan-changes-indicator">
-          <p>You have unsaved changes</p>
-        </div>
-      )}
     </div>
   );
 }
@@ -164,19 +163,19 @@ function CodeBlock({ children, index, onCopy, copiedIndex }) {
   const hasClaudeCommand = code.includes('Claude, please');
 
   return (
-    <div className="code-block-container">
-      <pre className="code-block">
-        <code>{code}</code>
+    <div className="relative mb-4">
+      <pre className="bg-muted/50 text-foreground rounded-lg p-4 overflow-x-auto border border-border">
+        <code className="text-sm font-mono">{code}</code>
         {hasClaudeCommand && (
           <button
-            className="copy-button"
+            className="absolute top-2 right-2 p-2 bg-muted hover:bg-muted/80 rounded-md transition-colors"
             onClick={() => onCopy(code, index)}
             title="Copy to clipboard"
           >
             {copiedIndex === index ? (
-              <Check size={16} className="copy-icon success" />
+              <Check size={16} className="text-chart-2" />
             ) : (
-              <Copy size={16} className="copy-icon" />
+              <Copy size={16} className="text-muted-foreground" />
             )}
           </button>
         )}
