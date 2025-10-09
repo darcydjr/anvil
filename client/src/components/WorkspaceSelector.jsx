@@ -93,7 +93,7 @@ export default function WorkspaceSelector() {
 
       {isOpen && (
         <div className="absolute top-full right-0 mt-2 w-80 bg-card rounded-lg shadow-lg border border-border z-50">
-          <div className="px-4 py-3 border-b border-border bg-muted rounded-t-lg">
+          <div className="px-4 py-3 border-b border-border rounded-t-lg">
             <h3 className="text-sm font-semibold text-foreground">Workspaces</h3>
           </div>
           <div className="max-h-96 overflow-y-auto">

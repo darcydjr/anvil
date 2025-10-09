@@ -117,7 +117,7 @@ export default function Sidebar() {
 
   if (loading) {
     return (
-      <div className="bg-card text-foreground rounded-[10px] p-6 shadow-md overflow-y-auto max-h-[calc(100vh-200px)]">
+      <div className="bg-card text-foreground rounded-[10px] p-6 shadow-md overflow-y-auto max-h-[calc(100vh-120px)]">
         <div className="flex items-center justify-center p-8 text-primary">
           <div className="spinner"></div>
           Loading...
@@ -127,7 +127,7 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="bg-card text-foreground rounded-[10px] p-6 shadow-md overflow-y-auto max-h-[calc(100vh-200px)]">
+    <div className="bg-card text-foreground rounded-[10px] p-6 shadow-md overflow-y-auto max-h-[calc(100vh-120px)]">
       {navigationHistory.length > 0 && (
         <button onClick={handleBackClick} className="flex items-center gap-2 py-2 px-4 mb-4 bg-card/70 border border-border rounded cursor-pointer text-sm text-primary w-full transition-all duration-150 ease-in-out backdrop-blur-[1px] hover:bg-accent hover:text-primary/80 hover:backdrop-blur-[2px]">
           <ArrowLeft size={16} />
@@ -224,7 +224,7 @@ export default function Sidebar() {
         </div>
 
         {expandedSections.enablers && (
-          <div className="flex flex-col gap-1">
+          <div className="ml-4 border-l-2 border-primary/20 pl-2">
             {filteredEnablers
               .sort((a, b) => {
                 const nameA = (a.title || a.name || '').toLowerCase()
@@ -238,11 +238,11 @@ export default function Sidebar() {
               return (
                 <div
                   key={enabler.path}
-                  className={`flex items-center gap-3 py-3 px-3 cursor-pointer transition-all duration-150 ease-in-out text-foreground text-sm ${
+                  className={`flex items-center gap-3 py-3 px-3 rounded-md cursor-pointer transition-all duration-150 ease-in-out text-foreground mb-1 text-sm ${
                     isActive
                       ? 'bg-primary/80 text-primary-foreground backdrop-blur-sm'
                       : 'hover:bg-accent hover:text-accent-foreground hover:backdrop-blur-sm'
-                  } ${selectedCapability ? 'ml-6 border-l-2 border-primary/30 pl-4' : ''} ${isImplemented ? 'relative' : ''}`}
+                  } ${isImplemented ? 'relative' : ''}`}
                   onClick={() => handleEnablerClick(enabler)}
                 >
                   <Zap size={16} className={isImplemented ? 'text-chart-4 fill-chart-4' : ''} />

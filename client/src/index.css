@@ -42,7 +42,7 @@
     --primary-foreground: oklch(100% 0.0 0);
     --secondary: oklch(99.281% 0.00654 209.662);
     --secondary-foreground: oklch(0.20 0.05 222);
-    --muted: oklch(0.96 0.01 210);
+    --muted: oklch(0.98 0.005 210);
     --muted-foreground: oklch(0.55 0.02 215);
     --accent: oklch(0.96 0.01 210);
     --accent-foreground: oklch(0.20 0.05 222);
@@ -100,86 +100,160 @@
 @layer components {
   .markdown-content {
     line-height: 1.75;
+    font-size: 1rem;
   }
 
   .markdown-content h1,
   .markdown-content h2,
   .markdown-content h3,
-  .markdown-content h4 {
-    margin: 1rem 0;
-    @apply text-foreground;
+  .markdown-content h4,
+  .markdown-content h5,
+  .markdown-content h6 {
+    @apply text-foreground font-semibold;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.3;
   }
 
   .markdown-content h1 {
-    font-size: 1.875rem;
+    font-size: 2rem;
     @apply border-b-2 border-primary;
     padding-bottom: 0.5rem;
+    margin-top: 0;
   }
 
   .markdown-content h2 {
-    font-size: 1.5rem;
-    @apply text-primary;
+    font-size: 1.625rem;
+    @apply text-primary border-b border-border/50;
+    padding-bottom: 0.3rem;
   }
 
   .markdown-content h3 {
-    font-size: 1.25rem;
+    font-size: 1.375rem;
+    @apply text-primary/90;
+  }
+
+  .markdown-content h4 {
+    font-size: 1.125rem;
+    @apply text-foreground/90;
+  }
+
+  .markdown-content h5 {
+    font-size: 1rem;
+    @apply text-foreground/80;
+  }
+
+  .markdown-content h6 {
+    font-size: 0.875rem;
+    @apply text-muted-foreground uppercase tracking-wide;
   }
 
   .markdown-content p {
-    margin: 1rem 0;
+    margin: 0.875rem 0;
+    line-height: 1.7;
   }
 
   .markdown-content ul,
   .markdown-content ol {
     margin: 1rem 0;
-    padding-left: 2rem;
+    padding-left: 1.75rem;
+  }
+
+  .markdown-content ul {
+    list-style-type: disc;
+  }
+
+  .markdown-content ol {
+    list-style-type: decimal;
   }
 
   .markdown-content li {
-    margin: 0.5rem 0;
+    margin: 0.4rem 0;
+    line-height: 1.6;
+  }
+
+  .markdown-content li > ul,
+  .markdown-content li > ol {
+    margin-top: 0.4rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .markdown-content strong {
+    @apply font-semibold text-foreground;
+  }
+
+  .markdown-content em {
+    @apply italic;
+  }
+
+  .markdown-content a {
+    @apply text-primary underline decoration-primary/30 hover:decoration-primary transition-colors;
+  }
+
+  .markdown-content hr {
+    @apply border-border my-6;
   }
 
   .markdown-content table {
     width: 100%;
-    border-collapse: collapse;
-    margin: 1rem 0;
-    @apply bg-card rounded-lg shadow-sm;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 1.5rem 0;
+    @apply bg-card rounded-lg shadow-sm border border-border;
     overflow: hidden;
   }
 
   .markdown-content th,
   .markdown-content td {
-    @apply border border-border;
-    padding: 0.75rem;
+    padding: 0.875rem 1rem;
     text-align: left;
+    @apply border-b border-border;
   }
 
   .markdown-content th {
-    @apply bg-muted font-semibold text-muted-foreground;
+    @apply bg-muted/80 font-semibold text-foreground;
+    border-bottom-width: 2px;
   }
 
-  .markdown-content tr:nth-child(even) {
-    @apply bg-muted/50;
+  .markdown-content td:not(:last-child),
+  .markdown-content th:not(:last-child) {
+    @apply border-r border-border/50;
+  }
+
+  .markdown-content tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .markdown-content tbody tr:hover {
+    @apply bg-muted/30;
   }
 
   .markdown-content code {
-    @apply bg-muted px-1.5 py-0.5 rounded text-sm;
-    font-family: ui-monospace, monospace;
+    @apply bg-muted/70 px-1.5 py-0.5 rounded text-sm border border-border/50;
+    font-family: ui-monospace, 'SF Mono', 'Cascadia Code', 'Courier New', monospace;
+    @apply text-foreground;
   }
 
   .markdown-content pre {
-    @apply bg-muted p-4 rounded-lg overflow-x-auto;
-    margin: 1rem 0;
+    @apply bg-muted/50 p-4 rounded-lg overflow-x-auto border border-border;
+    margin: 1.25rem 0;
   }
 
   .markdown-content pre code {
     background: transparent;
     padding: 0;
+    border: none;
+    font-size: 0.875rem;
+    line-height: 1.6;
   }
 
   .markdown-content blockquote {
-    @apply border-l-4 border-primary pl-4 italic text-muted-foreground;
-    margin: 1rem 0;
+    @apply border-l-4 border-primary/60 pl-4 py-0.5 italic text-muted-foreground bg-muted/30 rounded-r;
+    margin: 1.25rem 0;
+  }
+
+  .markdown-content blockquote p {
+    margin: 0.5rem 0;
   }
 
   /* Mermaid diagram styles */

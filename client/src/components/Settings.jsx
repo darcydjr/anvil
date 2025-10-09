@@ -170,7 +170,7 @@ export default function Settings() {
                   type="number"
                   value={config.server?.port || 3000}
                   onChange={(e) => updateNestedConfigField('server', 'port', parseInt(e.target.value))}
-                  className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
+                  className="w-full px-3 py-2 bg-card border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
                 />
               </div>
               <div className="flex justify-end">
@@ -205,7 +205,7 @@ export default function Settings() {
                   type="text"
                   value={config.defaults?.owner || ''}
                   onChange={(e) => updateNestedConfigField('defaults', 'owner', e.target.value)}
-                  className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
+                  className="w-full px-3 py-2 bg-card border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
                 />
               </div>
 
@@ -264,7 +264,7 @@ export default function Settings() {
                   value={newImportName}
                   onChange={(e) => setNewImportName(e.target.value)}
                   placeholder="e.g., Authentication Service"
-                  className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground"
+                  className="w-full px-3 py-2 bg-card border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground"
                 />
               </div>
               <div>
@@ -274,7 +274,7 @@ export default function Settings() {
                   value={newImportPath}
                   onChange={(e) => setNewImportPath(e.target.value)}
                   placeholder="e.g., /path/to/other-project/specifications"
-                  className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground"
+                  className="w-full px-3 py-2 bg-card border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground"
                 />
               </div>
               <button
@@ -360,7 +360,7 @@ export default function Settings() {
               type="text"
               value={config.templates || ''}
               onChange={(e) => updateConfigField('templates', e.target.value)}
-              className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground"
+              className="w-full px-3 py-2 bg-card border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground"
               placeholder="./templates"
             />
           </div>

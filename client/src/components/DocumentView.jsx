@@ -455,7 +455,7 @@ export default function DocumentView() {
       </div>
 
       <div
-        className="bg-card rounded-lg shadow-sm border border-border p-6 prose prose-lg max-w-none"
+        className="bg-card rounded-lg shadow-sm border border-border p-6 markdown-content"
         dangerouslySetInnerHTML={{ __html: enhancedHtml || document?.html }}
       />
     </div>

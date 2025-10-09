@@ -137,7 +137,7 @@ export default function Plan() {
               spellCheck={false}
             />
           ) : (
-            <div className="prose prose-lg max-w-none">
+            <div className="markdown-content">
               {content ? (
                 <MarkdownRenderer content={content} onCopy={handleCopyToClipboard} copiedIndex={copiedIndex} />
               ) : (

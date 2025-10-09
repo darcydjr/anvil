@@ -139,7 +139,7 @@ export default function Discovery() {
           <div className="p-6">
             {previewMode ? (
               <div
-                className="prose prose-lg max-w-none"
+                className="markdown-content"
                 dangerouslySetInnerHTML={renderPreview()}
               />
             ) : (
