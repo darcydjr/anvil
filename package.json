@@ -2,7 +2,7 @@
   "name": "anvil",
   "version": "2.5.0",
   "description": "Product Requirements Document management application for Capabilities and Enablers",
-  "main": "server.js",
+  "main": "server.ts",
   "author": "Darcy Davidson",
   "license": "Apache-2.0",
   "repository": {
@@ -25,13 +25,14 @@
     "claude-code"
   ],
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "build:server": "tsc",
+    "start": "ts-node server.ts",
+    "prod": "npm run build:server && npm run build && node dist/server.js",
+    "dev": "concurrently \"nodemon --exec ts-node server.ts\" \"cd client && npm run dev\"",
     "client": "cd client && npm run dev",
     "build": "cd client && npm run build",
     "build:start": "npm run build && npm start",
     "install:all": "npm install && cd client && npm install",
-    "dev:full": "concurrently \"npm run dev\" \"npm run client\"",
     "version:sync": "node -e \"const pkg=require('./package.json'); const clientPkg=require('./client/package.json'); clientPkg.version=pkg.version; require('fs').writeFileSync('./client/package.json', JSON.stringify(clientPkg, null, 2));\""
   },
   "dependencies": {
@@ -56,7 +57,19 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.14",
+    "@types/chokidar": "^1.7.5",
+    "@types/express": "^5.0.3",
+    "@types/fs-extra": "^11.0.4",
+    "@types/marked": "^5.0.2",
+    "@types/node": "^24.7.0",
+    "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.18.1",
+    "autoprefixer": "^10.4.21",
     "concurrently": "^8.2.2",
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.1.10",
+    "tailwindcss": "^4.1.14",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }
