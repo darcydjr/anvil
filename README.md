@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-2.5.1-green.svg)]()
+[![Version](https://img.shields.io/badge/version-2.6.0-green.svg)]()
 
 ## Overview
 
@@ -28,6 +28,36 @@ Product development has two distinct sides:
 - **Right Side (Technical Implementation)**: Technical Capabilities and Enablers - the domain of Engineers and Architects
 
 Anvil focuses exclusively on the right side, helping engineering teams define, organize, and manage the technical capabilities that enable product experiences. A new platform is coming soon for the left side that will marry **Experiences and Features** (Product Managers) with **Technical Capabilities and Enablers** (Engineers) to build the architectural runway needed to support exceptional user experiences.
+
+## What's New in v2.6.0
+
+### 🔍 **Complete Search Functionality Restored**
+- **Global Search Bar**: Added search input to header with real-time search across capabilities, enablers, and requirements
+- **Search Results Sidebar**: Dedicated search results view replacing the normal sidebar when searching
+- **Comprehensive Coverage**: Search through titles, IDs, descriptions, system/component fields, and requirement content
+- **Categorized Results**: Results organized by type (Capabilities, Enablers, Requirements) with result counts
+- **Click Navigation**: Click any search result to navigate directly to the document or containing enabler
+
+### 📋 **Document Copy Functionality**
+- **Complete Document Copying**: New Copy button for both capabilities and enablers positioned next to Edit/Delete actions
+- **Smart Capability Copying**: When copying a capability, automatically copies all associated enablers with updated references
+- **Enabler Copy with Renumbering**: Copy enablers with automatic requirement renumbering (FR-001, FR-002, NFR-001, etc.)
+- **Unique ID Generation**: All copied documents receive new unique IDs following existing generation patterns
+- **Intelligent Naming**: Adds "(Copy)" prefix to document names while preserving metadata structure
+
+### 🎨 **UI/UX Improvements**
+- **Enhanced Search Interface**: Search bar positioned in header with search/clear icons and responsive design
+- **Improved Component Navigation**: System/component groups now have expand/collapse functionality with chevron indicators
+- **Button Repositioning**: Copy button placed to the right of Delete button with improved visibility (chart-2 color scheme)
+- **Workspace Selector Fix**: Fixed dropdown positioning to prevent cutoff on left side of screen
+- **Error Display Enhancement**: Changed error backgrounds from pink to neutral gray for better readability
+
+### 🔧 **Technical Enhancements**
+- **TypeScript Integration**: Full TypeScript implementation for search functionality with proper interfaces
+- **State Management**: Enhanced AppContext with search state management and real-time search execution
+- **API Endpoints**: New `/api/copy/{type}/{path}` endpoints for document copying with comprehensive error handling
+- **File System Operations**: Robust file operations with directory creation, path validation, and backup support
+- **Requirements Processing**: Enhanced requirement extraction and renumbering logic for copied documents
 
 ## What's New in v2.5.1
 
@@ -237,7 +267,9 @@ Claude Code will automatically:
 - **Light/Dark Mode**: Toggle between light and dark themes in Settings
 - Mobile-responsive design
 - Hover effects and active states for navigation items
-- **Search Functionality**: Global search across capabilities, enablers, and requirements with regex-based matching
+- **Global Search**: Real-time search across capabilities, enablers, and requirements with dedicated search results view
+- **Document Copy**: Complete copy functionality for capabilities and enablers with smart ID generation and requirement renumbering
+- **Expandable Navigation**: System/component groups with expand/collapse functionality for better organization
 - **Enabler Filtering**: Toggle to show all enablers or filter by selected capability
 - **Approval Management**: Bulk approval features for enablers and requirements
 
@@ -305,6 +337,7 @@ Anvil supports **workspace-based configuration** for managing multiple document 
 
 - `GET /api/capabilities` - Returns categorized documents (capabilities, enablers, templates)
 - `GET /api/file/*` - Returns specific file content with rendered HTML
+- `POST /api/copy/:type/*` - Copy capability or enabler with smart ID generation and requirement renumbering
 - `GET /api/workspaces` - Get all workspaces and active workspace ID
 - `POST /api/workspaces` - Create new workspace
 - `GET /api/agents` - List all AI agents

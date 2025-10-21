@@ -616,6 +616,239 @@ async function generateEnablerId() {
   return `ENB-${sequentialNum}`;
 }
 
+/**
+ * Copy a capability document with all its enablers
+ */
+async function copyCapability(originalContent, originalPath, configPaths) {
+  // Generate new capability ID
+  const newCapabilityId = await generateCapabilityId();
+
+  // Extract original capability info
+  const originalName = extractName(originalContent);
+  const originalId = extractId(originalContent);
+
+  // Create new name with "(Copy)" prefix
+  const newName = `(Copy) ${originalName}`;
+
+  // Update capability content
+  let newContent = originalContent;
+
+  // Replace ID
+  newContent = newContent.replace(
+    /^-\s*\*\*ID\*\*:\s*.+$/m,
+    `- **ID**: ${newCapabilityId}`
+  );
+
+  // Replace title/name
+  newContent = newContent.replace(
+    /^#\s+(.+)$/m,
+    `# ${newName}`
+  );
+
+  // Replace name in metadata if it exists
+  newContent = newContent.replace(
+    /^-\s*\*\*Name\*\*:\s*.+$/m,
+    `- **Name**: ${newName}`
+  );
+
+  // Create new file path
+  const pathParts = originalPath.split('/');
+  const fileName = pathParts[pathParts.length - 1];
+  const newFileName = fileName.replace(/^(.+)-capability\.md$/, `${newCapabilityId.toLowerCase()}-capability.md`);
+  const newPath = [...pathParts.slice(0, -1), newFileName].join('/');
+
+  // Find the target directory (first project path for new files)
+  const targetDir = configPaths.projectPaths[0];
+  const fullNewPath = path.resolve(path.join(targetDir, newPath));
+
+  // Create directory if it doesn't exist
+  await fs.ensureDir(path.dirname(fullNewPath));
+
+  // Write new capability file
+  await fs.writeFile(fullNewPath, newContent);
+
+  // Find and copy all enablers for this capability
+  const copiedEnablers = await copyCapabilityEnablers(originalId, newCapabilityId, configPaths);
+
+  return {
+    newPath,
+    newId: newCapabilityId,
+    newName,
+    copiedEnablers
+  };
+}
+
+/**
+ * Copy all enablers for a capability
+ */
+async function copyCapabilityEnablers(originalCapabilityId, newCapabilityId, configPaths) {
+  const copiedEnablers = [];
+
+  // Scan for enablers belonging to the original capability
+  const allItems = await scanProjectPaths(configPaths.projectPaths);
+  const enablerFiles = allItems.filter(item =>
+    item.name.endsWith('-enabler.md') &&
+    item.type === 'enabler'
+  );
+
+  for (const enablerFile of enablerFiles) {
+    try {
+      // Read the enabler file content
+      const fullPath = path.resolve(path.join(enablerFile.projectPath, enablerFile.path));
+      const enablerContent = await fs.readFile(fullPath, 'utf8');
+
+      // Check if this enabler belongs to the original capability
+      if (extractCapabilityId(enablerContent) !== originalCapabilityId) {
+        continue;
+      }
+
+      const newEnablerId = await generateEnablerId();
+      const originalName = extractName(enablerContent);
+      const newName = `(Copy) ${originalName}`;
+
+      // Update enabler content
+      let newContent = enablerContent;
+
+      // Replace enabler ID
+      newContent = newContent.replace(
+        /^-\s*\*\*ID\*\*:\s*.+$/m,
+        `- **ID**: ${newEnablerId}`
+      );
+
+      // Replace capability ID reference
+      newContent = newContent.replace(
+        /^-\s*\*\*Capability ID\*\*:\s*.+$/m,
+        `- **Capability ID**: ${newCapabilityId}`
+      );
+
+      // Replace title/name
+      newContent = newContent.replace(
+        /^#\s+(.+)$/m,
+        `# ${newName}`
+      );
+
+      // Replace name in metadata if it exists
+      newContent = newContent.replace(
+        /^-\s*\*\*Name\*\*:\s*.+$/m,
+        `- **Name**: ${newName}`
+      );
+
+      // Renumber requirements
+      newContent = renumberRequirements(newContent);
+
+      // Create new file path
+      const originalPath = enablerFile.path;
+      const pathParts = originalPath.split('/');
+      const fileName = pathParts[pathParts.length - 1];
+      const newFileName = fileName.replace(/^(.+)-enabler\.md$/, `${newEnablerId.toLowerCase()}-enabler.md`);
+      const newPath = [...pathParts.slice(0, -1), newFileName].join('/');
+
+      // Write new enabler file
+      const targetDir = configPaths.projectPaths[0];
+      const fullNewPath = path.resolve(path.join(targetDir, newPath));
+      await fs.ensureDir(path.dirname(fullNewPath));
+      await fs.writeFile(fullNewPath, newContent);
+
+      copiedEnablers.push({
+        originalId: extractId(enablerContent),
+        newId: newEnablerId,
+        newPath,
+        newName
+      });
+
+    } catch (error) {
+      console.error(`Error copying enabler ${enablerFile.path}:`, error);
+    }
+  }
+
+  return copiedEnablers;
+}
+
+/**
+ * Copy an enabler document with renumbered requirements
+ */
+async function copyEnabler(originalContent, originalPath, configPaths) {
+  // Generate new enabler ID
+  const newEnablerId = await generateEnablerId();
+
+  // Extract original enabler info
+  const originalName = extractName(originalContent);
+  const capabilityId = extractCapabilityId(originalContent);
+
+  // Create new name with "(Copy)" prefix
+  const newName = `(Copy) ${originalName}`;
+
+  // Update enabler content
+  let newContent = originalContent;
+
+  // Replace ID
+  newContent = newContent.replace(
+    /^-\s*\*\*ID\*\*:\s*.+$/m,
+    `- **ID**: ${newEnablerId}`
+  );
+
+  // Replace title/name
+  newContent = newContent.replace(
+    /^#\s+(.+)$/m,
+    `# ${newName}`
+  );
+
+  // Replace name in metadata if it exists
+  newContent = newContent.replace(
+    /^-\s*\*\*Name\*\*:\s*.+$/m,
+    `- **Name**: ${newName}`
+  );
+
+  // Renumber requirements
+  newContent = renumberRequirements(newContent);
+
+  // Create new file path
+  const pathParts = originalPath.split('/');
+  const fileName = pathParts[pathParts.length - 1];
+  const newFileName = fileName.replace(/^(.+)-enabler\.md$/, `${newEnablerId.toLowerCase()}-enabler.md`);
+  const newPath = [...pathParts.slice(0, -1), newFileName].join('/');
+
+  // Find the target directory (first project path for new files)
+  const targetDir = configPaths.projectPaths[0];
+  const fullNewPath = path.resolve(path.join(targetDir, newPath));
+
+  // Create directory if it doesn't exist
+  await fs.ensureDir(path.dirname(fullNewPath));
+
+  // Write new enabler file
+  await fs.writeFile(fullNewPath, newContent);
+
+  return {
+    newPath,
+    newId: newEnablerId,
+    newName,
+    capabilityId
+  };
+}
+
+/**
+ * Renumber all requirements in an enabler
+ */
+function renumberRequirements(content) {
+  let updatedContent = content;
+  let frCounter = 1;
+  let nfrCounter = 1;
+
+  // Renumber functional requirements (FR-001, FR-002, etc.)
+  updatedContent = updatedContent.replace(
+    /\|\s*FR-\d+\s*\|/g,
+    () => `| FR-${String(frCounter++).padStart(3, '0')} |`
+  );
+
+  // Reset counter for non-functional requirements
+  updatedContent = updatedContent.replace(
+    /\|\s*NFR-\d+\s*\|/g,
+    () => `| NFR-${String(nfrCounter++).padStart(3, '0')} |`
+  );
+
+  return updatedContent;
+}
+
 function extractComponent(content) {
   const match = content.match(/^-\s*\*\*Component\*\*:\s*(.+)$/m);
   return match ? match[1].trim() : null;
@@ -1252,6 +1485,51 @@ app.put('/api/file/rename/*', async (req, res) => {
   } catch (error) {
     console.error('Error renaming file:', error);
     res.status(500).json({ error: 'Error renaming file: ' + error.message });
+  }
+});
+
+// Copy document (capability or enabler)
+app.post('/api/copy/:type/*', async (req, res) => {
+  try {
+    const { type } = req.params;
+    const originalPath = req.params[0];
+
+    if (type !== 'capability' && type !== 'enabler') {
+      return res.status(400).json({ error: 'Invalid document type. Must be capability or enabler.' });
+    }
+
+    const configPaths = getConfigPaths(config);
+    let resolvedPath = null;
+
+    // Find the file in project paths
+    for (const projectPath of configPaths.projectPaths) {
+      const fullPath = path.resolve(path.join(projectPath, originalPath));
+      if (await fs.pathExists(fullPath)) {
+        resolvedPath = fullPath;
+        break;
+      }
+    }
+
+    if (!resolvedPath) {
+      return res.status(404).json({ error: 'Original document not found' });
+    }
+
+    // Read original file
+    const originalContent = await fs.readFile(resolvedPath, 'utf8');
+
+    if (type === 'capability') {
+      // Copy capability with all its enablers
+      const result = await copyCapability(originalContent, originalPath, configPaths);
+      res.json(result);
+    } else {
+      // Copy enabler with renumbered requirements
+      const result = await copyEnabler(originalContent, originalPath, configPaths);
+      res.json(result);
+    }
+
+  } catch (error) {
+    console.error('Error copying document:', error);
+    res.status(500).json({ error: 'Error copying document: ' + error.message });
   }
 });
 

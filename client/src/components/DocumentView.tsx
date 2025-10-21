@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { apiService } from '../services/apiService'
 import { useApp } from '../contexts/AppContext'
 import { websocketService } from '../services/websocketService'
-import { Edit, Trash2, ArrowLeft } from 'lucide-react'
+import { Edit, Trash2, ArrowLeft, Copy } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { renderMermaidDiagrams } from '../utils/mermaidUtils'
 
@@ -409,6 +409,35 @@ export default function DocumentView(): React.ReactElement {
     }
   }
 
+  const handleCopy = async (): Promise<void> => {
+    if (!document || !path || !type) {
+      toast.error('No document to copy')
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/copy/${type}/${path}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to copy document')
+      }
+
+      const result = await response.json()
+      toast.success(`Document copied successfully: ${result.newPath}`)
+      refreshData()
+      navigate(`/view/${type}/${result.newPath}`)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      toast.error(`Failed to copy document: ${errorMessage}`)
+    }
+  }
+
   const handleBack = (): void => {
     if (navigationHistory.length > 0) {
       navigate(-1)
@@ -466,6 +495,10 @@ export default function DocumentView(): React.ReactElement {
               <button onClick={handleDelete} className="flex items-center gap-2 px-3 py-2 text-sm bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 transition-colors">
                 <Trash2 size={16} />
                 Delete
+              </button>
+              <button onClick={handleCopy} className="flex items-center gap-2 px-3 py-2 text-sm bg-chart-2 text-white border border-chart-2 rounded-md hover:bg-chart-2/90 transition-colors">
+                <Copy size={16} />
+                Copy
               </button>
             </>
           )}
