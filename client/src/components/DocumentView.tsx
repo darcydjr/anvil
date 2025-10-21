@@ -41,6 +41,7 @@ export default function DocumentView(): React.ReactElement {
   const [error, setError] = useState<string | null>(null)
   const [enhancedHtml, setEnhancedHtml] = useState<string>('')
   const [previousContent, setPreviousContent] = useState<string>('')
+  const [previousPath, setPreviousPath] = useState<string>('')
   const [changedElements, setChangedElements] = useState<Set<string>>(new Set())
 
   console.log('[DocumentView] Component mounted/updated with params:', { type, path })
@@ -317,17 +318,19 @@ export default function DocumentView(): React.ReactElement {
       // Enhance HTML with file path information
       const enhanced = enhanceHtmlWithFilePath(data?.html, data?.filePath, data?.allFilePaths)
 
-      // Identify and highlight changes if this is an update
+      // Identify and highlight changes if this is an update to the same document
       let finalHtml = enhanced
-      if (previousContent && previousContent.length > 0) {
-        console.log('[DocumentView] Comparing with previous content for changes')
+      const currentPath = path!
+      if (previousContent && previousContent.length > 0 && previousPath === currentPath) {
+        console.log('[DocumentView] Same document - comparing with previous content for changes')
         finalHtml = identifyChanges(previousContent, enhanced)
       } else {
-        console.log('[DocumentView] First load or no previous content, storing for future comparison')
+        console.log('[DocumentView] Different document or first load - not comparing for changes')
       }
 
-      // Store the enhanced HTML as previous content for next comparison
+      // Store the enhanced HTML and path for next comparison
       setPreviousContent(enhanced)
+      setPreviousPath(currentPath)
 
       setEnhancedHtml(finalHtml)
       setDocument(data)
@@ -425,7 +428,7 @@ export default function DocumentView(): React.ReactElement {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-destructive/10 p-6">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-muted/20 p-6">
         <p className="text-destructive mb-4">Error loading document: {error}</p>
         <button onClick={() => navigate('/')} className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
           Back to Dashboard

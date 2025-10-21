@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings, HelpCircle, Bot, Lightbulb, Clipboard } from 'lucide-react'
+import { Settings, HelpCircle, Bot, Lightbulb, Clipboard, Search, X } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { version } from '../../../package.json'
 import WorkspaceSelector from './WorkspaceSelector'
@@ -9,13 +9,32 @@ import { ButtonGroup } from './ui/button-group'
 import { ThemeToggle } from './ui/theme-toggle'
 
 export default function Header(): JSX.Element {
-  const { config, setSelectedCapability } = useApp()
+  const { config, setSelectedCapability, searchTerm, setSearchTerm, performSearch } = useApp()
   const navigate = useNavigate()
+  const [localSearchTerm, setLocalSearchTerm] = useState('')
 
   const handleLogoClick = (): void => {
     setSelectedCapability(null)
     navigate('/')
   }
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const value = e.target.value
+    setLocalSearchTerm(value)
+    setSearchTerm(value)
+    performSearch(value)
+  }
+
+  const handleSearchClear = (): void => {
+    setLocalSearchTerm('')
+    setSearchTerm('')
+    performSearch('')
+  }
+
+  // Sync local state with context
+  useEffect(() => {
+    setLocalSearchTerm(searchTerm)
+  }, [searchTerm])
 
   const majorVersion = version.split('.')[0]
 
@@ -41,6 +60,26 @@ export default function Header(): JSX.Element {
           </div>
         </div>
         <div className="flex gap-4 items-center flex-1 justify-end">
+          <div className="relative max-w-md">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
+              <input
+                type="text"
+                placeholder="Search capabilities, enablers, requirements..."
+                value={localSearchTerm}
+                onChange={handleSearchChange}
+                className="w-full pl-10 pr-10 py-2 border border-border rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-w-[300px]"
+              />
+              {localSearchTerm && (
+                <button
+                  onClick={handleSearchClear}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+          </div>
           <div className="flex items-center gap-2">
             <ButtonGroup>
               <Button

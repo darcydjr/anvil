@@ -99,7 +99,7 @@ export default function WorkspaceSelector(): JSX.Element {
       </ButtonGroup>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-80 bg-card rounded-lg shadow-lg border border-border z-50">
+        <div className="absolute top-full left-0 mt-2 w-80 bg-card rounded-lg shadow-lg border border-border z-50">
           <div className="px-4 py-3 border-b border-border rounded-t-lg">
             <h3 className="text-sm font-semibold text-foreground">Workspaces</h3>
           </div>
@@ -107,18 +107,32 @@ export default function WorkspaceSelector(): JSX.Element {
             {workspacesList.length === 0 ? (
               <div className="px-4 py-8 text-center text-muted-foreground text-sm">No workspaces available</div>
             ) : (
-              workspacesList.map((workspace) => (
+              workspacesList
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((workspace) => (
                 <button
                   key={workspace.id}
                   className={`w-full text-left px-4 py-3 hover:bg-accent hover:text-accent-foreground transition-colors border-b border-border ${workspace.isActive || workspace.id === activeWorkspaceId ? 'bg-primary/10' : ''}`}
                   onClick={() => handleWorkspaceChange(workspace.id)}
                 >
-                  <span className={`block font-medium text-sm ${workspace.isActive || workspace.id === activeWorkspaceId ? 'text-primary' : 'text-foreground'}`}>
-                    {workspace.name}
-                  </span>
-                  {workspace.description && (
-                    <span className="block text-xs text-muted-foreground mt-1">{workspace.description}</span>
-                  )}
+                  <div className="flex items-center gap-3">
+                    <img
+                      src="/logo.png"
+                      alt="Workspace"
+                      className="w-6 h-6 object-contain flex-shrink-0"
+                      onError={(e: React.SyntheticEvent<HTMLImageElement, Event>): void => {
+                        (e.target as HTMLImageElement).style.display = 'none'
+                      }}
+                    />
+                    <div className="flex-1">
+                      <span className={`block font-medium text-sm ${workspace.isActive || workspace.id === activeWorkspaceId ? 'text-primary' : 'text-foreground'}`}>
+                        {workspace.name}
+                      </span>
+                      {workspace.description && (
+                        <span className="block text-xs text-muted-foreground mt-1">{workspace.description}</span>
+                      )}
+                    </div>
+                  </div>
                 </button>
               ))
             )}

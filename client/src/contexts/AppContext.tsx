@@ -23,6 +23,21 @@ interface Enabler {
   [key: string]: unknown
 }
 
+interface Requirement {
+  id: string
+  name: string
+  type: 'Functional' | 'Non-Functional'
+  enablerID: string
+  enablerName: string
+  [key: string]: unknown
+}
+
+interface SearchResults {
+  capabilities: Capability[]
+  enablers: Enabler[]
+  requirements: Requirement[]
+}
+
 interface SelectedDocument {
   type: 'capability' | 'enabler'
   path: string
@@ -67,6 +82,8 @@ interface AppState {
   navigationHistory: NavigationHistoryItem[]
   workspaces: Workspace[]
   activeWorkspaceId: string | null
+  searchTerm: string
+  searchResults: SearchResults
 }
 
 type AppAction =
@@ -80,6 +97,8 @@ type AppAction =
   | { type: 'GO_BACK' }
   | { type: 'CLEAR_HISTORY' }
   | { type: 'SET_WORKSPACES'; payload: { workspaces: Workspace[]; activeWorkspaceId: string | null } }
+  | { type: 'SET_SEARCH_TERM'; payload: string }
+  | { type: 'SET_SEARCH_RESULTS'; payload: SearchResults }
 
 interface AppContextValue extends AppState {
   loadData: () => Promise<void>
@@ -92,6 +111,8 @@ interface AppContextValue extends AppState {
   refreshData: () => void
   loadWorkspaces: () => Promise<void>
   activateWorkspace: (workspaceId: string) => Promise<boolean>
+  setSearchTerm: (term: string) => void
+  performSearch: (term: string) => void
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined)
@@ -106,7 +127,13 @@ const initialState: AppState = {
   config: null,
   navigationHistory: [],
   workspaces: [],
-  activeWorkspaceId: null
+  activeWorkspaceId: null,
+  searchTerm: '',
+  searchResults: {
+    capabilities: [],
+    enablers: [],
+    requirements: []
+  }
 }
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -167,6 +194,12 @@ function appReducer(state: AppState, action: AppAction): AppState {
         workspaces: action.payload.workspaces || [],
         activeWorkspaceId: action.payload.activeWorkspaceId || null
       }
+
+    case 'SET_SEARCH_TERM':
+      return { ...state, searchTerm: action.payload }
+
+    case 'SET_SEARCH_RESULTS':
+      return { ...state, searchResults: action.payload }
 
     default:
       return state
@@ -264,6 +297,79 @@ export function AppProvider({ children }: AppProviderProps): JSX.Element {
     }
   }, [loadWorkspaces, loadData])
 
+  const setSearchTerm = useCallback((term: string) => {
+    dispatch({ type: 'SET_SEARCH_TERM', payload: term })
+  }, [])
+
+  const performSearch = useCallback((term: string) => {
+    if (!term.trim()) {
+      dispatch({ type: 'SET_SEARCH_RESULTS', payload: { capabilities: [], enablers: [], requirements: [] } })
+      return
+    }
+
+    const searchTerm = term.toLowerCase()
+
+    // Search capabilities
+    const filteredCapabilities = state.capabilities.filter(capability =>
+      (capability.title?.toLowerCase().includes(searchTerm)) ||
+      (capability.name?.toLowerCase().includes(searchTerm)) ||
+      (capability.id?.toLowerCase().includes(searchTerm)) ||
+      (capability.system?.toLowerCase().includes(searchTerm)) ||
+      (capability.component?.toLowerCase().includes(searchTerm))
+    )
+
+    // Search enablers
+    const filteredEnablers = state.enablers.filter(enabler =>
+      (enabler.title?.toLowerCase().includes(searchTerm)) ||
+      (enabler.name?.toLowerCase().includes(searchTerm)) ||
+      (enabler.id?.toLowerCase().includes(searchTerm)) ||
+      (enabler.capabilityId?.toLowerCase().includes(searchTerm))
+    )
+
+    // Search requirements within enablers
+    const requirements: Requirement[] = []
+    state.enablers.forEach(enabler => {
+      // Check functional requirements
+      if (enabler.functionalRequirements && Array.isArray(enabler.functionalRequirements)) {
+        enabler.functionalRequirements.forEach((req: any) => {
+          if (req.name?.toLowerCase().includes(searchTerm) || req.id?.toLowerCase().includes(searchTerm)) {
+            requirements.push({
+              id: req.id,
+              name: req.name,
+              type: 'Functional',
+              enablerID: enabler.id || '',
+              enablerName: enabler.title || enabler.name || ''
+            })
+          }
+        })
+      }
+
+      // Check non-functional requirements
+      if (enabler.nonFunctionalRequirements && Array.isArray(enabler.nonFunctionalRequirements)) {
+        enabler.nonFunctionalRequirements.forEach((req: any) => {
+          if (req.name?.toLowerCase().includes(searchTerm) || req.id?.toLowerCase().includes(searchTerm)) {
+            requirements.push({
+              id: req.id,
+              name: req.name,
+              type: 'Non-Functional',
+              enablerID: enabler.id || '',
+              enablerName: enabler.title || enabler.name || ''
+            })
+          }
+        })
+      }
+    })
+
+    dispatch({
+      type: 'SET_SEARCH_RESULTS',
+      payload: {
+        capabilities: filteredCapabilities,
+        enablers: filteredEnablers,
+        requirements
+      }
+    })
+  }, [state.capabilities, state.enablers])
+
   useEffect(() => {
     loadData()
     loadConfig()
@@ -303,7 +409,9 @@ export function AppProvider({ children }: AppProviderProps): JSX.Element {
     clearHistory,
     refreshData,
     loadWorkspaces,
-    activateWorkspace
+    activateWorkspace,
+    setSearchTerm,
+    performSearch
   }
 
   return (
