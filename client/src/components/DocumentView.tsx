@@ -496,10 +496,10 @@ export default function DocumentView(): React.ReactElement {
                 <Trash2 size={16} />
                 Delete
               </button>
-              <button onClick={handleCopy} className="flex items-center gap-2 px-3 py-2 text-sm bg-chart-2 text-white border border-chart-2 rounded-md hover:bg-chart-2/90 transition-colors">
+              {/* <button onClick={handleCopy} className="flex items-center gap-2 px-3 py-2 text-sm bg-chart-2 text-white border border-chart-2 rounded-md hover:bg-chart-2/90 transition-colors">
                 <Copy size={16} />
                 Copy
-              </button>
+              </button> */}
             </>
           )}
         </div>
