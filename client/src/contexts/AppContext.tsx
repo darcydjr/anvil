@@ -288,6 +288,12 @@ export function AppProvider({ children }: AppProviderProps): JSX.Element {
       }
 
       await loadWorkspaces()
+
+      // Clear selected documents when switching workspaces
+      setSelectedCapability(null)
+      setSelectedDocument(null)
+      clearHistory()
+
       loadData()
 
       return true

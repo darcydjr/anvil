@@ -8,6 +8,23 @@ export default function Dashboard(): React.ReactElement {
   const { capabilities, enablers, loading, error } = useApp()
   const navigate = useNavigate()
 
+  // Count total requirements across all enablers
+  const totalRequirements = enablers.reduce((count, enabler) => {
+    let enablerRequirements = 0
+
+    // Count functional requirements
+    if (enabler.functionalRequirements && Array.isArray(enabler.functionalRequirements)) {
+      enablerRequirements += enabler.functionalRequirements.length
+    }
+
+    // Count non-functional requirements
+    if (enabler.nonFunctionalRequirements && Array.isArray(enabler.nonFunctionalRequirements)) {
+      enablerRequirements += enabler.nonFunctionalRequirements.length
+    }
+
+    return count + enablerRequirements
+  }, 0)
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background">
@@ -34,7 +51,7 @@ export default function Dashboard(): React.ReactElement {
 
       <RelationshipDiagram />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-card rounded-lg shadow-md p-6 flex items-center gap-4 border border-border">
           <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
             <FileText size={24} />
@@ -52,6 +69,16 @@ export default function Dashboard(): React.ReactElement {
           <div className="flex-1">
             <div className="text-3xl font-bold text-foreground">{enablers.length}</div>
             <div className="text-sm text-muted-foreground">Enablers</div>
+          </div>
+        </div>
+
+        <div className="bg-card rounded-lg shadow-md p-6 flex items-center gap-4 border border-border">
+          <div className="flex-shrink-0 w-12 h-12 bg-chart-3/10 rounded-lg flex items-center justify-center text-chart-3">
+            <FileText size={24} />
+          </div>
+          <div className="flex-1">
+            <div className="text-3xl font-bold text-foreground">{totalRequirements}</div>
+            <div className="text-sm text-muted-foreground">Requirements</div>
           </div>
         </div>
 
