@@ -136,7 +136,7 @@ interface EnhancedError extends Error {
 // Configure axios defaults
 const api: AxiosInstance = axios.create({
   baseURL: '/api',
-  timeout: 10000
+  timeout: 30000
 })
 
 // Add response interceptor for consistent error handling

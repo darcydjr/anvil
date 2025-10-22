@@ -23,7 +23,7 @@ interface WorkspacesData {
 }
 
 export default function ManageWorkspaces(): JSX.Element {
-  const { loadWorkspaces } = useApp()
+  const { loadWorkspaces, refreshData } = useApp()
   const [workspaces, setWorkspaces] = useState<WorkspacesData>({ workspaces: [], activeWorkspaceId: null })
   const [loading, setLoading] = useState<boolean>(true)
 
@@ -89,6 +89,7 @@ export default function ManageWorkspaces(): JSX.Element {
       setShowCreateForm(false)
       await loadWorkspacesData()
       loadWorkspaces()
+      refreshData()
       toast.success('Workspace created successfully')
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -109,6 +110,7 @@ export default function ManageWorkspaces(): JSX.Element {
 
       await loadWorkspacesData()
       loadWorkspaces()
+      refreshData()
       toast.success('Workspace activated')
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -131,6 +133,7 @@ export default function ManageWorkspaces(): JSX.Element {
 
       await loadWorkspacesData()
       loadWorkspaces()
+      refreshData()
       toast.success('Workspace deleted')
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -171,6 +174,7 @@ export default function ManageWorkspaces(): JSX.Element {
       setShowEditForm(false)
       await loadWorkspacesData()
       loadWorkspaces()
+      refreshData()
       toast.success('Workspace updated successfully')
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'

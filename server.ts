@@ -3186,6 +3186,9 @@ app.post('/api/workspaces/:id/paths', async (req, res) => {
     // Save to config.local.json
     await fs.writeFile('./config.local.json', JSON.stringify(config, null, 2), 'utf8');
 
+    // Update file watchers to monitor the new project path
+    setupFileWatchers();
+
     res.json(workspace);
   } catch (error) {
     console.error('[WORKSPACE] Error adding project path:', error);
@@ -3221,6 +3224,9 @@ app.delete('/api/workspaces/:id/paths', async (req, res) => {
 
     // Save to config.local.json
     await fs.writeFile('./config.local.json', JSON.stringify(config, null, 2), 'utf8');
+
+    // Update file watchers to stop monitoring the removed project path
+    setupFileWatchers();
 
     res.json(workspace);
   } catch (error) {
@@ -3834,26 +3840,24 @@ function setupFileWatchers() {
   try {
     const configPaths = getConfigPaths(config);
 
-    // Watch directories directly instead of using glob patterns
-    const watchPaths = configPaths.projectPaths;
+    // Watch only .md files in the workspace paths
+    const watchPatterns = configPaths.projectPaths.map(p => path.join(p, '*.md'));
 
-    console.log('Setting up file watchers for paths:', watchPaths);
+    console.log('Setting up file watchers for .md files in paths:', watchPatterns);
 
     // Test if directories exist
     configPaths.projectPaths.forEach(p => {
       console.log(`Testing directory access: ${p}`, fs.existsSync(p) ? 'EXISTS' : 'NOT FOUND');
     });
 
-    fileWatcher = chokidar.watch(watchPaths, {
-      ignored: /(^|[\/\\])\../, // Ignore dotfiles
+    fileWatcher = chokidar.watch(watchPatterns, {
       persistent: true,
       ignoreInitial: true,
-      usePolling: false, // Try native watching first
+      usePolling: false,
       awaitWriteFinish: {
         stabilityThreshold: 300,
         pollInterval: 100
-      },
-      depth: 10 // Allow deep nesting
+      }
     });
 
     fileWatcher
@@ -3902,13 +3906,12 @@ function setupFileWatchersWithPolling() {
   try {
     const configPaths = getConfigPaths(config);
 
-    // Watch directories directly instead of using glob patterns
-    const watchPaths = configPaths.projectPaths;
+    // Watch only .md files in the workspace paths
+    const watchPatterns = configPaths.projectPaths.map(p => path.join(p, '*.md'));
 
-    console.log('Setting up file watchers with POLLING for paths:', watchPaths);
+    console.log('Setting up file watchers with POLLING for .md files in paths:', watchPatterns);
 
-    fileWatcher = chokidar.watch(watchPaths, {
-      ignored: /node_modules|\.git|backup/,
+    fileWatcher = chokidar.watch(watchPatterns, {
       persistent: true,
       ignoreInitial: true,
       usePolling: true, // Force polling mode

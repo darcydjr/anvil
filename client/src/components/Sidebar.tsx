@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../contexts/AppContext'
 import { FileText, Plus, ArrowLeft, ChevronDown, ChevronRight, Settings, Box, Zap } from 'lucide-react'
@@ -160,7 +160,7 @@ export default function Sidebar(): JSX.Element {
     return groups
   }
 
-  const capabilityGroups = groupCapabilitiesBySystemComponent(capabilities)
+  const capabilityGroups = useMemo(() => groupCapabilitiesBySystemComponent(capabilities), [capabilities])
 
   // Initialize expanded state for new component groups (open by default)
   useEffect(() => {
