@@ -33,6 +33,9 @@ anvil-test-projects/
 *.swp
 *.swo
 
+# VS Code Counter
+.VSCodeCounter/
+
 # OS files
 .DS_Store
 Thumbs.db

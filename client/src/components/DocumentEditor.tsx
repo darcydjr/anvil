@@ -268,13 +268,14 @@ export default function DocumentEditor(): JSX.Element {
         needsRename = true
         newPath = savePath
       } else if (!isNew && originalName && formData.name && formData.name !== originalName) {
-        if (namesGenerateDifferentFilenames(originalName, formData.name, type)) {
+        // Only rename files for templates, NOT for capabilities or enablers
+        // Capabilities and enablers should keep their ID-based filenames
+        if (type === 'template' && namesGenerateDifferentFilenames(originalName, formData.name, type)) {
           needsRename = true
-          newPath = nameToFilename(formData.name, type)
-          if (type === 'template') {
-            newPath = `templates/${newPath}`
-          }
+          newPath = `templates/${nameToFilename(formData.name, type)}`
         }
+        // For capabilities and enablers, the name change is handled by updating
+        // the metadata within the file content only - no file rename needed
       }
 
       if (type === 'capability' && editMode === 'form') {

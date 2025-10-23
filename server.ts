@@ -144,6 +144,32 @@ function validateConfig(config: Config): string[] {
 function getConfigPaths(config: Config): ConfigPaths {
   const activeWorkspace = config.workspaces.find(ws => ws.id === config.activeWorkspaceId)
 
+  console.log('[CONFIG-DEBUG] activeWorkspaceId:', config.activeWorkspaceId);
+  console.log('[CONFIG-DEBUG] activeWorkspace found:', !!activeWorkspace);
+  if (activeWorkspace) {
+    console.log('[CONFIG-DEBUG] activeWorkspace.projectPaths:', activeWorkspace.projectPaths);
+  }
+
+  if (!activeWorkspace) {
+    console.error(`[CONFIG] Active workspace not found: ${config.activeWorkspaceId}`)
+    // Fallback to first workspace if available
+    const fallbackWorkspace = config.workspaces[0]
+    if (!fallbackWorkspace) {
+      throw new Error('No workspaces available')
+    }
+    console.warn(`[CONFIG] Using fallback workspace: ${fallbackWorkspace.id}`)
+    const fallbackPaths = fallbackWorkspace.projectPaths.map(pathItem => {
+      if (typeof pathItem === 'string') {
+        return pathItem // Legacy format
+      }
+      return pathItem.path // New format with icon
+    })
+    return {
+      projectPaths: fallbackPaths,
+      templates: config.templates
+    }
+  }
+
   // Extract just the path strings from path objects (support both legacy string format and new object format)
   const projectPaths = activeWorkspace.projectPaths.map(pathItem => {
     if (typeof pathItem === 'string') {
@@ -617,6 +643,70 @@ async function generateEnablerId() {
 }
 
 /**
+ * Generates a unique functional requirement ID
+ * @returns {Promise<string>} New FR ID in format FR-123456
+ */
+async function generateFunctionalRequirementId() {
+  const existingIds = await scanExistingIds('FR-');
+  let attempts = 0;
+  const maxAttempts = 100;
+
+  while (attempts < maxAttempts) {
+    const newNumber = generateSemiUniqueNumber();
+    const newId = `FR-${newNumber}`;
+
+    if (!existingIds.includes(newId)) {
+      return newId;
+    }
+
+    attempts++;
+    // Small delay to ensure different timestamp
+    const start = Date.now();
+    while (Date.now() - start < 1) { /* wait */ }
+  }
+
+  // Fallback to sequential numbering if semi-unique generation fails
+  let sequentialNum = 100000;
+  while (existingIds.includes(`FR-${sequentialNum}`)) {
+    sequentialNum++;
+  }
+
+  return `FR-${sequentialNum}`;
+}
+
+/**
+ * Generates a unique non-functional requirement ID
+ * @returns {Promise<string>} New NFR ID in format NFR-123456
+ */
+async function generateNonFunctionalRequirementId() {
+  const existingIds = await scanExistingIds('NFR-');
+  let attempts = 0;
+  const maxAttempts = 100;
+
+  while (attempts < maxAttempts) {
+    const newNumber = generateSemiUniqueNumber();
+    const newId = `NFR-${newNumber}`;
+
+    if (!existingIds.includes(newId)) {
+      return newId;
+    }
+
+    attempts++;
+    // Small delay to ensure different timestamp
+    const start = Date.now();
+    while (Date.now() - start < 1) { /* wait */ }
+  }
+
+  // Fallback to sequential numbering if semi-unique generation fails
+  let sequentialNum = 100000;
+  while (existingIds.includes(`NFR-${sequentialNum}`)) {
+    sequentialNum++;
+  }
+
+  return `NFR-${sequentialNum}`;
+}
+
+/**
  * Copy a capability document with all its enablers
  */
 async function copyCapability(originalContent, originalPath, configPaths) {
@@ -654,7 +744,8 @@ async function copyCapability(originalContent, originalPath, configPaths) {
   // Create new file path
   const pathParts = originalPath.split('/');
   const fileName = pathParts[pathParts.length - 1];
-  const newFileName = fileName.replace(/^(.+)-capability\.md$/, `${newCapabilityId.toLowerCase()}-capability.md`);
+  const numericId = newCapabilityId.replace(/^CAP-/, '');
+  const newFileName = fileName.replace(/^(.+)-capability\.md$/, `${numericId}-capability.md`);
   const newPath = [...pathParts.slice(0, -1), newFileName].join('/');
 
   // Find the target directory (first project path for new files)
@@ -664,11 +755,20 @@ async function copyCapability(originalContent, originalPath, configPaths) {
   // Create directory if it doesn't exist
   await fs.ensureDir(path.dirname(fullNewPath));
 
-  // Write new capability file
-  await fs.writeFile(fullNewPath, newContent);
-
-  // Find and copy all enablers for this capability
+  // Find and copy all enablers for this capability first
   const copiedEnablers = await copyCapabilityEnablers(originalId, newCapabilityId, configPaths);
+
+  // Update enabler table with copied enabler IDs
+  if (copiedEnablers.length > 0) {
+    copiedEnablers.forEach(enabler => {
+      // Replace old enabler ID with new one in the enabler table
+      const oldIdPattern = new RegExp(`\\b${enabler.originalId}\\b`, 'g');
+      newContent = newContent.replace(oldIdPattern, enabler.newId);
+    });
+  }
+
+  // Write new capability file with updated enabler table
+  await fs.writeFile(fullNewPath, newContent);
 
   return {
     newPath,
@@ -684,12 +784,19 @@ async function copyCapability(originalContent, originalPath, configPaths) {
 async function copyCapabilityEnablers(originalCapabilityId, newCapabilityId, configPaths) {
   const copiedEnablers = [];
 
+  console.log(`[COPY-ENABLERS] Looking for enablers for capability: ${originalCapabilityId}`);
+  console.log(`[COPY-ENABLERS] Project paths:`, configPaths.projectPaths);
+
   // Scan for enablers belonging to the original capability
   const allItems = await scanProjectPaths(configPaths.projectPaths);
+  console.log(`[COPY-ENABLERS] All items found:`, allItems.map(item => ({ name: item.name, type: item.type, path: item.path })));
+
   const enablerFiles = allItems.filter(item =>
-    item.name.endsWith('-enabler.md') &&
+    item.path.endsWith('-enabler.md') &&
     item.type === 'enabler'
   );
+
+  console.log(`[COPY-ENABLERS] Found ${enablerFiles.length} total enabler files`);
 
   for (const enablerFile of enablerFiles) {
     try {
@@ -698,9 +805,14 @@ async function copyCapabilityEnablers(originalCapabilityId, newCapabilityId, con
       const enablerContent = await fs.readFile(fullPath, 'utf8');
 
       // Check if this enabler belongs to the original capability
-      if (extractCapabilityId(enablerContent) !== originalCapabilityId) {
+      const enablerCapabilityId = extractCapabilityId(enablerContent);
+      console.log(`[COPY-ENABLERS] Enabler ${enablerFile.name} has capability ID: ${enablerCapabilityId}, looking for: ${originalCapabilityId}`);
+
+      if (enablerCapabilityId !== originalCapabilityId) {
         continue;
       }
+
+      console.log(`[COPY-ENABLERS] Found matching enabler: ${enablerFile.name}`);
 
       const newEnablerId = await generateEnablerId();
       const originalName = extractName(enablerContent);
@@ -734,13 +846,14 @@ async function copyCapabilityEnablers(originalCapabilityId, newCapabilityId, con
       );
 
       // Renumber requirements
-      newContent = renumberRequirements(newContent);
+      newContent = await renumberRequirements(newContent);
 
       // Create new file path
       const originalPath = enablerFile.path;
       const pathParts = originalPath.split('/');
       const fileName = pathParts[pathParts.length - 1];
-      const newFileName = fileName.replace(/^(.+)-enabler\.md$/, `${newEnablerId.toLowerCase()}-enabler.md`);
+      const numericId = newEnablerId.replace(/^ENB-/, '');
+      const newFileName = fileName.replace(/^(.+)-enabler\.md$/, `${numericId}-enabler.md`);
       const newPath = [...pathParts.slice(0, -1), newFileName].join('/');
 
       // Write new enabler file
@@ -761,6 +874,7 @@ async function copyCapabilityEnablers(originalCapabilityId, newCapabilityId, con
     }
   }
 
+  console.log(`[COPY-ENABLERS] Copied ${copiedEnablers.length} enablers`);
   return copiedEnablers;
 }
 
@@ -800,12 +914,13 @@ async function copyEnabler(originalContent, originalPath, configPaths) {
   );
 
   // Renumber requirements
-  newContent = renumberRequirements(newContent);
+  newContent = await renumberRequirements(newContent);
 
   // Create new file path
   const pathParts = originalPath.split('/');
   const fileName = pathParts[pathParts.length - 1];
-  const newFileName = fileName.replace(/^(.+)-enabler\.md$/, `${newEnablerId.toLowerCase()}-enabler.md`);
+  const numericId = newEnablerId.replace(/^ENB-/, '');
+  const newFileName = fileName.replace(/^(.+)-enabler\.md$/, `${numericId}-enabler.md`);
   const newPath = [...pathParts.slice(0, -1), newFileName].join('/');
 
   // Find the target directory (first project path for new files)
@@ -827,24 +942,24 @@ async function copyEnabler(originalContent, originalPath, configPaths) {
 }
 
 /**
- * Renumber all requirements in an enabler
+ * Renumber all requirements in an enabler with unique IDs
  */
-function renumberRequirements(content) {
+async function renumberRequirements(content) {
   let updatedContent = content;
-  let frCounter = 1;
-  let nfrCounter = 1;
 
-  // Renumber functional requirements (FR-001, FR-002, etc.)
-  updatedContent = updatedContent.replace(
-    /\|\s*FR-\d+\s*\|/g,
-    () => `| FR-${String(frCounter++).padStart(3, '0')} |`
-  );
+  // Find all FR- IDs and replace with unique ones
+  const frMatches = updatedContent.match(/\|\s*FR-\d+\s*\|/g) || [];
+  for (const match of frMatches) {
+    const newFrId = await generateFunctionalRequirementId();
+    updatedContent = updatedContent.replace(match, `| ${newFrId} |`);
+  }
 
-  // Reset counter for non-functional requirements
-  updatedContent = updatedContent.replace(
-    /\|\s*NFR-\d+\s*\|/g,
-    () => `| NFR-${String(nfrCounter++).padStart(3, '0')} |`
-  );
+  // Find all NFR- IDs and replace with unique ones
+  const nfrMatches = updatedContent.match(/\|\s*NFR-\d+\s*\|/g) || [];
+  for (const match of nfrMatches) {
+    const newNfrId = await generateNonFunctionalRequirementId();
+    updatedContent = updatedContent.replace(match, `| ${newNfrId} |`);
+  }
 
   return updatedContent;
 }
@@ -1398,6 +1513,7 @@ app.put('/api/file/rename/*', async (req, res) => {
     // Handle different file types based on configuration
     let oldFullPath, newFullPath;
     let projectRoot;
+    let oldProjectRoot, newProjectRoot;
     let oldCleanPath, newCleanPath;
     
     if (oldFilePath.startsWith('templates/')) {
@@ -1405,16 +1521,41 @@ app.put('/api/file/rename/*', async (req, res) => {
       oldCleanPath = oldFilePath.replace('templates/', '');
       newCleanPath = newFilePath.replace('templates/', '');
       projectRoot = path.resolve(configPaths.templates);
+      oldProjectRoot = projectRoot;
+      newProjectRoot = projectRoot;
     } else {
-      // For capabilities and enablers - determine correct project path
+      // For capabilities and enablers - search for existing file across all project paths
       const configPaths = getConfigPaths(config);
       oldCleanPath = oldFilePath;
+
+      // First, find where the old file actually exists
+      let foundOldFile = false;
+      for (const projectPath of configPaths.projectPaths) {
+        const normalizedProjectPath = projectPath.replace(/^\.\//, '');
+        const testRoot = path.resolve(normalizedProjectPath);
+        const testPath = path.resolve(testRoot, oldFilePath);
+
+        try {
+          if (await fs.pathExists(testPath)) {
+            oldProjectRoot = testRoot;
+            foundOldFile = true;
+            console.log(`[RENAME] Found old file at: ${testPath}`);
+            break;
+          }
+        } catch (err) {
+          // Continue searching
+        }
+      }
+
+      if (!foundOldFile) {
+        return res.status(404).json({ error: 'Original file not found in any project path' });
+      }
 
       // Extract just the filename from the new path to avoid nested directories
       const filename = path.basename(newFilePath);
       const newDir = path.dirname(newFilePath);
 
-      // Find the matching project path
+      // Find the matching project path for the new file location
       let matchingProjectPath = null;
       for (const projectPath of configPaths.projectPaths) {
         const normalizedProjectPath = projectPath.replace(/^\.\//, '');
@@ -1426,31 +1567,42 @@ app.put('/api/file/rename/*', async (req, res) => {
 
       if (matchingProjectPath) {
         // Use the specific project path and just the filename
-        projectRoot = path.resolve(matchingProjectPath.replace(/^\.\//, ''));
+        newProjectRoot = path.resolve(matchingProjectPath.replace(/^\.\//, ''));
         newCleanPath = filename;
       } else {
-        // Fallback to first project path
-        projectRoot = path.resolve(configPaths.projectPaths[0]);
-        newCleanPath = newFilePath;
+        // Fallback - keep in same directory as old file
+        newProjectRoot = oldProjectRoot;
+        newCleanPath = filename;
       }
+
+      // For backward compatibility, set projectRoot to oldProjectRoot
+      projectRoot = oldProjectRoot;
     }
     
     try {
-      oldFullPath = validateAndResolvePath(oldCleanPath, projectRoot, 'old rename path');
-      newFullPath = validateAndResolvePath(newCleanPath, projectRoot, 'new rename path');
-      
+      if (oldFilePath.startsWith('templates/')) {
+        // Template files - use same project root for both
+        oldFullPath = validateAndResolvePath(oldCleanPath, projectRoot, 'old rename path');
+        newFullPath = validateAndResolvePath(newCleanPath, projectRoot, 'new rename path');
+      } else {
+        // Capability/Enabler files - may be cross-project move
+        oldFullPath = validateAndResolvePath(oldCleanPath, oldProjectRoot, 'old rename path');
+        newFullPath = validateAndResolvePath(newCleanPath, newProjectRoot, 'new rename path');
+      }
+
       // Additional file type validation
       if (!oldFullPath.endsWith('.md') || !newFullPath.endsWith('.md')) {
         throw new Error('Only .md files can be renamed');
       }
     } catch (securityError) {
-      console.warn(`[SECURITY] File rename denied: ${securityError.message}`, { 
-        oldFilePath, newFilePath, oldCleanPath, newCleanPath, projectRoot 
+      console.warn(`[SECURITY] File rename denied: ${securityError.message}`, {
+        oldFilePath, newFilePath, oldCleanPath, newCleanPath, projectRoot
       });
       return res.status(403).json({ error: 'Access denied: ' + securityError.message });
     }
     
-    if (!await fs.pathExists(oldFullPath)) {
+    // Note: We already verified the old file exists during path resolution for non-template files
+    if (oldFilePath.startsWith('templates/') && !await fs.pathExists(oldFullPath)) {
       return res.status(404).json({ error: 'Original file not found' });
     }
 
@@ -2397,7 +2549,7 @@ async function generateEnablerContentFromTemplate(enabler, capabilityId) {
       // Basic placeholders
       '\\[Enabler Name\\]': enabler.name || '[Enabler Name]',
       'ENB-XXXXXX': enabler.id || 'ENB-XXXXXX',
-      'CAP-XXXXXX \\(Parent Capability\\)': capabilityId || 'CAP-XXXXXX (Parent Capability)',
+      'CAP-XXXXXX': capabilityId || 'CAP-XXXXXX',
       'YYYY-MM-DD': currentDate,
       'X\\.Y': '1.0',
       '\\[What is the purpose\\?\\]': enabler.description || '[What is the purpose?]',
@@ -2408,7 +2560,7 @@ async function generateEnablerContentFromTemplate(enabler, capabilityId) {
       // Metadata section replacements
       '- \\*\\*Name\\*\\*: \\[Enabler Name\\]': `- **Name**: ${enabler.name || '[Enabler Name]'}`,
       '- \\*\\*ID\\*\\*: ENB-XXXXXX': `- **ID**: ${enabler.id || 'ENB-XXXXXX'}`,
-      '- \\*\\*Capability ID\\*\\*: CAP-XXXXXX \\(Parent Capability\\)': `- **Capability ID**: ${capabilityId || 'CAP-XXXXXX (Parent Capability)'}`,
+      '- \\*\\*Capability ID\\*\\*: CAP-XXXXXX': `- **Capability ID**: ${capabilityId || 'CAP-XXXXXX'}`,
       '- \\*\\*Status\\*\\*: In Draft': `- **Status**: ${enabler.status || 'In Draft'}`,
       '- \\*\\*Approval\\*\\*: Not Approved': `- **Approval**: ${enabler.approval || 'Not Approved'}`,
       '- \\*\\*Priority\\*\\*: High': `- **Priority**: ${enabler.priority || 'High'}`,

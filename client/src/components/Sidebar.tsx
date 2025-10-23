@@ -333,9 +333,10 @@ export default function Sidebar(): JSX.Element {
               e.stopPropagation()
               handleCreateCapability()
             }}
-            className="btn btn-sm btn-primary"
+            className="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors duration-200 shadow-sm border border-primary/20"
+            title="Create New Capability"
           >
-            <Plus size={14} />
+            <Plus size={18} strokeWidth={2.5} />
           </button>
         </div>
 
@@ -408,9 +409,10 @@ export default function Sidebar(): JSX.Element {
               e.stopPropagation()
               handleCreateEnabler()
             }}
-            className="btn btn-sm btn-primary"
+            className="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors duration-200 shadow-sm border border-primary/20"
+            title="Create New Enabler"
           >
-            <Plus size={14} />
+            <Plus size={18} strokeWidth={2.5} />
           </button>
         </div>
 
