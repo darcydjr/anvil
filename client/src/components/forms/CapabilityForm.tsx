@@ -30,6 +30,13 @@ interface WorkspacesData {
   activeWorkspaceId: string | null
 }
 
+interface CapabilityLink {
+  id: string
+  title: string
+  system?: string
+  component?: string
+}
+
 
 function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: CapabilityFormProps): JSX.Element {
   const { capabilities, enablers } = useApp()
@@ -37,6 +44,7 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
   const stateListenerRef = useRef(null)
   const [workspaces, setWorkspaces] = useState<WorkspacesData>({ workspaces: [], activeWorkspaceId: null })
   const [originalPath, setOriginalPath] = useState<string | null>(null)
+  const [availableCapabilities, setAvailableCapabilities] = useState<CapabilityLink[]>([])
 
   // Initialize state listener for capability
   useEffect(() => {
@@ -102,6 +110,20 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
     // Load workspaces for both new and existing capabilities
     loadWorkspaces()
   }, [isNew, capabilities, data.lastSelectedCapabilityPath, onChange, currentPath])
+
+  // Load capabilities for dropdowns
+  useEffect(() => {
+    const loadCapabilities = async () => {
+      try {
+        const response = await apiService.getCapabilityLinks()
+        setAvailableCapabilities(response.capabilities || [])
+      } catch (error) {
+        console.warn('Could not load capabilities for dropdown:', error)
+      }
+    }
+
+    loadCapabilities()
+  }, [])
 
   const handleBasicChange = useCallback(async (field, value) => {
     onChange({ [field]: value })
@@ -215,15 +237,37 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
   const templates = useMemo(() => ({
     upstream: { id: '', description: '' },
     downstream: { id: '', description: '' },
-    enabler: { 
-      id: '', 
-      name: '', 
-      description: '', 
-      status: STATUS_VALUES.ENABLER.READY_FOR_ANALYSIS, 
-      approval: APPROVAL_VALUES.NOT_APPROVED, 
-      priority: PRIORITY_VALUES.CAPABILITY_ENABLER.HIGH 
+    enabler: {
+      id: '',
+      name: '',
+      description: '',
+      status: STATUS_VALUES.ENABLER.READY_FOR_ANALYSIS,
+      approval: APPROVAL_VALUES.NOT_APPROVED,
+      priority: PRIORITY_VALUES.CAPABILITY_ENABLER.HIGH
     }
   }), [])
+
+  // Group capabilities by system and component
+  const groupedCapabilities = useMemo(() => {
+    const groups = {}
+
+    availableCapabilities.forEach(cap => {
+      const system = cap.system || 'Unknown System'
+      const component = cap.component || 'Unknown Component'
+
+      if (!groups[system]) {
+        groups[system] = {}
+      }
+
+      if (!groups[system][component]) {
+        groups[system][component] = []
+      }
+
+      groups[system][component].push(cap)
+    })
+
+    return groups
+  }, [availableCapabilities])
   
   // Memoize status, approval, priority, and review options
   const statusOptions = useMemo(() => [
@@ -609,11 +653,17 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
                         onChange={(e) => handleArrayChange('internalUpstream', index, 'id', e.target.value)}
                       >
                         <option value="">Select capability</option>
-                        {capabilities.map((cap) => (
-                          <option key={cap.path} value={cap.id || cap.title}>
-                            {cap.title} - {cap.id || cap.title}
-                          </option>
-                        ))}
+                        {Object.keys(groupedCapabilities).sort().map((system) =>
+                          Object.keys(groupedCapabilities[system]).sort().map((component) => (
+                            <optgroup key={`${system}-${component}`} label={`${system} → ${component}`}>
+                              {groupedCapabilities[system][component].map((cap) => (
+                                <option key={cap.id} value={cap.id}>
+                                  {cap.id} - {cap.title}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ))
+                        )}
                       </select>
                     </td>
                     <td className="p-2">
@@ -672,11 +722,17 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
                         onChange={(e) => handleArrayChange('internalDownstream', index, 'id', e.target.value)}
                       >
                         <option value="">Select capability</option>
-                        {capabilities.map((cap) => (
-                          <option key={cap.path} value={cap.id || cap.title}>
-                            {cap.title} - {cap.id || cap.title}
-                          </option>
-                        ))}
+                        {Object.keys(groupedCapabilities).sort().map((system) =>
+                          Object.keys(groupedCapabilities[system]).sort().map((component) => (
+                            <optgroup key={`${system}-${component}`} label={`${system} → ${component}`}>
+                              {groupedCapabilities[system][component].map((cap) => (
+                                <option key={cap.id} value={cap.id}>
+                                  {cap.id} - {cap.title}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ))
+                        )}
                       </select>
                     </td>
                     <td className="p-2">

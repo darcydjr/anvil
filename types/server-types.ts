@@ -85,6 +85,8 @@ export interface DocumentItem {
   capabilityId?: string;
   system?: string;
   component?: string;
+  status?: string;
+  approval?: string;
   fullPath?: string;
   upstreamDependencies?: Dependency[];
   downstreamDependencies?: Dependency[];

@@ -20,6 +20,7 @@ interface Capability {
   system?: string
   component?: string
   status?: string
+  approval?: string
 }
 
 interface Enabler {
@@ -29,6 +30,7 @@ interface Enabler {
   path: string
   capabilityId?: string
   status?: string
+  approval?: string
 }
 
 interface SelectedDocument {
@@ -225,17 +227,16 @@ export default function Sidebar(): JSX.Element {
                   return (
                     <div
                       key={capability.path}
-                      className={`flex items-center gap-3 py-2 px-3 rounded-md cursor-pointer transition-all duration-150 ease-in-out text-foreground text-sm ${
+                      className={`flex items-center gap-3 py-2 px-3 rounded-md cursor-pointer transition-all duration-150 ease-in-out text-sm ${capability.approval === 'Not Approved' ? 'text-gray-400' : 'text-foreground'} ${
                         isActive
                           ? 'bg-primary/80 text-primary-foreground backdrop-blur-sm'
                           : 'hover:bg-accent hover:text-accent-foreground hover:backdrop-blur-sm'
-                      } ${isImplemented ? 'relative' : ''}`}
+                      } relative`}
                       onClick={() => handleCapabilityClick(capability)}
                     >
-                      <Zap size={16} className={isImplemented ? 'text-chart-4 fill-chart-4' : ''} />
+                      <Zap size={16} className={isImplemented ? 'text-yellow-500 fill-yellow-500' : ''} />
                       <span className="flex-1 break-words">{capability.title || capability.name}</span>
                       {capability.id && <small className="text-xs opacity-70">({capability.id})</small>}
-                      {isImplemented && <span className="absolute right-2 text-xs opacity-70">✨</span>}
                     </div>
                   )
                 })}
@@ -256,17 +257,16 @@ export default function Sidebar(): JSX.Element {
                   return (
                     <div
                       key={enabler.path}
-                      className={`flex items-center gap-3 py-2 px-3 rounded-md cursor-pointer transition-all duration-150 ease-in-out text-foreground text-sm ${
+                      className={`flex items-center gap-3 py-2 px-3 rounded-md cursor-pointer transition-all duration-150 ease-in-out text-sm ${enabler.approval === 'Not Approved' ? 'text-gray-400' : 'text-foreground'} ${
                         isActive
                           ? 'bg-primary/80 text-primary-foreground backdrop-blur-sm'
                           : 'hover:bg-accent hover:text-accent-foreground hover:backdrop-blur-sm'
-                      } ${isImplemented ? 'relative' : ''}`}
+                      } relative`}
                       onClick={() => handleEnablerClick(enabler)}
                     >
-                      <Zap size={16} className={isImplemented ? 'text-chart-4 fill-chart-4' : ''} />
+                      <Zap size={16} className={isImplemented ? 'text-yellow-500 fill-yellow-500' : ''} />
                       <span className="flex-1 break-words">{enabler.title || enabler.name}</span>
                       {enabler.id && <small className="text-xs opacity-70">({enabler.id})</small>}
-                      {isImplemented && <span className="absolute right-2 text-xs opacity-70">✨</span>}
                     </div>
                   )
                 })}
@@ -348,14 +348,20 @@ export default function Sidebar(): JSX.Element {
                 if (b === 'Unassigned') return -1
                 return a.localeCompare(b)
               })
-              .map(([groupKey, groupCapabilities]) => (
+              .map(([groupKey, groupCapabilities]) => {
+                // Check if all capabilities in this group are implemented
+                const allImplemented = groupCapabilities.length > 0 && groupCapabilities.every(cap => cap.status === 'Implemented')
+
+                // Blue icon when all capabilities in group are implemented
+
+                return (
                 <div key={groupKey} className="mb-4">
                   <div
                     className="flex items-center gap-3 py-3 px-3 rounded-md transition-all duration-150 ease-in-out text-foreground cursor-pointer hover:bg-accent hover:text-accent-foreground"
                     onClick={() => toggleComponentGroup(groupKey)}
                   >
                     {expandedComponentGroups[groupKey] ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                    <Box size={16} />
+                    <Box size={16} className={allImplemented ? 'text-blue-400 fill-blue-400 stroke-black stroke-1' : ''} />
                     <span>{groupKey}</span>
                   </div>
                   {expandedComponentGroups[groupKey] && (
@@ -374,25 +380,25 @@ export default function Sidebar(): JSX.Element {
                         return (
                           <div
                             key={capability.path}
-                            className={`flex items-center gap-3 py-3 px-3 rounded-md cursor-pointer transition-all duration-150 ease-in-out text-foreground mb-1 text-sm ${
+                            className={`flex items-center gap-3 py-3 px-3 rounded-md cursor-pointer transition-all duration-150 ease-in-out mb-1 text-sm ${capability.approval === 'Not Approved' ? 'text-gray-400' : 'text-foreground'} ${
                               isActive
                                 ? 'bg-primary/80 text-primary-foreground backdrop-blur-sm'
                                 : isAssociated
                                 ? 'bg-transparent border-2 border-primary/80 rounded-lg text-primary font-medium'
                                 : 'hover:bg-accent hover:text-accent-foreground hover:backdrop-blur-sm'
-                            } ${isImplemented ? 'relative' : ''}`}
+                            } relative`}
                             onClick={(): void => handleCapabilityClick(capability)}
                           >
-                            <Zap size={16} className={isImplemented ? 'text-chart-4 fill-chart-4' : ''} />
+                            <Zap size={16} className={isImplemented ? 'text-yellow-500 fill-yellow-500' : ''} />
                             <span className="flex-1 break-words">{capability.title || capability.name}</span>
-                            {isImplemented && <span className="absolute right-2 text-xs opacity-70">✨</span>}
                           </div>
                         )
                       })}
                     </div>
                   )}
                 </div>
-              ))}
+                )
+              })}
           </div>
         )}
       </div>
@@ -431,16 +437,15 @@ export default function Sidebar(): JSX.Element {
                 return (
                   <div
                     key={enabler.path}
-                    className={`flex items-center gap-3 py-3 px-3 rounded-md cursor-pointer transition-all duration-150 ease-in-out text-foreground mb-1 text-sm ${
+                    className={`flex items-center gap-3 py-3 px-3 rounded-md cursor-pointer transition-all duration-150 ease-in-out mb-1 text-sm ${enabler.approval === 'Not Approved' ? 'text-gray-400' : 'text-foreground'} ${
                       isActive
                         ? 'bg-primary/80 text-primary-foreground backdrop-blur-sm'
                         : 'hover:bg-accent hover:text-accent-foreground hover:backdrop-blur-sm'
                     } ${isImplemented ? 'relative' : ''}`}
                     onClick={(): void => handleEnablerClick(enabler)}
                   >
-                    <Zap size={16} className={isImplemented ? 'text-chart-4 fill-chart-4' : ''} />
+                    <Zap size={16} className={isImplemented ? 'text-yellow-500 fill-yellow-500' : ''} />
                     <span className="flex-1 break-words">{enabler.title || enabler.name}</span>
-                    {isImplemented && <span className="absolute right-2 text-xs opacity-70">✨</span>}
                   </div>
                 )
               })}

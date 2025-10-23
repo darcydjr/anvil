@@ -322,6 +322,8 @@ async function scanDirectory(dirPath: string, baseUrl: string = ''): Promise<Doc
       const capabilityId = extractCapabilityId(content);
       const system = extractSystem(content);
       const component = extractComponent(content);
+      const status = extractStatus(content);
+      const approval = extractApproval(content);
 
       // Determine type based on filename or explicit type field
       let itemType = 'document'
@@ -341,24 +343,14 @@ async function scanDirectory(dirPath: string, baseUrl: string = ''): Promise<Doc
         description: description,
         type: itemType as any,
         path: baseUrl ? `${baseUrl.replace(/^\//, '')}/${file}` : file,
-        projectPath: dirPath // Add source project path for workspace support
+        projectPath: dirPath, // Add source project path for workspace support
+        id: id,
+        system: system,
+        component: component,
+        status: status,
+        approval: approval,
+        capabilityId: capabilityId
       };
-
-      if (id) {
-        item.id = id;
-      }
-
-      if (capabilityId) {
-        item.capabilityId = capabilityId;
-      }
-
-      if (system) {
-        item.system = system;
-      }
-
-      if (component) {
-        item.component = component;
-      }
 
       items.push(item);
     }
@@ -1706,7 +1698,9 @@ app.get('/api/links/capabilities', async (req, res) => {
         return {
           id: extractId(content),
           title: cap.title,
-          path: cap.path
+          path: cap.path,
+          system: extractSystem(content),
+          component: extractComponent(content)
         };
       })
     );

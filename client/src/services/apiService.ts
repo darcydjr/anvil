@@ -78,6 +78,8 @@ export interface CapabilityLink {
   id: string
   name: string
   path: string
+  system?: string
+  component?: string
 }
 
 export interface Config {

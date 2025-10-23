@@ -16,6 +16,8 @@ interface EnablerFormProps {
 interface CapabilityLink {
   id: string
   title: string
+  system?: string
+  component?: string
 }
 
 interface CapabilityLinksResponse {
@@ -248,6 +250,28 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
     requirementStatus: Object.values(STATUS_VALUES.REQUIREMENT).sort()
   }), [])
 
+  // Group capabilities by system and component
+  const groupedCapabilities = useMemo(() => {
+    const groups = {}
+
+    availableCapabilities.forEach(cap => {
+      const system = cap.system || 'Unknown System'
+      const component = cap.component || 'Unknown Component'
+
+      if (!groups[system]) {
+        groups[system] = {}
+      }
+
+      if (!groups[system][component]) {
+        groups[system][component] = []
+      }
+
+      groups[system][component].push(cap)
+    })
+
+    return groups
+  }, [availableCapabilities])
+
   const nfrTypes = [
     'Performance', 'Scalability', 'Security', 'Reliability', 'Availability',
     'Usability', 'Maintainability', 'Portability', 'Compliance', 'Technical Constraint', 'Other'
@@ -299,11 +323,17 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
               onChange={(e) => handleBasicChange('capabilityId', e.target.value)}
             >
               <option value="">Select a capability...</option>
-              {availableCapabilities.map((cap) => (
-                <option key={cap.id} value={cap.id}>
-                  {cap.id} - {cap.title}
-                </option>
-              ))}
+              {Object.keys(groupedCapabilities).sort().map((system) =>
+                Object.keys(groupedCapabilities[system]).sort().map((component) => (
+                  <optgroup key={`${system}-${component}`} label={`${system} → ${component}`}>
+                    {groupedCapabilities[system][component].map((cap) => (
+                      <option key={cap.id} value={cap.id}>
+                        {cap.id} - {cap.title}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))
+              )}
             </select>
             {validationErrors.capabilityId && (
               <span className="text-xs text-destructive">{validationErrors.capabilityId}</span>
