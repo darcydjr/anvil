@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../contexts/AppContext'
-import { FileText, Plus, ArrowLeft, ChevronDown, ChevronRight, Settings, Box, Zap } from 'lucide-react'
+import { FileText, Plus, ArrowLeft, ChevronDown, ChevronRight, Settings, Box, Zap, PencilRuler, Ruler, Microscope } from 'lucide-react'
 
 interface SidebarExpandedSections {
   capabilities: boolean
@@ -226,7 +226,7 @@ export default function Sidebar(): JSX.Element {
                   const isImplemented = capability.status === 'Implemented'
                   return (
                     <div
-                      key={capability.path}
+                      key={`${capability.path}-${capability.status}-${capability.approval}`}
                       className={`flex items-center gap-3 py-2 px-3 rounded-md cursor-pointer transition-all duration-150 ease-in-out text-sm ${capability.approval === 'Not Approved' ? 'text-gray-400' : 'text-foreground'} ${
                         isActive
                           ? 'bg-primary/80 text-primary-foreground backdrop-blur-sm'
@@ -237,6 +237,15 @@ export default function Sidebar(): JSX.Element {
                       <Zap size={16} className={isImplemented ? 'text-yellow-500 fill-yellow-500' : ''} />
                       <span className="flex-1 break-words">{capability.title || capability.name}</span>
                       {capability.id && <small className="text-xs opacity-70">({capability.id})</small>}
+                      {capability.status === 'In Analysis' && (
+                        <Microscope size={19} className="text-blue-500 ml-1" />
+                      )}
+                      {capability.status === 'In Design' && (
+                        <Ruler size={19} className="text-blue-500 ml-1" />
+                      )}
+                      {capability.status === 'In Implementation' && (
+                        <PencilRuler size={19} className="text-blue-500 ml-1" />
+                      )}
                     </div>
                   )
                 })}
@@ -256,7 +265,7 @@ export default function Sidebar(): JSX.Element {
                   const isImplemented = enabler.status === 'Implemented'
                   return (
                     <div
-                      key={enabler.path}
+                      key={`${enabler.path}-${enabler.status}-${enabler.approval}`}
                       className={`flex items-center gap-3 py-2 px-3 rounded-md cursor-pointer transition-all duration-150 ease-in-out text-sm ${enabler.approval === 'Not Approved' ? 'text-gray-400' : 'text-foreground'} ${
                         isActive
                           ? 'bg-primary/80 text-primary-foreground backdrop-blur-sm'
@@ -267,6 +276,15 @@ export default function Sidebar(): JSX.Element {
                       <Zap size={16} className={isImplemented ? 'text-yellow-500 fill-yellow-500' : ''} />
                       <span className="flex-1 break-words">{enabler.title || enabler.name}</span>
                       {enabler.id && <small className="text-xs opacity-70">({enabler.id})</small>}
+                      {enabler.status === 'In Analysis' && (
+                        <Microscope size={19} className="text-blue-500 ml-1" />
+                      )}
+                      {enabler.status === 'In Design' && (
+                        <Ruler size={19} className="text-blue-500 ml-1" />
+                      )}
+                      {enabler.status === 'In Implementation' && (
+                        <PencilRuler size={19} className="text-blue-500 ml-1" />
+                      )}
                     </div>
                   )
                 })}
@@ -379,7 +397,7 @@ export default function Sidebar(): JSX.Element {
 
                         return (
                           <div
-                            key={capability.path}
+                            key={`${capability.path}-${capability.status}-${capability.approval}`}
                             className={`flex items-center gap-3 py-3 px-3 rounded-md cursor-pointer transition-all duration-150 ease-in-out mb-1 text-sm ${capability.approval === 'Not Approved' ? 'text-gray-400' : 'text-foreground'} ${
                               isActive
                                 ? 'bg-primary/80 text-primary-foreground backdrop-blur-sm'
@@ -391,6 +409,15 @@ export default function Sidebar(): JSX.Element {
                           >
                             <Zap size={16} className={isImplemented ? 'text-yellow-500 fill-yellow-500' : ''} />
                             <span className="flex-1 break-words">{capability.title || capability.name}</span>
+                            {capability.status === 'In Analysis' && (
+                              <Microscope size={19} className="text-blue-500 ml-1" />
+                            )}
+                            {capability.status === 'In Design' && (
+                              <Ruler size={19} className="text-blue-500 ml-1" />
+                            )}
+                            {capability.status === 'In Implementation' && (
+                              <PencilRuler size={19} className="text-blue-500 ml-1" />
+                            )}
                           </div>
                         )
                       })}
@@ -446,6 +473,15 @@ export default function Sidebar(): JSX.Element {
                   >
                     <Zap size={16} className={isImplemented ? 'text-yellow-500 fill-yellow-500' : ''} />
                     <span className="flex-1 break-words">{enabler.title || enabler.name}</span>
+                    {enabler.status === 'In Analysis' && (
+                      <Microscope size={19} className="text-blue-500 ml-1" />
+                    )}
+                    {enabler.status === 'In Design' && (
+                      <Ruler size={19} className="text-blue-500 ml-1" />
+                    )}
+                    {enabler.status === 'In Implementation' && (
+                      <PencilRuler size={19} className="text-blue-500 ml-1" />
+                    )}
                   </div>
                 )
               })}

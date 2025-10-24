@@ -1335,7 +1335,11 @@ app.post('/api/file/*', async (req, res) => {
     
     await fs.writeFile(resolvedPath, content, 'utf8');
     console.log('[SAVE] File written successfully to:', resolvedPath);
-    
+
+    // Broadcast file change to trigger client refresh
+    broadcastFileChange('change', resolvedPath);
+    console.log('[SAVE] Broadcasted file change:', path.basename(resolvedPath));
+
     const title = extractTitle(content);
     const description = extractDescription(content);
     const type = extractType(content);
@@ -3986,20 +3990,38 @@ function setupFileWatchers() {
   try {
     const configPaths = getConfigPaths(config);
 
-    // Watch only .md files in the workspace paths
-    const watchPatterns = configPaths.projectPaths.map(p => path.join(p, '*.md'));
+    console.log('Setting up file watchers for .md files in paths:', configPaths.projectPaths);
 
-    console.log('Setting up file watchers for .md files in paths:', watchPatterns);
-
-    // Test if directories exist
+    // Test if directories exist and find actual .md files
+    const allMdFiles = [];
     configPaths.projectPaths.forEach(p => {
-      console.log(`Testing directory access: ${p}`, fs.existsSync(p) ? 'EXISTS' : 'NOT FOUND');
+      const exists = fs.existsSync(p);
+      console.log(`Testing directory access: ${p}`, exists ? 'EXISTS' : 'NOT FOUND');
+
+      if (exists) {
+        try {
+          const files = fs.readdirSync(p);
+          const mdFiles = files
+            .filter(file => file.endsWith('.md'))
+            .map(file => path.join(p, file));
+          allMdFiles.push(...mdFiles);
+          console.log(`Found .md files in ${p}:`, files.filter(file => file.endsWith('.md')));
+        } catch (err) {
+          console.error(`Error reading directory ${p}:`, err.message);
+        }
+      }
     });
 
-    fileWatcher = chokidar.watch(watchPatterns, {
+    console.log('All .md files to watch:', allMdFiles);
+
+    // Watch the directories and all existing .md files
+    const watchTargets = [...configPaths.projectPaths, ...allMdFiles];
+
+    fileWatcher = chokidar.watch(watchTargets, {
       persistent: true,
       ignoreInitial: true,
-      usePolling: false,
+      usePolling: true,
+      interval: 1000,
       awaitWriteFinish: {
         stabilityThreshold: 300,
         pollInterval: 100
@@ -4052,12 +4074,34 @@ function setupFileWatchersWithPolling() {
   try {
     const configPaths = getConfigPaths(config);
 
-    // Watch only .md files in the workspace paths
-    const watchPatterns = configPaths.projectPaths.map(p => path.join(p, '*.md'));
+    console.log('Setting up file watchers with POLLING for .md files in paths:', configPaths.projectPaths);
 
-    console.log('Setting up file watchers with POLLING for .md files in paths:', watchPatterns);
+    // Test if directories exist and find actual .md files
+    const allMdFiles = [];
+    configPaths.projectPaths.forEach(p => {
+      const exists = fs.existsSync(p);
+      console.log(`Testing directory access (POLLING): ${p}`, exists ? 'EXISTS' : 'NOT FOUND');
 
-    fileWatcher = chokidar.watch(watchPatterns, {
+      if (exists) {
+        try {
+          const files = fs.readdirSync(p);
+          const mdFiles = files
+            .filter(file => file.endsWith('.md'))
+            .map(file => path.join(p, file));
+          allMdFiles.push(...mdFiles);
+          console.log(`Found .md files (POLLING) in ${p}:`, files.filter(file => file.endsWith('.md')));
+        } catch (err) {
+          console.error(`Error reading directory (POLLING) ${p}:`, err.message);
+        }
+      }
+    });
+
+    console.log('All .md files to watch (POLLING):', allMdFiles);
+
+    // Watch the directories and all existing .md files
+    const watchTargets = [...configPaths.projectPaths, ...allMdFiles];
+
+    fileWatcher = chokidar.watch(watchTargets, {
       persistent: true,
       ignoreInitial: true,
       usePolling: true, // Force polling mode

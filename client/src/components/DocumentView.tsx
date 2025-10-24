@@ -49,6 +49,31 @@ export default function DocumentView(): React.ReactElement {
   // Function to create a floating overlay notification for changes
   const createChangeOverlay = useCallback((fieldName: string, oldValue: string, newValue: string) => {
     console.log(`[DocumentView] Creating overlay for ${fieldName}: "${oldValue}" → "${newValue}"`)
+    console.log(`[DocumentView] Document object:`, document)
+    console.log(`[DocumentView] Document content available:`, !!document?.content)
+
+    // Extract metadata from document content using same approach as identifyChanges
+    let documentId = 'Unknown ID'
+    let documentName = 'Unknown Document'
+
+    // Use the enhanced HTML content like identifyChanges does
+    if (enhancedHtml) {
+      // Create temporary DOM elements to parse HTML like identifyChanges
+      const tempDiv = window.document.createElement('div')
+      tempDiv.innerHTML = enhancedHtml
+
+      // Extract ID using regex on text content
+      const idMatch = tempDiv.textContent?.match(/ID[^:]*:\s*([^\n-]+)/i)
+      if (idMatch) {
+        documentId = idMatch[1].trim()
+      }
+
+      // Extract Name using regex on text content
+      const nameMatch = tempDiv.textContent?.match(/Name[^:]*:\s*([^\n-]+)/i)
+      if (nameMatch) {
+        documentName = nameMatch[1].trim()
+      }
+    }
 
     // Create overlay element
     const overlay = window.document.createElement('div')
@@ -56,8 +81,9 @@ export default function DocumentView(): React.ReactElement {
       position: fixed;
       top: 20px;
       right: 20px;
-      background: linear-gradient(45deg, #ff6b6b, #ff8e53);
-      color: white;
+      background: rgb(255, 255, 255);
+      color: rgb(15, 23, 42);
+      border: 1px solid rgb(226, 232, 240);
       padding: 25px;
       border-radius: 15px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
@@ -72,13 +98,12 @@ export default function DocumentView(): React.ReactElement {
 
     overlay.innerHTML = `
       <div style="display: flex; align-items: center; gap: 15px;">
-        <div style="font-size: 32px;">🚨</div>
         <div>
-          <div style="font-size: 20px; margin-bottom: 8px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">FIELD CHANGED!</div>
-          <div style="font-size: 16px; opacity: 0.95; line-height: 1.4;">
-            <strong>${fieldName}:</strong><br/>
-            <span style="text-decoration: line-through; opacity: 0.7;">"${oldValue}"</span><br/>
-            <span style="color: #ffff99;">→ "${newValue}"</span>
+          <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: rgb(51, 65, 85);">
+            ${documentId} - ${documentName}
+          </div>
+          <div style="font-size: 13px; color: rgb(100, 116, 139);">
+            Status: <span style="color: rgb(34, 197, 94); font-weight: 600;">${newValue}</span>
           </div>
         </div>
       </div>
