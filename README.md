@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-2.6.0-green.svg)]()
+[![Version](https://img.shields.io/badge/version-2.6.7-green.svg)]()
 
 ## Overview
 
@@ -28,6 +28,32 @@ Product development has two distinct sides:
 - **Right Side (Technical Implementation)**: Technical Capabilities and Enablers - the domain of Engineers and Architects
 
 Anvil focuses exclusively on the right side, helping engineering teams define, organize, and manage the technical capabilities that enable product experiences. A new platform is coming soon for the left side that will marry **Experiences and Features** (Product Managers) with **Technical Capabilities and Enablers** (Engineers) to build the architectural runway needed to support exceptional user experiences.
+
+## What's New in v2.6.7
+
+### 🎨 **User Interface Enhancements**
+- **Direct File Access Routing**: Fixed React Router to support direct file access (e.g., `SOFTWARE_DEVELOPMENT_PLAN.md`) without requiring type parameters
+- **Anvil Logo Implementation Status**: Replaced "In Implementation" status icons with Anvil logo (`anvil.png`) in both navigation sidebar and status change notifications
+- **Enhanced Icon Visibility**: Increased Anvil logo icon size by 50% for better visibility (24px in notifications, 29px in navigation)
+- **Backup Directory Exclusion**: File watcher now properly excludes backup directories to prevent unnecessary monitoring and performance impact
+
+### 🔧 **Technical Improvements**
+- **Routing System Enhancement**: Added catch-all `/*.md` route to handle direct file access without breaking existing functionality
+- **Requirements Search Fix**: Fixed server-side requirement parsing to enable searching within enabler functional and non-functional requirements
+- **Backup System Removal**: Completely removed automatic backup functionality for cleaner file operations and faster performance
+- **File Watcher Optimization**: Enhanced chokidar configuration with comprehensive backup directory exclusion patterns
+- **DocumentView Component Updates**: Enhanced to handle both parametrized routes and direct file access seamlessly
+
+### 🎯 **Development Workflow Improvements**
+- **Named Development Processes**: Server and client processes now have descriptive names in Windows Task Manager for easier identification
+- **Improved Build Process**: Updated build configuration with proper process naming for development environment
+- **Enhanced Status Notifications**: Status change popups now display Anvil branding for "In Implementation" status
+
+### ⚙️ **Infrastructure Updates**
+- **Simplified Development Scripts**: Removed custom nodemon configuration for cleaner development setup
+- **Enhanced Metadata Processing**: Updated server to use centralized extractMetadata function for complete data parsing
+- **Type System Updates**: Extended DocumentMetadata interface to include requirements data for better type safety
+- **File System Monitoring**: Improved file watching with explicit backup directory filtering for better performance
 
 ## What's New in v2.6.0
 

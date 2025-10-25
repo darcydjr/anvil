@@ -1,6 +1,6 @@
 {
   "name": "anvil",
-  "version": "2.6.6",
+  "version": "2.6.7",
   "description": "Product Requirements Document management application for Capabilities and Enablers",
   "main": "server.ts",
   "author": "Darcy Davidson",
@@ -28,7 +28,7 @@
     "build:server": "tsc",
     "start": "ts-node server.ts",
     "prod": "npm run build:server && npm run build && node dist/server.js",
-    "dev": "concurrently --names \"ANVIL-SERVER,ANVIL-CLIENT\" --prefix-colors \"blue,green\" \"nodemon server.ts\" \"cd client && npm run dev\"",
+    "dev": "concurrently \"nodemon server.ts\" \"cd client && npm run dev\"",
     "client": "cd client && npm run dev",
     "build": "cd client && npm run build",
     "build:start": "npm run build && npm start",

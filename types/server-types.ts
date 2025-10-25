@@ -72,6 +72,8 @@ export interface DocumentMetadata {
   system?: string;
   component?: string;
   capabilityId?: string;
+  functionalRequirements?: any[];
+  nonFunctionalRequirements?: any[];
 }
 
 export interface DocumentItem {

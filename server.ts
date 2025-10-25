@@ -314,16 +314,17 @@ async function scanDirectory(dirPath: string, baseUrl: string = ''): Promise<Doc
       }
     } else if (file.endsWith('.md')) {
       const content = await fs.readFile(fullPath, 'utf8');
-      const title = extractTitle(content);
-      const name = extractName(content);
-      const description = extractDescription(content);
-      const type = extractType(content);
-      const id = extractId(content);
-      const capabilityId = extractCapabilityId(content);
-      const system = extractSystem(content);
-      const component = extractComponent(content);
-      const status = extractStatus(content);
-      const approval = extractApproval(content);
+      const metadata = extractMetadata(content);
+      const title = metadata.title;
+      const name = metadata.name;
+      const description = metadata.description;
+      const type = metadata.type;
+      const id = metadata.id;
+      const capabilityId = metadata.capabilityId;
+      const system = metadata.system;
+      const component = metadata.component;
+      const status = metadata.status;
+      const approval = metadata.approval;
 
       // Determine type based on filename or explicit type field
       let itemType = 'document'
@@ -349,7 +350,9 @@ async function scanDirectory(dirPath: string, baseUrl: string = ''): Promise<Doc
         component: component,
         status: status,
         approval: approval,
-        capabilityId: capabilityId
+        capabilityId: capabilityId,
+        ...(metadata.functionalRequirements && { functionalRequirements: metadata.functionalRequirements }),
+        ...(metadata.nonFunctionalRequirements && { nonFunctionalRequirements: metadata.nonFunctionalRequirements })
       };
 
       items.push(item);
@@ -511,12 +514,13 @@ function extractSystem(content) {
 
 // Extract all metadata from content into a single object
 function extractMetadata(content: string): DocumentMetadata {
-  return {
+  const type = extractType(content);
+  const metadata: any = {
     id: extractId(content),
     name: extractName(content),
     title: extractTitle(content),
     description: extractDescription(content),
-    type: extractType(content),
+    type: type,
     status: extractStatus(content),
     approval: extractApproval(content),
     priority: extractPriority(content),
@@ -524,6 +528,66 @@ function extractMetadata(content: string): DocumentMetadata {
     component: extractComponent(content),
     capabilityId: extractCapabilityId(content)
   };
+
+  // Add requirements for enablers
+  if (type === 'enabler') {
+    metadata.functionalRequirements = parseFunctionalRequirements(content);
+    metadata.nonFunctionalRequirements = parseNonFunctionalRequirements(content);
+  }
+
+  return metadata;
+}
+
+// Requirement parsing functions
+function parseFunctionalRequirements(markdown: string): any[] {
+  return parseRequirementsTable(markdown, 'Functional Requirements', ['id', 'name', 'requirement', 'priority', 'status', 'approval']);
+}
+
+function parseNonFunctionalRequirements(markdown: string): any[] {
+  return parseRequirementsTable(markdown, 'Non-Functional Requirements', ['id', 'name', 'type', 'requirement', 'priority', 'status', 'approval']);
+}
+
+function parseRequirementsTable(markdown: string, sectionTitle: string, fields: string[]): any[] {
+  const lines = markdown.split('\n');
+  const sectionIndex = lines.findIndex(line => line.includes(sectionTitle));
+
+  if (sectionIndex === -1) return [];
+
+  // Find the table start (look for | headers |)
+  let tableStart = -1;
+  for (let i = sectionIndex; i < lines.length; i++) {
+    if (lines[i].trim().startsWith('|') && lines[i].includes('|')) {
+      tableStart = i;
+      break;
+    }
+  }
+
+  if (tableStart === -1) return [];
+
+  // Skip header and separator rows
+  const dataStart = tableStart + 2;
+  const requirements: any[] = [];
+
+  for (let i = dataStart; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    // Stop if we hit an empty line or next section
+    if (!line || (!line.startsWith('|') && line.startsWith('#'))) break;
+
+    if (line.startsWith('|') && line.endsWith('|')) {
+      const cells = line.split('|').map(cell => cell.trim()).filter(cell => cell !== '');
+
+      if (cells.length >= fields.length) {
+        const requirement: any = {};
+        fields.forEach((field, index) => {
+          requirement[field] = cells[index] || '';
+        });
+        requirements.push(requirement);
+      }
+    }
+  }
+
+  return requirements;
 }
 
 // ID Generation Functions (Server-side)
@@ -1324,14 +1388,6 @@ app.post('/api/file/*', async (req, res) => {
       return res.status(403).json({ error: 'Access denied: ' + securityError.message });
     }
     
-    // Create backup if file exists
-    if (await fs.pathExists(resolvedPath)) {
-      const backupDir = path.join(path.dirname(resolvedPath), 'backup');
-      await fs.ensureDir(backupDir);
-      const fileName = path.basename(resolvedPath);
-      const backupPath = path.join(backupDir, `${fileName}.backup.${Date.now()}`);
-      await fs.copy(resolvedPath, backupPath);
-    }
     
     await fs.writeFile(resolvedPath, content, 'utf8');
     console.log('[SAVE] File written successfully to:', resolvedPath);
@@ -1474,19 +1530,12 @@ app.delete('/api/file/*', async (req, res) => {
       }
     }
     
-    // Create backup before deleting
-    const backupDir = path.join(path.dirname(resolvedPath), 'backup');
-    await fs.ensureDir(backupDir);
-    const backupPath = path.join(backupDir, `${fileName}.deleted.${Date.now()}`);
-    await fs.copy(resolvedPath, backupPath);
-    
     // Delete the file
     await fs.unlink(resolvedPath);
-    
+
     res.json({
       success: true,
-      message: 'File deleted successfully',
-      backup: backupPath
+      message: 'File deleted successfully'
     });
   } catch (error) {
     console.error('Error deleting file:', error);
@@ -1888,14 +1937,6 @@ app.post('/api/capability-with-dependencies/*', async (req, res) => {
       return res.status(403).json({ error: 'Access denied: ' + securityError.message });
     }
     
-    // Create backup if file exists
-    if (await fs.pathExists(resolvedPath)) {
-      const backupDir = path.join(path.dirname(resolvedPath), 'backup');
-      await fs.ensureDir(backupDir);
-      const fileName = path.basename(resolvedPath);
-      const backupPath = path.join(backupDir, `${fileName}.backup.${Date.now()}`);
-      await fs.copy(resolvedPath, backupPath);
-    }
     
     await fs.writeFile(resolvedPath, content, 'utf8');
     console.log('[BI-DIRECTIONAL] Main capability file saved:', resolvedPath);
@@ -2003,14 +2044,6 @@ app.post('/api/capability-with-enablers/*', async (req, res) => {
       return res.status(403).json({ error: 'Access denied: ' + securityError.message });
     }
     
-    // Create backup if file exists
-    if (await fs.pathExists(resolvedPath)) {
-      const backupDir = path.join(path.dirname(resolvedPath), 'backup');
-      await fs.ensureDir(backupDir);
-      const fileName = path.basename(resolvedPath);
-      const backupPath = path.join(backupDir, `${fileName}.backup.${Date.now()}`);
-      await fs.copy(resolvedPath, backupPath);
-    }
     
     await fs.writeFile(resolvedPath, content, 'utf8');
     console.log('[CAPABILITY-ENABLERS] Main capability file saved:', resolvedPath);
@@ -2101,14 +2134,6 @@ app.post('/api/enabler-with-reparenting/*', async (req, res) => {
       return res.status(403).json({ error: 'Access denied: ' + securityError.message });
     }
     
-    // Create backup if file exists
-    if (await fs.pathExists(resolvedPath)) {
-      const backupDir = path.join(path.dirname(resolvedPath), 'backup');
-      await fs.ensureDir(backupDir);
-      const fileName = path.basename(resolvedPath);
-      const backupPath = path.join(backupDir, `${fileName}.backup.${Date.now()}`);
-      await fs.copy(resolvedPath, backupPath);
-    }
     
     // Save the enabler file
     await fs.writeFile(resolvedPath, content, 'utf8');
