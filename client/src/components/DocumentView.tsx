@@ -26,8 +26,19 @@ export default function DocumentView(): React.ReactElement {
   const params = useParams<{ type: string; '*': string }>()
   console.log('[DocumentView] Got params:', params)
 
+  // Handle both normal routes (/view/:type/*) and direct file access (/*.md)
   const type = params.type
-  const path = params['*']
+  let path = params['*']
+
+  // If no type and no path, check if this is a direct file access
+  if (!type && !path) {
+    // Get the current pathname and use it as the path
+    const currentPath = window.location.pathname
+    if (currentPath.endsWith('.md')) {
+      path = currentPath.substring(1) // Remove leading slash
+    }
+  }
+
   console.log('[DocumentView] Extracted type:', type, 'path:', path)
 
   const navigate = useNavigate()
@@ -46,8 +57,35 @@ export default function DocumentView(): React.ReactElement {
 
   console.log('[DocumentView] Component mounted/updated with params:', { type, path })
 
+  // Function to get status icon based on status value
+  const getStatusIcon = (status: string): string => {
+    const statusLower = status.toLowerCase()
+
+    // Implementation/Development status icons
+    if (statusLower.includes('implementation') || statusLower.includes('implementing')) return '<img src="/anvil.png" style="width: 24px; height: 24px; vertical-align: middle;" alt="Implementation" />'
+    if (statusLower.includes('implemented') || statusLower.includes('complete')) return '✅'
+    if (statusLower.includes('in progress') || statusLower.includes('active')) return '⚡'
+
+    // Review status icons
+    if (statusLower.includes('review')) return '👀'
+    if (statusLower.includes('analysis')) return '🔬'
+    if (statusLower.includes('design')) return '📐'
+
+    // Planning status icons
+    if (statusLower.includes('draft') || statusLower.includes('planning')) return '📝'
+    if (statusLower.includes('ready')) return '🟢'
+    if (statusLower.includes('pending') || statusLower.includes('waiting')) return '⏳'
+
+    // Problem status icons
+    if (statusLower.includes('blocked') || statusLower.includes('issue')) return '🚫'
+    if (statusLower.includes('cancelled') || statusLower.includes('rejected')) return '❌'
+
+    // Default icon
+    return '📋'
+  }
+
   // Function to create a floating overlay notification for changes
-  const createChangeOverlay = useCallback((fieldName: string, oldValue: string, newValue: string) => {
+  const createChangeOverlay = useCallback((fieldName: string, oldValue: string, newValue: string, currentHtml: string) => {
     console.log(`[DocumentView] Creating overlay for ${fieldName}: "${oldValue}" → "${newValue}"`)
     console.log(`[DocumentView] Document object:`, document)
     console.log(`[DocumentView] Document content available:`, !!document?.content)
@@ -56,22 +94,31 @@ export default function DocumentView(): React.ReactElement {
     let documentId = 'Unknown ID'
     let documentName = 'Unknown Document'
 
-    // Use the enhanced HTML content like identifyChanges does
-    if (enhancedHtml) {
+    // Use the current HTML content passed from identifyChanges
+    if (currentHtml) {
       // Create temporary DOM elements to parse HTML like identifyChanges
       const tempDiv = window.document.createElement('div')
-      tempDiv.innerHTML = enhancedHtml
+      tempDiv.innerHTML = currentHtml
 
-      // Extract ID using regex on text content
-      const idMatch = tempDiv.textContent?.match(/ID[^:]*:\s*([^\n-]+)/i)
+      console.log(`[DocumentView] Parsing content for ID and Name:`, tempDiv.textContent?.substring(0, 500))
+
+      // Extract ID using regex - look for CAP- or ENB- IDs
+      const idMatch = tempDiv.textContent?.match(/ID[^:]*:\s*([A-Z]{3}-\d+)/i) ||
+                     tempDiv.textContent?.match(/(CAP-\d+|ENB-\d+)/i)
       if (idMatch) {
         documentId = idMatch[1].trim()
+        console.log(`[DocumentView] Found ID: "${documentId}"`)
+      } else {
+        console.log(`[DocumentView] No ID found in content`)
       }
 
-      // Extract Name using regex on text content
-      const nameMatch = tempDiv.textContent?.match(/Name[^:]*:\s*([^\n-]+)/i)
+      // Extract Name using regex - get the name field value
+      const nameMatch = tempDiv.textContent?.match(/Name[^:]*:\s*([^\n]+)/i)
       if (nameMatch) {
         documentName = nameMatch[1].trim()
+        console.log(`[DocumentView] Found Name: "${documentName}"`)
+      } else {
+        console.log(`[DocumentView] No Name found in content`)
       }
     }
 
@@ -81,9 +128,9 @@ export default function DocumentView(): React.ReactElement {
       position: fixed;
       top: 20px;
       right: 20px;
-      background: rgb(255, 255, 255);
-      color: rgb(15, 23, 42);
-      border: 1px solid rgb(226, 232, 240);
+      background: #363636;
+      color: #fff;
+      border: 1px solid #555;
       padding: 25px;
       border-radius: 15px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
@@ -92,18 +139,18 @@ export default function DocumentView(): React.ReactElement {
       font-size: 18px;
       font-weight: bold;
       max-width: 450px;
-      border: 4px solid #fff;
       animation: bounceIn 0.6s ease-out;
     `
 
     overlay.innerHTML = `
       <div style="display: flex; align-items: center; gap: 15px;">
         <div>
-          <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: rgb(51, 65, 85);">
-            ${documentId} - ${documentName}
+          <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #fff;">
+            ${documentId} | ${documentName}
           </div>
-          <div style="font-size: 13px; color: rgb(100, 116, 139);">
-            Status: <span style="color: rgb(34, 197, 94); font-weight: 600;">${newValue}</span>
+          <div style="font-size: 13px; color: #ccc; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 16px;">${getStatusIcon(newValue)}</span>
+            <span style="color: #4ade80; font-weight: 600;">${newValue}</span>
           </div>
         </div>
       </div>
@@ -201,7 +248,7 @@ export default function DocumentView(): React.ReactElement {
           foundChanges = true
 
           // Create floating overlay notification
-          createChangeOverlay(field, oldField[1].trim(), newField[1].trim())
+          createChangeOverlay(field, oldField[1].trim(), newField[1].trim(), newHtml)
 
           // Add a subtle inline highlight for reference that stays longer
           const fieldRegex = new RegExp(`(${field}[^:]*:\\s*)([^\\n-]+)`, 'gi')
@@ -435,7 +482,7 @@ export default function DocumentView(): React.ReactElement {
   }
 
   const handleCopy = async (): Promise<void> => {
-    if (!document || !path || !type) {
+    if (!document || !path) {
       toast.error('No document to copy')
       return
     }

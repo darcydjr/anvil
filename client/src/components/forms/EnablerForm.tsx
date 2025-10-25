@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, RefreshCcw } from 'lucide-react'
 import { apiService } from '../../services/apiService'
 import { generateFunctionalRequirementId, generateNonFunctionalRequirementId } from '../../utils/idGenerator'
 import { stateListenerManager } from '../../utils/stateListeners'
 import { STATUS_VALUES, APPROVAL_VALUES, PRIORITY_VALUES, REVIEW_VALUES } from '../../utils/constants'
+import toast from 'react-hot-toast'
 
-import { EnablerFormData, FunctionalRequirement, NonFunctionalRequirement } from '../../utils/markdownUtils'
+import { EnablerFormData, FunctionalRequirement, NonFunctionalRequirement, generateEnablerTechnicalSpecificationsTemplate } from '../../utils/markdownUtils'
 
 interface EnablerFormProps {
   data: EnablerFormData
@@ -276,6 +277,17 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
     'Performance', 'Scalability', 'Security', 'Reliability', 'Availability',
     'Usability', 'Maintainability', 'Portability', 'Compliance', 'Technical Constraint', 'Other'
   ]
+
+  const handleClearTechnicalSpecifications = useCallback(() => {
+    const confirmed = window.confirm(
+      'Are you sure you want to clear the technical specifications and replace them with the template? This action cannot be undone.'
+    )
+    if (confirmed) {
+      const templateSpecs = generateEnablerTechnicalSpecificationsTemplate()
+      onChange({ technicalSpecifications: templateSpecs })
+      toast.success('Technical specifications cleared and replaced with template')
+    }
+  }, [onChange])
 
   return (
     <div className="space-y-6">
@@ -681,6 +693,26 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
             >
               Approve All
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Clear Technical Specifications */}
+      <div className="bg-card rounded-lg border border-border p-6">
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={handleClearTechnicalSpecifications}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 transition-colors"
+          >
+            <RefreshCcw size={16} />
+            Clear Technical Specifications
+          </button>
+          <div>
+            <h4 className="text-lg font-semibold text-foreground">Clear Technical Specifications</h4>
+            <p className="text-sm text-muted-foreground mt-1">
+              Replace the current technical specifications with the template content
+            </p>
           </div>
         </div>
       </div>

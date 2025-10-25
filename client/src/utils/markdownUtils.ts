@@ -729,7 +729,7 @@ function formatImplementationPlan(implementationPlan: string): string {
   }
 }
 
-function generateCapabilityTechnicalSpecificationsTemplate(): string {
+export function generateCapabilityTechnicalSpecificationsTemplate(): string {
   let template = `## Technical Specifications (Template)\n\n`
   template += `### Capability Dependency Flow Diagram\n`
   template += `> **Note for AI**: When designing this section, show the direct relationships and dependencies between capabilities (NOT enablers). Focus on capability-to-capability interactions, business value flows, and how capabilities work together to deliver end-to-end business outcomes. Include:\n`
@@ -790,7 +790,7 @@ function generateCapabilityTechnicalSpecificationsTemplate(): string {
   return template
 }
 
-function generateEnablerTechnicalSpecificationsTemplate(): string {
+export function generateEnablerTechnicalSpecificationsTemplate(): string {
   let template = `## Technical Specifications (Template)\n\n`
   template += `### Enabler Dependency Flow Diagram\n`
   template += `\`\`\`mermaid\n`

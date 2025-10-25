@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useCallback, useMemo, useState } from 'react'
-import { Plus, Trash2, FileText } from 'lucide-react'
+import { Plus, Trash2, FileText, RefreshCcw } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../../contexts/AppContext'
 import { generateEnablerId } from '../../utils/idGenerator'
@@ -8,7 +8,7 @@ import { STATUS_VALUES, APPROVAL_VALUES, PRIORITY_VALUES, REVIEW_VALUES } from '
 import { apiService } from '../../services/apiService'
 import toast from 'react-hot-toast'
 
-import { CapabilityFormData, Dependency, Enabler } from '../../utils/markdownUtils'
+import { CapabilityFormData, Dependency, Enabler, generateCapabilityTechnicalSpecificationsTemplate } from '../../utils/markdownUtils'
 
 interface CapabilityFormProps {
   data: CapabilityFormData
@@ -309,6 +309,19 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
     STATUS_VALUES.ENABLER.IMPLEMENTED,
     STATUS_VALUES.ENABLER.RETIRED
   ], [])
+
+  // Function to clear technical specifications and replace with template
+  const handleClearTechnicalSpecifications = useCallback(() => {
+    const confirmed = window.confirm(
+      'Are you sure you want to clear the technical specifications and replace them with the template? This action cannot be undone.'
+    )
+
+    if (confirmed) {
+      const templateSpecs = generateCapabilityTechnicalSpecificationsTemplate()
+      onChange({ technicalSpecifications: templateSpecs })
+      toast.success('Technical specifications cleared and replaced with template')
+    }
+  }, [onChange])
 
   return (
     <div className="space-y-6">
@@ -793,6 +806,19 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
               />
             </div>
           </div>
+        </div>
+
+        {/* Clear Technical Specifications Button */}
+        <div className="flex justify-start mt-8 pt-6 border-t border-border">
+          <button
+            type="button"
+            onClick={handleClearTechnicalSpecifications}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+            title="Replace technical specifications with template"
+          >
+            <RefreshCcw size={14} />
+            Clear Technical Specifications
+          </button>
         </div>
       </div>
     </div>

@@ -244,7 +244,7 @@ export default function Sidebar(): JSX.Element {
                         <Ruler size={19} className="text-blue-500 ml-1" />
                       )}
                       {capability.status === 'In Implementation' && (
-                        <PencilRuler size={19} className="text-blue-500 ml-1" />
+                        <img src="/anvil.png" style={{width: '29px', height: '29px'}} className="ml-1" alt="Implementation" />
                       )}
                     </div>
                   )
@@ -283,7 +283,7 @@ export default function Sidebar(): JSX.Element {
                         <Ruler size={19} className="text-blue-500 ml-1" />
                       )}
                       {enabler.status === 'In Implementation' && (
-                        <PencilRuler size={19} className="text-blue-500 ml-1" />
+                        <img src="/anvil.png" style={{width: '29px', height: '29px'}} className="ml-1" alt="Implementation" />
                       )}
                     </div>
                   )
@@ -416,7 +416,7 @@ export default function Sidebar(): JSX.Element {
                               <Ruler size={19} className="text-blue-500 ml-1" />
                             )}
                             {capability.status === 'In Implementation' && (
-                              <PencilRuler size={19} className="text-blue-500 ml-1" />
+                              <img src="/anvil.png" style={{width: '29px', height: '29px'}} className="ml-1" alt="Implementation" />
                             )}
                           </div>
                         )
@@ -480,7 +480,7 @@ export default function Sidebar(): JSX.Element {
                       <Ruler size={19} className="text-blue-500 ml-1" />
                     )}
                     {enabler.status === 'In Implementation' && (
-                      <PencilRuler size={19} className="text-blue-500 ml-1" />
+                      <img src="/anvil.png" style={{width: '29px', height: '29px'}} className="ml-1" alt="Implementation" />
                     )}
                   </div>
                 )

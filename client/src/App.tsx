@@ -45,6 +45,7 @@ function App(): JSX.Element {
               <Route path="/edit/:type/*" element={<DocumentEditor />} />
               <Route path="/create/:type" element={<DocumentEditor />} />
               <Route path="/create/:type/for/:capabilityId" element={<DocumentEditor />} />
+              <Route path="/*.md" element={<DocumentView />} />
             </Routes>
           </Layout>
         </Router>

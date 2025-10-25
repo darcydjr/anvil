@@ -4002,10 +4002,10 @@ function setupFileWatchers() {
         try {
           const files = fs.readdirSync(p);
           const mdFiles = files
-            .filter(file => file.endsWith('.md'))
+            .filter(file => file.endsWith('.md') && !file.includes('backup'))
             .map(file => path.join(p, file));
           allMdFiles.push(...mdFiles);
-          console.log(`Found .md files in ${p}:`, files.filter(file => file.endsWith('.md')));
+          console.log(`Found .md files in ${p}:`, files.filter(file => file.endsWith('.md') && !file.includes('backup')));
         } catch (err) {
           console.error(`Error reading directory ${p}:`, err.message);
         }
@@ -4022,6 +4022,11 @@ function setupFileWatchers() {
       ignoreInitial: true,
       usePolling: true,
       interval: 1000,
+      ignored: [
+        '**/backup/**',
+        '**/backup',
+        /backup/
+      ],
       awaitWriteFinish: {
         stabilityThreshold: 300,
         pollInterval: 100
@@ -4086,10 +4091,10 @@ function setupFileWatchersWithPolling() {
         try {
           const files = fs.readdirSync(p);
           const mdFiles = files
-            .filter(file => file.endsWith('.md'))
+            .filter(file => file.endsWith('.md') && !file.includes('backup'))
             .map(file => path.join(p, file));
           allMdFiles.push(...mdFiles);
-          console.log(`Found .md files (POLLING) in ${p}:`, files.filter(file => file.endsWith('.md')));
+          console.log(`Found .md files (POLLING) in ${p}:`, files.filter(file => file.endsWith('.md') && !file.includes('backup')));
         } catch (err) {
           console.error(`Error reading directory (POLLING) ${p}:`, err.message);
         }
@@ -4106,6 +4111,11 @@ function setupFileWatchersWithPolling() {
       ignoreInitial: true,
       usePolling: true, // Force polling mode
       interval: 1000, // Poll every second
+      ignored: [
+        '**/backup/**',
+        '**/backup',
+        /backup/
+      ],
       awaitWriteFinish: {
         stabilityThreshold: 300,
         pollInterval: 100
