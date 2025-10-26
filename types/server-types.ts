@@ -38,6 +38,10 @@ export interface DefaultsConfig {
   codeReview?: 'Required' | 'Not Required';
 }
 
+export interface LoggingConfig {
+  level: 'ERROR' | 'WARN' | 'INFO' | 'DEBUG';
+}
+
 export interface Config {
   workspaces: Workspace[];
   activeWorkspaceId: string;
@@ -45,6 +49,7 @@ export interface Config {
   server: ServerConfig;
   ui: UIConfig;
   defaults?: DefaultsConfig;
+  logging?: LoggingConfig;
   importedComponents?: any[];
 }
 
@@ -89,6 +94,7 @@ export interface DocumentItem {
   component?: string;
   status?: string;
   approval?: string;
+  priority?: string;
   fullPath?: string;
   upstreamDependencies?: Dependency[];
   downstreamDependencies?: Dependency[];

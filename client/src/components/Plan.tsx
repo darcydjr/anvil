@@ -129,17 +129,39 @@ function MarkdownRenderer({ content, onCopy, copiedIndex }: MarkdownRendererProp
   );
 }
 
+function createAnchorId(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+}
+
 function formatTextMarkdown(markdown: string): string {
   return markdown
-    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
+    .replace(/^# (.+)$/gm, (match, title) => {
+      const id = createAnchorId(title);
+      return `<h1 id="${id}">${title}</h1>`;
+    })
+    .replace(/^## (.+)$/gm, (match, title) => {
+      const id = createAnchorId(title);
+      return `<h2 id="${id}">${title}</h2>`;
+    })
+    .replace(/^### (.+)$/gm, (match, title) => {
+      const id = createAnchorId(title);
+      return `<h3 id="${id}">${title}</h3>`;
+    })
+    .replace(/^#### (.+)$/gm, (match, title) => {
+      const id = createAnchorId(title);
+      return `<h4 id="${id}">${title}</h4>`;
+    })
+    .replace(/\[([^\]]+)\]\(#([^)]+)\)/g, '<a href="#$2" class="text-primary hover:text-primary/80 underline">$1</a>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/`(.+?)`/g, '<code class="bg-muted px-1 py-0.5 rounded text-sm">$1</code>')
     .replace(/^\- (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+    .replace(/(<li>.*<\/li>)/s, '<ul class="list-disc ml-6 space-y-1">$1</ul>')
     .replace(/\n\n/g, '</p><p>')
     .replace(/^(?!<[uh]|<li)(.+)$/gm, '<p>$1</p>')
     .replace(/<p><\/p>/g, '');
@@ -278,7 +300,50 @@ export default function Plan(): JSX.Element {
               spellCheck={false}
             />
           ) : (
-            <div className="markdown-content">
+            <div className="markdown-content prose prose-sm max-w-none">
+              <style>{`
+                html {
+                  scroll-behavior: smooth;
+                }
+                .markdown-content h1 {
+                  font-size: 2rem;
+                  font-weight: bold;
+                  margin: 2rem 0 1rem 0;
+                  padding-top: 1rem;
+                  border-top: 1px solid hsl(var(--border));
+                }
+                .markdown-content h1:first-child {
+                  margin-top: 0;
+                  border-top: none;
+                  padding-top: 0;
+                }
+                .markdown-content h2 {
+                  font-size: 1.5rem;
+                  font-weight: bold;
+                  margin: 1.5rem 0 1rem 0;
+                  padding-top: 0.5rem;
+                }
+                .markdown-content h3 {
+                  font-size: 1.25rem;
+                  font-weight: bold;
+                  margin: 1.25rem 0 0.75rem 0;
+                }
+                .markdown-content h4 {
+                  font-size: 1.125rem;
+                  font-weight: bold;
+                  margin: 1rem 0 0.5rem 0;
+                }
+                .markdown-content p {
+                  margin: 0.75rem 0;
+                  line-height: 1.6;
+                }
+                .markdown-content ul {
+                  margin: 0.75rem 0;
+                }
+                .markdown-content li {
+                  margin: 0.25rem 0;
+                }
+              `}</style>
               {content ? (
                 <MarkdownRenderer content={content} onCopy={handleCopyToClipboard} copiedIndex={copiedIndex} />
               ) : (

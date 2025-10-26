@@ -216,15 +216,15 @@ export function convertFormToMarkdown(formData: FormData, type: DocumentType): s
     // Enablers (comes right after metadata)
     markdown += `## Enablers\n\n`
     if (capData.enablers && capData.enablers.length > 0) {
-      markdown += `| Enabler ID | Name | Description | Status | Approval | Priority |\n`
-      markdown += `|------------|------|-------------|--------|----------|----------|\n`
+      markdown += `| Enabler ID | Description |\n`
+      markdown += `|------------|-------------|\n`
       capData.enablers.forEach(enabler => {
-        markdown += `| ${enabler.id || ''} | ${enabler.name || ''} | ${enabler.description || ''} | ${enabler.status || STATUS_VALUES.ENABLER.IN_DRAFT} | ${enabler.approval || APPROVAL_VALUES.NOT_APPROVED} | ${enabler.priority || PRIORITY_VALUES.CAPABILITY_ENABLER.HIGH} |\n`
+        markdown += `| ${enabler.id || ''} | ${enabler.description || ''} |\n`
       })
     } else {
-      markdown += `| Enabler ID | Name | Description | Status | Approval | Priority |\n`
-      markdown += `|------------|------|-------------|--------|----------|----------|\n`
-      markdown += `| | | | | | |\n`
+      markdown += `| Enabler ID | Description |\n`
+      markdown += `|------------|-------------|\n`
+      markdown += `| | |\n`
     }
     markdown += `\n`
 
@@ -389,7 +389,7 @@ function parseEnablersTable(markdown: string): Enabler[] {
       if (cells.length > 0 && cells[cells.length - 1] === '') cells.pop()
 
       // Flexible parsing based on available columns
-      if (cells.length >= 3) { // Minimum: ID, Name, Description
+      if (cells.length >= 2) { // Minimum: ID, Description (for 2-column capability format)
         const enabler: Enabler = {
           id: '',
           name: '',
@@ -417,13 +417,28 @@ function parseEnablersTable(markdown: string): Enabler[] {
           } else if (header.includes('priority')) {
             enabler.priority = value || PRIORITY_VALUES.CAPABILITY_ENABLER.HIGH
           } else {
-            // Fallback to positional mapping for standard 6-column format
-            if (j === 0) enabler.id = value
-            else if (j === 1) enabler.name = value
-            else if (j === 2) enabler.description = value
-            else if (j === 3) enabler.status = value || STATUS_VALUES.ENABLER.IN_DRAFT
-            else if (j === 4) enabler.approval = value || APPROVAL_VALUES.NOT_APPROVED
-            else if (j === 5) enabler.priority = value || PRIORITY_VALUES.CAPABILITY_ENABLER.HIGH
+            // Fallback to positional mapping
+            if (j === 0) {
+              enabler.id = value
+            } else if (j === 1) {
+              // For 2-column format, second column is description
+              if (headerColumns.length === 2) {
+                enabler.description = value
+                // Generate a name from the description if not provided
+                enabler.name = value.length > 50 ? value.substring(0, 47) + '...' : value
+              } else {
+                // For 3+ column format, second column is name
+                enabler.name = value
+              }
+            } else if (j === 2) {
+              enabler.description = value
+            } else if (j === 3) {
+              enabler.status = value || STATUS_VALUES.ENABLER.IN_DRAFT
+            } else if (j === 4) {
+              enabler.approval = value || APPROVAL_VALUES.NOT_APPROVED
+            } else if (j === 5) {
+              enabler.priority = value || PRIORITY_VALUES.CAPABILITY_ENABLER.HIGH
+            }
           }
         }
 

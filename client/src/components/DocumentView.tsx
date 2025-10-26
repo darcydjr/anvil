@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { apiService } from '../services/apiService'
 import { useApp } from '../contexts/AppContext'
 import { websocketService } from '../services/websocketService'
-import { Edit, Trash2, ArrowLeft, Copy } from 'lucide-react'
+import { Edit, Trash2, ArrowLeft, Copy, Folder } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { renderMermaidDiagrams } from '../utils/mermaidUtils'
 
@@ -54,6 +54,8 @@ export default function DocumentView(): React.ReactElement {
   const [previousContent, setPreviousContent] = useState<string>('')
   const [previousPath, setPreviousPath] = useState<string>('')
   const [changedElements, setChangedElements] = useState<Set<string>>(new Set())
+  const [isExternalReload, setIsExternalReload] = useState(false)
+  const contentRef = useRef<HTMLDivElement>(null)
 
   console.log('[DocumentView] Component mounted/updated with params:', { type, path })
 
@@ -84,43 +86,9 @@ export default function DocumentView(): React.ReactElement {
     return '📋'
   }
 
-  // Function to create a floating overlay notification for changes
-  const createChangeOverlay = useCallback((fieldName: string, oldValue: string, newValue: string, currentHtml: string) => {
-    console.log(`[DocumentView] Creating overlay for ${fieldName}: "${oldValue}" → "${newValue}"`)
-    console.log(`[DocumentView] Document object:`, document)
-    console.log(`[DocumentView] Document content available:`, !!document?.content)
-
-    // Extract metadata from document content using same approach as identifyChanges
-    let documentId = 'Unknown ID'
-    let documentName = 'Unknown Document'
-
-    // Use the current HTML content passed from identifyChanges
-    if (currentHtml) {
-      // Create temporary DOM elements to parse HTML like identifyChanges
-      const tempDiv = window.document.createElement('div')
-      tempDiv.innerHTML = currentHtml
-
-      console.log(`[DocumentView] Parsing content for ID and Name:`, tempDiv.textContent?.substring(0, 500))
-
-      // Extract ID using regex - look for CAP- or ENB- IDs
-      const idMatch = tempDiv.textContent?.match(/ID[^:]*:\s*([A-Z]{3}-\d+)/i) ||
-                     tempDiv.textContent?.match(/(CAP-\d+|ENB-\d+)/i)
-      if (idMatch) {
-        documentId = idMatch[1].trim()
-        console.log(`[DocumentView] Found ID: "${documentId}"`)
-      } else {
-        console.log(`[DocumentView] No ID found in content`)
-      }
-
-      // Extract Name using regex - get the name field value
-      const nameMatch = tempDiv.textContent?.match(/Name[^:]*:\s*([^\n]+)/i)
-      if (nameMatch) {
-        documentName = nameMatch[1].trim()
-        console.log(`[DocumentView] Found Name: "${documentName}"`)
-      } else {
-        console.log(`[DocumentView] No Name found in content`)
-      }
-    }
+  // Function to create a floating overlay notification for external changes
+  const createExternalChangeOverlay = useCallback((fieldName: string, oldValue: string, newValue: string, documentId: string, documentName: string) => {
+    console.log(`[DocumentView] Creating external change overlay for ${fieldName}: "${oldValue}" → "${newValue}"`)
 
     // Create overlay element
     const overlay = window.document.createElement('div')
@@ -146,11 +114,11 @@ export default function DocumentView(): React.ReactElement {
       <div style="display: flex; align-items: center; gap: 15px;">
         <div>
           <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #fff;">
-            ${documentId} | ${documentName}
+            🔄 External Change | ${documentId} | ${documentName}
           </div>
           <div style="font-size: 13px; color: #ccc; display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 16px;">${getStatusIcon(newValue)}</span>
-            <span style="color: #4ade80; font-weight: 600;">${newValue}</span>
+            <span style="color: #4ade80; font-weight: 600;">${fieldName}: ${oldValue} → ${newValue}</span>
           </div>
         </div>
       </div>
@@ -206,90 +174,22 @@ export default function DocumentView(): React.ReactElement {
     }, 8000)
   }, [])
 
-  // Function to identify changes between old and new content
-  const identifyChanges = useCallback((oldHtml: string, newHtml: string): string => {
-    console.log('[DocumentView] identifyChanges called')
-    console.log('[DocumentView] oldHtml length:', oldHtml?.length || 0)
-    console.log('[DocumentView] newHtml length:', newHtml?.length || 0)
 
-    if (!oldHtml || !newHtml) {
-      console.log('[DocumentView] Missing old or new HTML, returning newHtml')
-      return newHtml
-    }
-
-    if (oldHtml === newHtml) {
-      console.log('[DocumentView] Content unchanged, returning newHtml')
-      return newHtml
-    }
+  const handleOpenExplorer = useCallback(async () => {
+    if (!path) return
 
     try {
-      // Create temporary DOM elements to compare
-      const tempOld = window.document.createElement('div')
-      const tempNew = window.document.createElement('div')
-      tempOld.innerHTML = oldHtml
-      tempNew.innerHTML = newHtml
-
-      // Look for metadata changes (Status, Priority, Approval, etc.)
-      const metadataFields = ['Status', 'Priority', 'Approval', 'Owner', 'Type']
-      let foundChanges = false
-
-      metadataFields.forEach(field => {
-        const oldField = tempOld.textContent?.match(new RegExp(`${field}[^:]*:\\s*([^\\n-]+)`, 'i'))
-        const newField = tempNew.textContent?.match(new RegExp(`${field}[^:]*:\\s*([^\\n-]+)`, 'i'))
-
-        console.log(`[DocumentView] ${field} - Old: "${oldField?.[1]?.trim()}" New: "${newField?.[1]?.trim()}"`)
-
-        if (oldField && newField) {
-          console.log(`[DocumentView] ${field} comparison: "${oldField[1].trim()}" === "${newField[1].trim()}" = ${oldField[1].trim() === newField[1].trim()}`)
-        }
-
-        if (oldField && newField && oldField[1].trim() !== newField[1].trim()) {
-          console.log(`🚨 [DocumentView] ${field} changed from "${oldField[1].trim()}" to "${newField[1].trim()}"`)
-          foundChanges = true
-
-          // Create floating overlay notification
-          createChangeOverlay(field, oldField[1].trim(), newField[1].trim(), newHtml)
-
-          // Add a subtle inline highlight for reference that stays longer
-          const fieldRegex = new RegExp(`(${field}[^:]*:\\s*)([^\\n-]+)`, 'gi')
-          const uniqueId = `subtle-highlight-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-          tempNew.innerHTML = tempNew.innerHTML.replace(fieldRegex, (match: string, prefix: string, value: string) => {
-            console.log(`[DocumentView] Adding subtle highlight with ID: ${uniqueId}`)
-            return `${prefix}<span id="${uniqueId}" style="background: linear-gradient(120deg, #fff3cd 0%, #ffd54f 100%); border-left: 5px solid #ff9800; padding: 5px 10px; font-weight: bold; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">${value}</span>`
-          })
-
-          // Remove subtle highlight after 15 seconds
-          setTimeout(() => {
-            try {
-              const element = window.document.getElementById(uniqueId)
-              if (element) {
-                console.log(`[DocumentView] Removing subtle highlight for: ${uniqueId}`)
-                element.style.background = 'transparent'
-                element.style.borderLeft = 'none'
-                element.style.padding = '0'
-                element.style.fontWeight = 'normal'
-                element.style.borderRadius = '0'
-                element.style.boxShadow = 'none'
-              }
-            } catch (error) {
-              console.error(`[DocumentView] Error removing subtle highlight for ${uniqueId}:`, error)
-            }
-          }, 15000)
-        }
-      })
-
-      if (foundChanges) {
-        console.log('✅ [DocumentView] Changes detected - overlay notification created')
+      const result = await apiService.openExplorer(path)
+      if (result.success) {
+        toast.success('File explorer opened successfully')
       } else {
-        console.log('[DocumentView] No metadata field changes detected')
+        toast.error(result.error || 'Failed to open file explorer')
       }
-
-      return tempNew.innerHTML
     } catch (error) {
-      console.error('[DocumentView] Error identifying changes:', error)
-      return newHtml
+      console.error('Error opening file explorer:', error)
+      toast.error('Failed to open file explorer')
     }
-  }, [createChangeOverlay])
+  }, [path])
 
   // Function to calculate relative path by finding common prefix
   const calculateRelativePath = useCallback((currentPath: string, allPaths?: string[]): string => {
@@ -351,9 +251,13 @@ export default function DocumentView(): React.ReactElement {
     const headings = doc.querySelectorAll('h2')
     let metadataSection: Element | null = null
 
+    console.log('[DocumentView] Looking for metadata section, found headings:', headings.length)
+
     for (const heading of Array.from(headings)) {
+      console.log('[DocumentView] Checking heading:', heading.textContent)
       if (heading.textContent?.toLowerCase().includes('metadata')) {
         metadataSection = heading
+        console.log('[DocumentView] Found metadata section')
         break
       }
     }
@@ -365,18 +269,97 @@ export default function DocumentView(): React.ReactElement {
         currentElement = currentElement.nextElementSibling
       }
 
-      if (currentElement && currentElement.tagName === 'UL') {
-        // Create the file path element
-        const filePathElement = doc.createElement('li')
-        filePathElement.innerHTML = `<strong>Specification Path:</strong> ${displayPath}`
+      console.log('[DocumentView] Found UL element:', currentElement ? 'Yes' : 'No')
 
-        // Add it to the end of the metadata list
-        currentElement.appendChild(filePathElement)
+      if (currentElement && currentElement.tagName === 'UL') {
+        // Look for existing Specification Path item
+        const listItems = currentElement.querySelectorAll('li')
+        let specPathItem: Element | null = null
+
+        console.log('[DocumentView] Found list items:', listItems.length)
+
+        for (const item of Array.from(listItems)) {
+          console.log('[DocumentView] Checking list item:', item.textContent)
+          if (item.textContent?.includes('Specification Path:')) {
+            specPathItem = item
+            console.log('[DocumentView] Found existing Specification Path item')
+            break
+          }
+        }
+
+        // Create folder icon container
+        const iconContainer = doc.createElement('span')
+        iconContainer.className = 'folder-icon-container'
+        iconContainer.style.cursor = 'pointer'
+        iconContainer.style.color = '#6b7280'
+        iconContainer.style.transition = 'color 0.2s ease'
+        iconContainer.style.marginLeft = '8px'
+        iconContainer.title = 'Open file explorer to directory'
+        iconContainer.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
+          </svg>
+        `
+
+        // Add hover effects through CSS
+        iconContainer.onmouseenter = () => {
+          iconContainer.style.color = '#3b82f6'
+        }
+        iconContainer.onmouseleave = () => {
+          iconContainer.style.color = '#6b7280'
+        }
+
+        // Store the click handler data for later use
+        iconContainer.setAttribute('data-open-explorer', 'true')
+
+        if (specPathItem) {
+          // Add icon to existing item, ensuring inline display
+          console.log('[DocumentView] Adding icon to existing Specification Path item')
+          specPathItem.style.display = 'flex'
+          specPathItem.style.alignItems = 'center'
+          specPathItem.style.gap = '8px'
+          specPathItem.appendChild(iconContainer)
+        } else {
+          // Create new item if none exists
+          console.log('[DocumentView] Creating new Specification Path item with displayPath:', displayPath)
+          const filePathElement = doc.createElement('li')
+          filePathElement.style.display = 'flex'
+          filePathElement.style.alignItems = 'center'
+          filePathElement.style.gap = '8px'
+          const textSpan = doc.createElement('span')
+          textSpan.innerHTML = `<strong>Specification Path:</strong> ${displayPath}`
+          filePathElement.appendChild(textSpan)
+          filePathElement.appendChild(iconContainer)
+          currentElement.appendChild(filePathElement)
+          console.log('[DocumentView] Added new Specification Path item to metadata list')
+        }
       }
+    } else {
+      console.log('[DocumentView] No metadata section found')
     }
 
+    console.log('[DocumentView] enhanceHtmlWithFilePath completed')
     return doc.body.innerHTML
   }, [calculateRelativePath])
+
+  // Attach click handlers to folder icons after HTML is rendered
+  useEffect(() => {
+    if (contentRef.current) {
+      const folderIcon = contentRef.current.querySelector('[data-open-explorer="true"]')
+      if (folderIcon) {
+        const clickHandler = (e: Event) => {
+          e.preventDefault()
+          e.stopPropagation()
+          handleOpenExplorer()
+        }
+        folderIcon.addEventListener('click', clickHandler)
+
+        return () => {
+          folderIcon.removeEventListener('click', clickHandler)
+        }
+      }
+    }
+  }, [enhancedHtml, document?.html, handleOpenExplorer])
 
   const loadDocument = useCallback(async () => {
     console.log('[DocumentView] loadDocument called with path:', path, 'type:', type)
@@ -390,15 +373,10 @@ export default function DocumentView(): React.ReactElement {
       // Enhance HTML with file path information
       const enhanced = enhanceHtmlWithFilePath(data?.html, data?.filePath, data?.allFilePaths)
 
-      // Identify and highlight changes if this is an update to the same document
+      // Use enhanced HTML directly without change detection for internal changes
       let finalHtml = enhanced
       const currentPath = path!
-      if (previousContent && previousContent.length > 0 && previousPath === currentPath) {
-        console.log('[DocumentView] Same document - comparing with previous content for changes')
-        finalHtml = identifyChanges(previousContent, enhanced)
-      } else {
-        console.log('[DocumentView] Different document or first load - not comparing for changes')
-      }
+      console.log('[DocumentView] Loading document without internal change detection')
 
       // Store the enhanced HTML and path for next comparison
       setPreviousContent(enhanced)
@@ -406,6 +384,11 @@ export default function DocumentView(): React.ReactElement {
 
       setEnhancedHtml(finalHtml)
       setDocument(data)
+
+      // Reset external reload flag after loading
+      if (isExternalReload) {
+        setIsExternalReload(false)
+      }
 
       // Set the selected document for highlighting in sidebar
       setSelectedDocument({
@@ -423,7 +406,7 @@ export default function DocumentView(): React.ReactElement {
       setLoading(false)
       console.log('[DocumentView] Loading finished, setting loading to false')
     }
-  }, [path, type, setSelectedDocument, previousContent, identifyChanges, enhanceHtmlWithFilePath])
+  }, [path, type, setSelectedDocument, enhanceHtmlWithFilePath, isExternalReload])
 
   useEffect(() => {
     loadDocument()
@@ -438,6 +421,8 @@ export default function DocumentView(): React.ReactElement {
     }
   }, [enhancedHtml])
 
+  // Track if the current load is from an external change to prevent duplicate overlays
+
   // WebSocket listener for file changes affecting the current document
   useEffect(() => {
     const removeListener = websocketService.addListener((data: WebSocketFileChangeData) => {
@@ -450,6 +435,9 @@ export default function DocumentView(): React.ReactElement {
         if (changedFilePath.includes(currentPath) || currentPath.includes(changedFilePath)) {
           console.log('Current document changed, reloading:', data.filePath)
 
+          // Mark this as an external reload to prevent duplicate overlays
+          setIsExternalReload(true)
+
           // Add a small delay to ensure file writes are complete
           setTimeout(() => {
             loadDocument()
@@ -460,6 +448,27 @@ export default function DocumentView(): React.ReactElement {
 
     return removeListener
   }, [path, loadDocument])
+
+  // Listen for external change events from AppContext
+  useEffect(() => {
+    const handleExternalChange = (event: CustomEvent) => {
+      const { documentId, documentName, changes, filePath } = event.detail
+
+      // Only show overlay if this document is currently viewed
+      if (path && filePath && (filePath.includes(path) || path.includes(filePath))) {
+        // Create overlay for the first change (most common case)
+        if (changes && changes.length > 0) {
+          const change = changes[0]
+          createExternalChangeOverlay(change.field, change.oldValue, change.newValue, documentId, documentName)
+        }
+      }
+    }
+
+    window.addEventListener('external-change', handleExternalChange as EventListener)
+    return () => {
+      window.removeEventListener('external-change', handleExternalChange as EventListener)
+    }
+  }, [path, createExternalChangeOverlay])
 
   const handleEdit = (): void => {
     navigate(`/edit/${type}/${path}`)
@@ -578,6 +587,7 @@ export default function DocumentView(): React.ReactElement {
       </div>
 
       <div
+        ref={contentRef}
         className="bg-card rounded-lg shadow-sm border border-border p-6 markdown-content"
         dangerouslySetInnerHTML={{ __html: enhancedHtml || document?.html || '' }}
       />

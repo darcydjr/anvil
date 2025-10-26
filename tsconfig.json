@@ -17,7 +17,6 @@
   },
   "include": [
     "server.ts",
-    "agents/**/*.ts",
     "api/**/*.ts"
   ],
   "exclude": [

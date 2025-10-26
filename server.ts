@@ -18,11 +18,12 @@ import express, { Request, Response } from 'express';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { marked } from 'marked';
-import agentAPI = require('./api/agent-endpoints');
+import { logger } from './utils/logger';
 import * as WebSocket from 'ws';
 import * as chokidar from 'chokidar';
 import { FSWatcher } from 'chokidar';
 import * as http from 'http';
+import { exec } from 'child_process';
 import type {
   Config, ConfigPaths, DocumentItem, DocumentMetadata, Enabler, EnablerData,
   Capability, FileLocation, VersionInfo, Dependency
@@ -144,11 +145,6 @@ function validateConfig(config: Config): string[] {
 function getConfigPaths(config: Config): ConfigPaths {
   const activeWorkspace = config.workspaces.find(ws => ws.id === config.activeWorkspaceId)
 
-  console.log('[CONFIG-DEBUG] activeWorkspaceId:', config.activeWorkspaceId);
-  console.log('[CONFIG-DEBUG] activeWorkspace found:', !!activeWorkspace);
-  if (activeWorkspace) {
-    console.log('[CONFIG-DEBUG] activeWorkspace.projectPaths:', activeWorkspace.projectPaths);
-  }
 
   if (!activeWorkspace) {
     console.error(`[CONFIG] Active workspace not found: ${config.activeWorkspaceId}`)
@@ -200,23 +196,23 @@ function deepMerge(target: any, source: any): any {
 }
 
 // Load configuration with factory + local override pattern
-console.log('Server working directory:', process.cwd());
-console.log('Server file location:', __dirname);
-console.log('Anvil version:', version.version);
+logger.info('Server working directory', { cwd: process.cwd() });
+logger.info('Server file location', { dirname: __dirname });
+logger.info('Anvil version', { version: version.version });
 let config: Config;
 try {
   // Load factory configuration
   const factoryConfig = JSON.parse(fs.readFileSync('./config.json', 'utf8'));
-  console.log('Factory config loaded successfully');
+  logger.info('Factory config loaded successfully');
 
   // Load local overrides if they exist
   let localOverrides = {};
   try {
     if (fs.existsSync('./config.local.json')) {
       localOverrides = JSON.parse(fs.readFileSync('./config.local.json', 'utf8'));
-      console.log('Local config overrides loaded:', Object.keys(localOverrides));
+      logger.info('Local config overrides loaded', { overrides: Object.keys(localOverrides) });
     } else {
-      console.log('No config.local.json found, using factory defaults only');
+      logger.info('No config.local.json found, using factory defaults only');
     }
   } catch (localError) {
     console.warn('Error loading config.local.json, ignoring local overrides:', localError.message);
@@ -235,7 +231,18 @@ try {
   }
 
   config = mergedConfig;
-  console.log('Config loaded and validated successfully:', config);
+  // Set log level from config
+  if (config.logging?.level) {
+    logger.setLogLevel(config.logging.level);
+  }
+
+  const activeWorkspace = config.workspaces.find(w => w.id === config.activeWorkspaceId);
+  logger.info('Config loaded and validated successfully', {
+    port: config.server?.port,
+    projectPaths: activeWorkspace?.projectPaths?.length,
+    activeWorkspace: config.activeWorkspaceId,
+    logLevel: config.logging?.level || 'INFO'
+  });
 } catch (error) {
   console.error('Error loading configuration, using defaults:', error.message);
   // Default workspace configuration
@@ -261,6 +268,41 @@ try {
   };
 }
 
+// Function to reload config from disk
+async function reloadConfig(): Promise<void> {
+  try {
+    console.log('[CONFIG] Reloading configuration from disk...');
+
+    // Load factory configuration
+    const factoryConfig = JSON.parse(fs.readFileSync('./config.json', 'utf8'));
+
+    // Load local overrides if they exist
+    let localOverrides = {};
+    if (fs.existsSync('./config.local.json')) {
+      localOverrides = JSON.parse(fs.readFileSync('./config.local.json', 'utf8'));
+      console.log('[CONFIG] Reloaded local config overrides:', Object.keys(localOverrides));
+    }
+
+    // Merge factory config with local overrides
+    const mergedConfig = deepMerge(factoryConfig, localOverrides);
+
+    // Validate final merged configuration
+    const validationErrors = validateConfig(mergedConfig);
+    if (validationErrors.length > 0) {
+      console.error('[CONFIG] Config validation failed during reload:', validationErrors);
+      throw new Error('Config validation failed: ' + validationErrors.join(', '));
+    }
+
+    // Update global config
+    config = mergedConfig;
+    console.log('[CONFIG] Config reloaded successfully, activeWorkspaceId:', config.activeWorkspaceId);
+
+  } catch (error) {
+    console.error('[CONFIG] Error reloading configuration:', error.message);
+    throw error;
+  }
+}
+
 const app = express();
 const PORT = process.env.PORT || config.server.port;
 
@@ -273,17 +315,6 @@ marked.setOptions({
   gfm: true
 });
 
-// Mount agent API routes
-app.use('/api/agents', agentAPI.router);
-
-// Initialize agents on server start
-agentAPI.initializeAgents().then(success => {
-  if (success) {
-    console.log('[SERVER] Agent system initialized');
-  } else {
-    console.warn('[SERVER] Agent system initialization failed - agents will not be available');
-  }
-});
 
 // Serve static files from React build
 app.use(express.static('dist'));
@@ -350,6 +381,7 @@ async function scanDirectory(dirPath: string, baseUrl: string = ''): Promise<Doc
         component: component,
         status: status,
         approval: approval,
+        priority: metadata.priority,
         capabilityId: capabilityId,
         ...(metadata.functionalRequirements && { functionalRequirements: metadata.functionalRequirements }),
         ...(metadata.nonFunctionalRequirements && { nonFunctionalRequirements: metadata.nonFunctionalRequirements })
@@ -465,6 +497,153 @@ async function enhanceDependencyTablesWithNames(html) {
     return enhancedHtml;
   } catch (error) {
     console.warn('Error enhancing dependency tables:', error.message);
+    return html; // Return original HTML if enhancement fails
+  }
+}
+
+// Function to enhance enabler tables with dynamic data
+async function enhanceEnablerTablesWithDynamicData(html) {
+  try {
+    const configPaths = getConfigPaths(config);
+
+    // Create a map of enabler ID to enabler data for quick lookup
+    const enablerMap = new Map();
+
+    // Read all enabler files from all project paths to build the map
+    for (const projectPath of configPaths.projectPaths) {
+      // Ensure projectPath is a string - handle both legacy string format and new object format
+      const pathString = typeof projectPath === 'string' ? projectPath : (projectPath as { path: string }).path;
+      const resolvedPath = path.resolve(pathString);
+      if (!await fs.pathExists(resolvedPath)) {
+        continue;
+      }
+
+      const files = await fs.readdir(resolvedPath);
+      const enablerFiles = files.filter(file => file.endsWith('-enabler.md'));
+
+      for (const file of enablerFiles) {
+        try {
+          const filePath = path.join(resolvedPath, file);
+          const content = await fs.readFile(filePath, 'utf8');
+          const metadata = extractMetadata(content);
+
+          if (metadata.id) {
+            const enablerEntry = {
+              id: metadata.id,
+              name: metadata.name || metadata.title || 'Unnamed',
+              status: metadata.status || 'Unknown',
+              approval: metadata.approval || 'Unknown',
+              priority: metadata.priority || 'Unknown'
+            };
+
+            // Debug logging for ENB-138959 specifically
+            if (metadata.id === 'ENB-138959') {
+              logger.debug('🔍 Loading ENB-138959 enabler metadata', {
+                file: filePath,
+                extractedPriority: metadata.priority,
+                extractedStatus: metadata.status,
+                extractedApproval: metadata.approval,
+                finalEntry: enablerEntry
+              });
+            }
+
+            enablerMap.set(metadata.id, enablerEntry);
+          }
+        } catch (err) {
+          console.warn(`Error reading enabler file ${file}:`, err.message);
+        }
+      }
+    }
+
+    // Find and enhance enabler tables in the HTML
+    // Look for tables with "Enabler ID" header
+    let enhancedHtml = html.replace(
+      /<table[\s\S]*?<\/table>/g,
+      (tableMatch) => {
+        // Check if this table has "Enabler ID" in the header
+        if (tableMatch.includes('Enabler ID')) {
+          // Transform the table to include dynamic data
+          return tableMatch.replace(
+            /<tr[^>]*>[\s\S]*?<\/tr>/g,
+            (rowMatch, index) => {
+              // Skip the header row and separator row
+              if (rowMatch.includes('Enabler ID') || rowMatch.includes('---')) {
+                return rowMatch;
+              }
+
+              // Extract enabler ID from the row
+              const enablerIdMatch = rowMatch.match(/<td[^>]*>(ENB-\d+)<\/td>/);
+              if (enablerIdMatch) {
+                const enablerId = enablerIdMatch[1];
+                const enablerData = enablerMap.get(enablerId);
+
+                if (enablerData) {
+                  // Check if this is the old format (6 columns) or new format (2 columns)
+                  const cellCount = (rowMatch.match(/<td[^>]*>/g) || []).length;
+
+                  if (cellCount === 2) {
+                    // New format: Only ID and Description
+                    // Transform to full format with dynamic data
+                    const descriptionMatch = rowMatch.match(/<td[^>]*>(?:ENB-\d+)<\/td>\s*<td[^>]*>(.*?)<\/td>/);
+                    const description = descriptionMatch ? descriptionMatch[1] : '';
+
+                    return `<tr>
+                      <td><strong>${enablerData.id}</strong></td>
+                      <td><strong>${enablerData.name}</strong></td>
+                      <td>${description}</td>
+                      <td><span class="status-${enablerData.status.toLowerCase().replace(/\s+/g, '-')}">${enablerData.status}</span></td>
+                      <td><span class="approval-${enablerData.approval.toLowerCase().replace(/\s+/g, '-')}">${enablerData.approval}</span></td>
+                      <td><span class="priority-${enablerData.priority.toLowerCase()}">${enablerData.priority}</span></td>
+                    </tr>`;
+                  } else {
+                    // Old format: Update with fresh data
+                    return rowMatch.replace(
+                      /<td[^>]*>([^<]*)<\/td>/g,
+                      (cellMatch, cellContent, cellIndex) => {
+                        switch(cellIndex) {
+                          case 0: return `<td><strong>${enablerData.id}</strong></td>`;
+                          case 1: return `<td><strong>${enablerData.name}</strong></td>`;
+                          case 3: return `<td><span class="status-${enablerData.status.toLowerCase().replace(/\s+/g, '-')}">${enablerData.status}</span></td>`;
+                          case 4: return `<td><span class="approval-${enablerData.approval.toLowerCase().replace(/\s+/g, '-')}">${enablerData.approval}</span></td>`;
+                          case 5: return `<td><span class="priority-${enablerData.priority.toLowerCase()}">${enablerData.priority}</span></td>`;
+                          default: return cellMatch; // Keep description as-is
+                        }
+                      }
+                    );
+                  }
+                } else {
+                  // Enabler not found - show warning
+                  return rowMatch.replace(
+                    /<td[^>]*>(ENB-\d+)<\/td>/,
+                    `<td><strong style="color: #d32f2f;">${enablerId} (Not Found)</strong></td>`
+                  );
+                }
+              }
+
+              return rowMatch;
+            }
+          );
+        }
+        return tableMatch;
+      }
+    );
+
+    // Also update the table header if it's the new format
+    enhancedHtml = enhancedHtml.replace(
+      /<tr[^>]*>\s*<th[^>]*>Enabler ID<\/th>\s*<th[^>]*>Description<\/th>\s*<\/tr>/,
+      `<tr>
+        <th>Enabler ID</th>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Status</th>
+        <th>Approval</th>
+        <th>Priority</th>
+      </tr>`
+    );
+
+    return enhancedHtml;
+  } catch (error) {
+    console.warn('Error enhancing enabler tables:', error.message);
     return html; // Return original HTML if enhancement fails
   }
 }
@@ -1085,6 +1264,7 @@ app.get('/api/capability-template', async (req, res) => {
 });
 
 app.get('/api/capabilities', async (req, res) => {
+  logger.info('API call: /api/capabilities', { timestamp: new Date().toISOString(), userAgent: req.get('User-Agent') });
   try {
     const configPaths = getConfigPaths(config);
     const allItems = await scanProjectPaths(configPaths.projectPaths);
@@ -1114,6 +1294,143 @@ app.get('/api/capabilities', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// New API endpoint for dynamic enabler lookup
+app.get('/api/capabilities-dynamic', async (req, res) => {
+  const startTime = Date.now();
+  logger.info('API call: /api/capabilities-dynamic', { timestamp: new Date().toISOString(), userAgent: req.get('User-Agent') });
+  try {
+    const configPaths = getConfigPaths(config);
+    const allItems = await scanProjectPaths(configPaths.projectPaths);
+    const templates = await scanDirectory(configPaths.templates, 'templates');
+
+    // Filter out non-document files and separate capabilities and enablers
+    const excludedFiles = ['SOFTWARE_DEVELOPMENT_PLAN.md', 'README.md', 'CONTRIBUTING.md', 'LICENSE', 'NOTICE'];
+    const filteredItems = allItems.filter(item => {
+      const fileName = path.basename(item.path || '');
+      if (excludedFiles.includes(fileName)) {
+        return false;
+      }
+      return item.type === 'capability' || item.type === 'enabler';
+    });
+
+    const capabilities = filteredItems.filter(item => item.type === 'capability');
+    const enablers = filteredItems.filter(item => item.type === 'enabler');
+
+    // Create enabler lookup map for fast access
+    const enablerMap = new Map();
+    enablers.forEach(enabler => {
+      if (enabler.id) {
+        enablerMap.set(enabler.id, enabler);
+      }
+    });
+
+    // Process capabilities to include dynamic enabler data
+    const enhancedCapabilities = await Promise.all(
+      capabilities.map(async (capability) => {
+        try {
+          // Read capability file to extract enabler IDs
+          const capabilityPath = path.join(capability.projectPath, path.basename(capability.path));
+          const content = await fs.readFile(capabilityPath, 'utf8');
+
+          // Parse enabler table to extract enabler IDs
+          const enablerIds = extractEnablerIds(content);
+
+          // Lookup enabler data dynamically
+          const enablerDetails = enablerIds.map(enablerIdRow => {
+            const enablerData = enablerMap.get(enablerIdRow.id);
+            if (enablerData) {
+              return {
+                id: enablerData.id,
+                name: enablerData.name || enablerData.title,
+                description: enablerIdRow.description || '', // Keep description from capability
+                status: enablerData.status,
+                approval: enablerData.approval,
+                priority: enablerData.priority
+              };
+            } else {
+              // Return placeholder if enabler not found
+              return {
+                id: enablerIdRow.id,
+                name: 'Enabler Not Found',
+                description: enablerIdRow.description || '',
+                status: 'Unknown',
+                approval: 'Unknown',
+                priority: 'Unknown'
+              };
+            }
+          });
+
+          return {
+            ...capability,
+            enablers: enablerDetails
+          };
+
+        } catch (error) {
+          console.warn(`Error processing capability ${capability.path}:`, error);
+          return capability;
+        }
+      })
+    );
+
+    const duration = Date.now() - startTime;
+    logger.info('API call completed: /api/capabilities-dynamic', { duration: `${duration}ms`, capabilityCount: enhancedCapabilities.length, enablerCount: enablers.length });
+
+    res.json({
+      capabilities: enhancedCapabilities,
+      enablers,
+      templates
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Helper function to extract enabler IDs from capability content
+function extractEnablerIds(content: string): { id: string; description: string }[] {
+  const lines = content.split('\n');
+  const enablerSectionIndex = lines.findIndex(line => line.includes('## Enablers'));
+
+  if (enablerSectionIndex === -1) {
+    return [];
+  }
+
+  const enablerIds: { id: string; description: string }[] = [];
+  let foundTable = false;
+
+  for (let i = enablerSectionIndex; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Stop when we hit the next section
+    if (line.startsWith('## ') && i > enablerSectionIndex) {
+      break;
+    }
+
+    if (line.startsWith('|') && !line.includes('---')) {
+      if (!foundTable) {
+        foundTable = true;
+        continue; // Skip header row
+      }
+
+      const columns = line.split('|').map(col => col.trim()).filter(col => col);
+      if (columns.length >= 3) {
+        const enablerIdCol = columns[0] || '';
+        const descriptionCol = columns[2] || '';
+
+        // Extract ENB-XXXXXX pattern
+        const enablerIdMatch = enablerIdCol.match(/ENB-\d+/);
+        if (enablerIdMatch) {
+          enablerIds.push({
+            id: enablerIdMatch[0],
+            description: descriptionCol
+          });
+        }
+      }
+    }
+  }
+
+  return enablerIds;
+}
 
 // Helper function to parse dependencies using markdownUtils parseTable function
 function parseTableFromContent(content, sectionTitle) {
@@ -1274,14 +1591,16 @@ app.get('/api/file/*', async (req, res) => {
     // Enhanced security validation
     let resolvedPath
     try {
-      resolvedPath = validateAndResolvePath(cleanFilePath, projectRoot, 'file path')
-      
+      // When file was found by findFileInProjectPaths, use the relative path from actual project root
+      const relativePath = fullPath ? path.relative(projectRoot, fullPath) : cleanFilePath
+      resolvedPath = validateAndResolvePath(relativePath, projectRoot, 'file path')
+
       // Additional file type validation
       if (!resolvedPath.endsWith('.md')) {
         throw new Error('Only .md files are allowed')
       }
     } catch (securityError) {
-      console.warn(`[SECURITY] File access denied: ${securityError.message}`, { filePath, cleanFilePath, projectRoot })
+      console.warn(`[SECURITY] File access denied: ${securityError.message}`, { filePath, cleanFilePath, projectRoot, fullPath })
       return res.status(403).json({ error: 'Access denied: ' + securityError.message })
     }
     
@@ -1295,6 +1614,9 @@ app.get('/api/file/*', async (req, res) => {
     
     // Enhance dependency tables with capability names
     html = await enhanceDependencyTablesWithNames(html);
+
+    // Enhance enabler tables with dynamic data
+    html = await enhanceEnablerTablesWithDynamicData(html);
     
     // Get all file paths for relative path calculation
     const allItems = await scanProjectPaths(configPaths.projectPaths);
@@ -2335,8 +2657,8 @@ async function updateCapabilityEnablerFields(enablerData, capabilityId) {
     
     const match = enablerRowRegex.exec(capabilityContent);
     if (match) {
-      // Build the new row with all enabler fields
-      const newRow = `| ${enablerData.id} | ${enablerData.name || ''} | ${enablerData.description || ''} | ${enablerData.status || ''} | ${enablerData.approval || ''} | ${enablerData.priority || ''} |`;
+      // Build the new row with only ID and description (2 columns only)
+      const newRow = `| ${enablerData.id} | ${enablerData.description || enablerData.name || ''} |`;
       
       capabilityContent = capabilityContent.replace(enablerRowRegex, newRow);
       
@@ -2904,6 +3226,18 @@ app.get('/api/config', (req, res) => {
   }
 });
 
+// Logs endpoint
+app.get('/api/logs', (req: Request, res: Response) => {
+  try {
+    const lines = parseInt(req.query.lines as string) || 100;
+    const logs = logger.getRecentLogs(lines);
+    res.json({ logs, executionId: logger.getExecutionId() });
+  } catch (error) {
+    logger.error('Failed to get logs', { error: error.message });
+    res.status(500).json({ error: 'Failed to get logs' });
+  }
+});
+
 // Shutdown API endpoint
 app.post('/api/shutdown', (req, res) => {
   try {
@@ -3264,6 +3598,9 @@ app.post('/api/workspaces/:id/activate', async (req, res) => {
     // Save to config.local.json
     await fs.writeFile('./config.local.json', JSON.stringify(config, null, 2), 'utf8');
 
+    // Reload config from disk to pick up any new workspaces
+    await reloadConfig();
+
     // Update file watchers to monitor the new active workspace paths
     setupFileWatchers();
 
@@ -3543,7 +3880,7 @@ async function addEnablerToCapability(capabilityId, enablerId, enablerName, proj
     
     // Add the new enabler row after the last table row or after the header if no rows exist
     if (foundTableHeader) {
-      const newEnablerRow = `| ${enablerId} | ${enablerName} |  | Draft | Not Approved | High |`;
+      const newEnablerRow = `| ${enablerId} | ${enablerName} |`;
       
       if (lastTableLineIndex >= 0) {
         // Insert after the last row
@@ -3614,6 +3951,63 @@ async function findCapabilityFile(capabilityId, projectPaths) {
     return null;
   }
 }
+
+// Open file explorer to document directory
+app.post('/api/open-explorer', async (req, res) => {
+  try {
+    const { filePath } = req.body;
+
+    if (!filePath) {
+      return res.status(400).json({ error: 'File path is required' });
+    }
+
+    // Find the file using existing findFileInProjectPaths function
+    const configPaths = getConfigPaths(config);
+    let cleanFilePath = filePath;
+
+    // Remove common prefixes
+    if (filePath.startsWith('specifications/')) {
+      cleanFilePath = filePath.replace('specifications/', '');
+    }
+
+    const fileLocation = await findFileInProjectPaths(cleanFilePath, configPaths.projectPaths);
+
+    if (!fileLocation) {
+      return res.status(404).json({ error: 'File not found in project paths' });
+    }
+
+    const directoryPath = path.dirname(fileLocation.fullPath);
+
+    // Platform-specific command to open file explorer
+    let command: string;
+    if (process.platform === 'win32') {
+      // Windows: Open Explorer to the directory
+      command = `explorer "${directoryPath}"`;
+    } else if (process.platform === 'darwin') {
+      // macOS: Open Finder to the directory
+      command = `open "${directoryPath}"`;
+    } else {
+      // Linux: Try common file managers
+      command = `xdg-open "${directoryPath}"`;
+    }
+
+    // Execute the command without waiting for callback (fire and forget)
+    exec(command, (error) => {
+      if (error) {
+        logger.error('Failed to open file explorer:', error);
+      } else {
+        logger.info(`Opened file explorer to: ${directoryPath}`);
+      }
+    });
+
+    // Return success immediately since opening explorer is a "fire and forget" operation
+    res.json({ success: true, directory: directoryPath });
+
+  } catch (error) {
+    logger.error('Error opening file explorer:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // Shutdown server endpoint
 app.post('/api/shutdown', (req, res) => {
@@ -4203,7 +4597,12 @@ process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
 server.listen(PORT, () => {
-  console.log(`Anvil v${version.version} server running at http://localhost:${PORT}`);
+  logger.info(`Anvil server running`, {
+    version: version.version,
+    port: PORT,
+    url: `http://localhost:${PORT}`,
+    executionId: logger.getExecutionId()
+  });
 
   // Setup file watchers after server starts
   setupFileWatchers();

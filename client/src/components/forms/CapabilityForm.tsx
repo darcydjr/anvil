@@ -46,6 +46,58 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
   const [originalPath, setOriginalPath] = useState<string | null>(null)
   const [availableCapabilities, setAvailableCapabilities] = useState<CapabilityLink[]>([])
 
+  // State to track if we've already enriched the data
+  const [hasEnriched, setHasEnriched] = useState(false)
+
+  // Enrich enabler data ONLY on initial load
+  useEffect(() => {
+    if (!hasEnriched && data.enablers && data.enablers.length > 0 && enablers.length > 0) {
+      console.log('🔍 CapabilityForm: Starting enabler enrichment', {
+        dataEnablers: data.enablers.length,
+        enablerFiles: enablers.length,
+        enablerFileIds: enablers.map(e => e.id)
+      })
+
+      const enrichedData = data.enablers.map(enabler => {
+        const enablerFile = enablers.find(e => e.id === enabler.id)
+
+        console.log(`🔍 CapabilityForm: Processing enabler ${enabler.id}`, {
+          enablerFile: enablerFile ? 'FOUND' : 'NOT_FOUND',
+          enablerFilePriority: enablerFile?.priority,
+          currentPriority: enabler.priority,
+          enablerFileStatus: enablerFile?.status,
+          enablerFileApproval: enablerFile?.approval
+        })
+
+        if (enablerFile) {
+          const enriched = {
+            ...enabler,
+            name: enablerFile.name || enablerFile.title || enabler.name || '',
+            description: enablerFile.purpose || enabler.description || '',
+            status: enablerFile.status || STATUS_VALUES.ENABLER.IN_DRAFT,
+            approval: enablerFile.approval || APPROVAL_VALUES.NOT_APPROVED,
+            priority: enablerFile.priority || PRIORITY_VALUES.CAPABILITY_ENABLER.HIGH
+          }
+
+          console.log(`✅ CapabilityForm: Enriched enabler ${enabler.id}`, {
+            before: { status: enabler.status, approval: enabler.approval, priority: enabler.priority },
+            after: { status: enriched.status, approval: enriched.approval, priority: enriched.priority }
+          })
+
+          return enriched
+        }
+        return enabler
+      })
+
+      console.log('🔍 CapabilityForm: Final enriched data', enrichedData)
+      onChange({ enablers: enrichedData })
+      setHasEnriched(true)
+    }
+  }, [data.enablers, enablers, hasEnriched, onChange])
+
+  // Use the form data directly (no enrichment after initial load)
+  const enrichedEnablers = data.enablers || []
+
   // Initialize state listener for capability
   useEffect(() => {
     if (data.id) {
@@ -275,8 +327,9 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
     STATUS_VALUES.CAPABILITY.READY_FOR_ANALYSIS,
     STATUS_VALUES.CAPABILITY.READY_FOR_DESIGN,
     STATUS_VALUES.CAPABILITY.READY_FOR_IMPLEMENTATION,
-    STATUS_VALUES.CAPABILITY.IMPLEMENTED
-  ], [])
+    STATUS_VALUES.CAPABILITY.IMPLEMENTED,
+    STATUS_VALUES.CAPABILITY.READY_FOR_REFACTOR
+  ].sort(), [])
   const approvalOptions = useMemo(() => Object.values(APPROVAL_VALUES), [])
   const priorityOptions = useMemo(() => Object.values(PRIORITY_VALUES.CAPABILITY_ENABLER), [])
   const reviewOptions = useMemo(() => Object.values(REVIEW_VALUES), [])
@@ -308,7 +361,7 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
     STATUS_VALUES.ENABLER.READY_FOR_RETIREMENT,
     STATUS_VALUES.ENABLER.IMPLEMENTED,
     STATUS_VALUES.ENABLER.RETIRED
-  ], [])
+  ].sort(), [])
 
   // Function to clear technical specifications and replace with template
   const handleClearTechnicalSpecifications = useCallback(() => {
@@ -527,7 +580,7 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
               </tr>
             </thead>
             <tbody>
-              {(data.enablers || []).map((enabler, index) => (
+              {enrichedEnablers.map((enabler, index) => (
                 <tr key={index} className="border-b border-border hover:bg-accent">
                   <td className="p-2">
                     <input
@@ -552,7 +605,7 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
                       className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-y"
                       value={enabler.description || ''}
                       onChange={(e) => handleArrayChange('enablers', index, 'description', e.target.value)}
-                      placeholder="Brief description"
+                      placeholder="Brief description (stored in capability)"
                     />
                   </td>
                   <td className="p-2">
@@ -631,7 +684,7 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
               type="button"
               onClick={approveAllEnablers}
               className="btn btn-success btn-sm"
-              disabled={!data.enablers || data.enablers.length === 0}
+              disabled={!enrichedEnablers || enrichedEnablers.length === 0}
               style={{ marginLeft: '10px' }}
             >
               Approve All

@@ -60,7 +60,8 @@ export default function Sidebar(): JSX.Element {
     clearHistory,
     loading,
     searchTerm,
-    searchResults
+    searchResults,
+    activeWorkspaceId
   } = useApp()
 
   const [expandedSections, setExpandedSections] = useState<SidebarExpandedSections>({
@@ -69,6 +70,9 @@ export default function Sidebar(): JSX.Element {
   })
 
   const [expandedComponentGroups, setExpandedComponentGroups] = useState<ExpandedComponentGroups>({})
+
+  // Track workspace changes to collapse navigation when switching workspaces
+  const [previousWorkspaceId, setPreviousWorkspaceId] = useState<string | null>(null)
 
   const navigate = useNavigate()
 
@@ -164,13 +168,28 @@ export default function Sidebar(): JSX.Element {
 
   const capabilityGroups = useMemo(() => groupCapabilitiesBySystemComponent(capabilities), [capabilities])
 
-  // Initialize expanded state for new component groups (open by default)
+  // Detect workspace changes and reset expansion states
+  useEffect(() => {
+    if (previousWorkspaceId !== null && previousWorkspaceId !== activeWorkspaceId) {
+      // Workspace has changed, collapse all sections
+      console.log('Workspace change detected, collapsing all sections')
+      setExpandedSections({
+        capabilities: false,
+        enablers: false
+      })
+      setExpandedComponentGroups({})
+    }
+
+    setPreviousWorkspaceId(activeWorkspaceId)
+  }, [activeWorkspaceId, previousWorkspaceId])
+
+  // Initialize expanded state for new component groups (closed by default)
   useEffect(() => {
     setExpandedComponentGroups(prev => {
       const newState = { ...prev }
       Object.keys(capabilityGroups).forEach(groupKey => {
         if (!(groupKey in newState)) {
-          newState[groupKey] = true // Open by default
+          newState[groupKey] = false // Closed by default
         }
       })
       return newState

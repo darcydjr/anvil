@@ -23,7 +23,6 @@ import Dashboard from './components/Dashboard'
 import DocumentView from './components/DocumentView'
 import DocumentEditor from './components/DocumentEditor'
 import Settings from './components/Settings'
-import AgentDashboard from './components/AgentDashboard'
 import Discovery from './components/Discovery'
 import Plan from './components/Plan'
 import ManageWorkspaces from './components/ManageWorkspaces'
@@ -36,7 +35,6 @@ function App(): JSX.Element {
           <Layout>
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/agents" element={<AgentDashboard />} />
               <Route path="/discovery" element={<Discovery />} />
               <Route path="/plan" element={<Plan />} />
               <Route path="/settings" element={<Settings />} />

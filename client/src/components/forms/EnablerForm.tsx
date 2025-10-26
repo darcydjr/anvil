@@ -243,7 +243,7 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
       STATUS_VALUES.ENABLER.READY_FOR_RETIREMENT,
       STATUS_VALUES.ENABLER.IMPLEMENTED,
       STATUS_VALUES.ENABLER.RETIRED
-    ],
+    ].sort(),
     approval: Object.values(APPROVAL_VALUES),
     priority: Object.values(PRIORITY_VALUES.CAPABILITY_ENABLER),
     review: Object.values(REVIEW_VALUES),

@@ -41,7 +41,7 @@ export default function DocumentEditor(): JSX.Element {
   const { type, '*': path, capabilityId } = params
   const navigate: NavigateFunction = useNavigate()
   const location: Location = useLocation()
-  const { refreshData, config, capabilities, enablers, setSelectedDocument } = useApp()
+  const { refreshData, config, capabilities, enablers, setSelectedDocument, suppressExternalChangeNotification } = useApp()
   
   const [document, setDocument] = useState<FileData | null>(null)
   const [formData, setFormData] = useState<FormData>({})
@@ -278,10 +278,13 @@ export default function DocumentEditor(): JSX.Element {
         // the metadata within the file content only - no file rename needed
       }
 
+      // Suppress external change notifications before saving
+      suppressExternalChangeNotification(savePath!, 5000)
+
       if (type === 'capability' && editMode === 'form') {
         await apiService.saveCapabilityWithEnablers(
-          savePath!, 
-          contentToSave, 
+          savePath!,
+          contentToSave,
           capFormData.id || '',
           capFormData.internalUpstream || [],
           capFormData.internalDownstream || [],
@@ -336,6 +339,39 @@ export default function DocumentEditor(): JSX.Element {
           console.log(`[PATH-PREFERENCE] Saved path preference: ${capFormData.selectedPath}`)
         } catch (error) {
           console.error('Error saving path preference:', error)
+        }
+      }
+
+      // Update individual enabler files if this is a capability with enabler changes
+      if (type === 'capability' && capFormData.enablers) {
+        for (const enabler of capFormData.enablers) {
+          if (enabler.id) {
+            try {
+              // Load the existing enabler file (extract number from ID like ENB-738492 -> 738492)
+              const enablerNumber = enabler.id.replace(/^ENB-/i, '')
+              const enablerResponse = await apiService.getFile(`${enablerNumber}-enabler.md`)
+              if (enablerResponse.content) {
+                // Parse the existing enabler
+                const existingEnablerData = parseMarkdownToForm(enablerResponse.content, 'enabler')
+
+                // Update only the fields that were changed in the capability form
+                const updatedEnablerData = {
+                  ...existingEnablerData,
+                  name: enabler.name || existingEnablerData.name,
+                  status: enabler.status || existingEnablerData.status,
+                  approval: enabler.approval || existingEnablerData.approval,
+                  priority: enabler.priority || existingEnablerData.priority
+                }
+
+                // Convert back to markdown and save
+                const updatedEnablerMarkdown = convertFormToMarkdown(updatedEnablerData, 'enabler')
+                await apiService.saveFile(`${enablerNumber}-enabler.md`, updatedEnablerMarkdown)
+                console.log(`[ENABLER-UPDATE] Updated enabler ${enabler.id}`)
+              }
+            } catch (enablerError) {
+              console.warn(`[ENABLER-UPDATE] Failed to update enabler ${enabler.id}:`, (enablerError as Error).message)
+            }
+          }
         }
       }
 

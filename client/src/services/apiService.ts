@@ -178,6 +178,16 @@ export const apiService = {
     }
   },
 
+  async getCapabilitiesDynamic(): Promise<CapabilitiesResponse> {
+    try {
+      const response = await api.get<CapabilitiesResponse>('/capabilities-dynamic')
+      return response.data
+    } catch (error) {
+      console.error('Failed to get capabilities with dynamic enabler data:', error)
+      throw new Error(`Failed to load capabilities: ${(error as Error).message}`)
+    }
+  },
+
   async getFile(filePath: string): Promise<FileResponse> {
     try {
       if (!filePath) {
@@ -369,6 +379,16 @@ export const apiService = {
     } catch (error) {
       console.error('Failed to create document from discovery:', error)
       throw new Error(`Failed to create ${type}: ${(error as Error).message}`)
+    }
+  },
+
+  async openExplorer(filePath: string): Promise<ApiResponse> {
+    try {
+      const response = await api.post('/open-explorer', { filePath })
+      return { success: true, data: response.data }
+    } catch (error) {
+      console.error('Failed to open file explorer:', error)
+      return { success: false, error: `Failed to open file explorer: ${(error as Error).message}` }
     }
   }
 }

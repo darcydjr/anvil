@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings, HelpCircle, Bot, Lightbulb, Clipboard, Search, X } from 'lucide-react'
+import { Settings, HelpCircle, Lightbulb, Clipboard, Search, X } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { version } from '../../../package.json'
 import WorkspaceSelector from './WorkspaceSelector'
@@ -55,8 +55,13 @@ export default function Header(): JSX.Element {
           <WorkspaceSelector />
         </div>
         <div className="flex justify-center items-center flex-1 absolute left-1/2 -translate-x-1/2">
-          <div className="text-2xl whitespace-nowrap font-semibold text-foreground">
-            {config?.description || 'Product Specifications Driven Development'}
+          <div className="text-center">
+            <div className="text-2xl whitespace-nowrap font-semibold text-foreground">
+              {config?.description || 'Product Specifications Driven Development'}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              v{version}
+            </div>
           </div>
         </div>
         <div className="flex gap-4 items-center flex-1 justify-end">
@@ -82,15 +87,6 @@ export default function Header(): JSX.Element {
           </div>
           <div className="flex items-center gap-2">
             <ButtonGroup>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={(): void => navigate('/agents')}
-                title="Agent Dashboard"
-                className="text-primary hover:bg-primary/10 hover:text-primary/80 transition-colors"
-              >
-                <Bot size={20} />
-              </Button>
               <Button
                 variant="outline"
                 size="icon"

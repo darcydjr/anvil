@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-2.6.7-green.svg)]()
+[![Version](https://img.shields.io/badge/version-3.1.2-green.svg)]()
 
 ## Overview
 
@@ -29,7 +29,79 @@ Product development has two distinct sides:
 
 Anvil focuses exclusively on the right side, helping engineering teams define, organize, and manage the technical capabilities that enable product experiences. A new platform is coming soon for the left side that will marry **Experiences and Features** (Product Managers) with **Technical Capabilities and Enablers** (Engineers) to build the architectural runway needed to support exceptional user experiences.
 
-## What's New in v2.6.7
+## What's New in v3.1.2
+
+### 🗂️ **File Explorer Integration**
+- **Folder Icon Feature**: Added clickable folder icon next to "Specification Path" in document viewer for capabilities and enablers
+- **File Explorer Access**: Click the folder icon to instantly open your system's file explorer to the document's directory
+- **Cross-Platform Support**: Works on Windows (explorer), macOS (open), and Linux (xdg-open) file managers
+- **Inline Display**: Folder icon appears seamlessly at the end of the specification path line, not on a separate line
+
+### 🧭 **Navigation Panel Improvements**
+- **Smart Workspace Collapsing**: Navigation panel now only collapses capabilities/enablers when switching workspaces
+- **Persistent Expansion**: Capabilities and enablers stay expanded when saving or creating new documents within the same workspace
+- **Improved User Experience**: No more unexpected navigation state changes during normal document operations
+
+### 🔧 **Technical Fixes**
+- **API Endpoint Correction**: Fixed double `/api` path issue in open-explorer endpoint that was causing 404 errors
+- **Fire-and-Forget Operation**: File explorer opening now returns success immediately without waiting for command completion
+- **Enhanced Error Handling**: Improved error reporting and success feedback for file explorer operations
+- **DOM Query Optimization**: Fixed querySelector scope to prevent null reference errors when attaching folder icon event handlers
+
+### 🎯 **Document Viewer Enhancements**
+- **Specification Path Visibility**: Enhanced specification path display in capability and enabler metadata sections
+- **Comprehensive Debugging**: Added detailed logging for troubleshooting document enhancement processes
+- **Improved HTML Enhancement**: Better DOM parsing and manipulation for adding interactive elements to rendered documents
+
+## Previous Release: v3.1.1
+
+### 🚀 **Performance & User Experience Improvements**
+- **Status Field Alphabetical Sorting**: Status dropdown fields in capability and enabler forms are now sorted alphabetically for easier selection
+- **New Capability Status**: Added "Ready for Refactor" status for capabilities to support design refactoring workflows
+- **External Change Notifications**: Fixed cross-project file access to enable proper notifications for approval and status changes
+- **Workspace Switching Improvements**: All capabilities and enablers now collapse automatically when switching workspaces for cleaner navigation
+- **Priority Field Fix**: Fixed capability form editor to correctly display enabler priority values from markdown files
+
+### 🛠️ **Critical Performance Fix**
+- **Document Save Performance**: Resolved critical performance issue causing 150+ API calls after file saves, which was causing very long document view load times
+- **Stable WebSocket Handling**: Fixed useEffect dependency loop that was creating cascading API call storms
+- **Improved Load Times**: Document views now load quickly after saves with normal performance restored
+
+### 🔧 **Technical Improvements**
+- **Path Validation Enhancement**: Fixed server-side path validation to support cross-project file access in multi-project workspaces
+- **Enabler Priority Integration**: Added priority field to DocumentItem interface and server-side metadata extraction
+- **useRef Pattern Implementation**: Used stable function references for WebSocket handlers to prevent dependency loops
+- **Enhanced Error Handling**: Improved error logging and debugging for file access and metadata extraction
+
+### 🎯 **UI/UX Enhancements**
+- **Form Field Organization**: Status dropdowns now display options in logical alphabetical order
+- **Workspace Management**: Cleaner workspace switching experience with automatic content collapse
+- **Priority Display**: Fixed priority field synchronization between capability tables and enabler files
+- **Responsive Navigation**: Improved navigation responsiveness after workspace changes
+
+## Previous Release: v3.1.0
+
+### 🧹 **Code Cleanup & Simplification**
+- **Agent System Removal**: Completely removed all agent-related code and infrastructure to simplify the codebase
+- **Configuration Cleanup**: Removed agent configuration files and references from TypeScript configuration
+- **UI Streamlining**: Removed agent dashboard components and navigation to focus on core document management functionality
+- **Logging System Enhancement**: Added comprehensive logging system with execution IDs, file output to logs directory, and configurable log levels
+- **Version Display**: Added version number display in the application header for better visibility
+
+### 🔧 **Technical Improvements**
+- **Global Log Level Configuration**: Log level now configurable via config.json with DEBUG, INFO, WARN, ERROR levels
+- **Enhanced Console Output**: Added colored console logging with timestamp and execution ID tracking
+- **Improved Error Handling**: Better error handling and logging throughout the application
+- **TypeScript Configuration**: Cleaned up TypeScript includes to remove agent references
+
+### 🎯 **Focus Shift**
+- **Core Functionality Focus**: Streamlined application to focus exclusively on PRD management, capabilities, and enablers
+- **Simplified Architecture**: Removed complex agent orchestration in favor of direct document management workflow
+- **Performance Optimization**: Reduced application complexity and improved startup performance
+
+## Previous Releases
+
+### What's New in v2.6.7
 
 ### 🎨 **User Interface Enhancements**
 - **Direct File Access Routing**: Fixed React Router to support direct file access (e.g., `SOFTWARE_DEVELOPMENT_PLAN.md`) without requiring type parameters
@@ -385,6 +457,27 @@ Anvil supports **workspace-based configuration** for managing multiple document 
 - **mermaid**: Diagram rendering
 
 ## Release Notes & Version History
+
+### v3.0.0 - Dynamic Enabler Status System ✅
+
+#### 🔄 **Major Feature: Dynamic Enabler Synchronization**
+- **ELIMINATES SYNC ISSUES**: Capability files now only store Enabler ID and Description, while Name, Status, Approval, and Priority are dynamically looked up from enabler files
+- **SINGLE SOURCE OF TRUTH**: Enabler metadata is now the authoritative source, preventing data duplication and synchronization conflicts
+- **AUTOMATIC ENHANCEMENT**: Server automatically enhances enabler tables with live data when serving capability documents
+- **BACKWARD COMPATIBLE**: Handles both old format (6 columns) and new format (2 columns) seamlessly
+- **ERROR HANDLING**: Clear indicators when enabler files are missing or not found
+
+#### 🔧 **Technical Implementation**
+- **SERVER ENHANCEMENT**: Added `enhanceEnablerTablesWithDynamicData()` function for real-time data injection
+- **API EXTENSION**: New `/api/capabilities-dynamic` endpoint for enhanced capability data
+- **MARKDOWN OPTIMIZATION**: Updated `markdownUtils.ts` to generate simplified enabler table format
+- **TYPE SAFETY**: Enhanced TypeScript support for dynamic enabler data structures
+
+#### 📊 **Benefits**
+- **NO MORE MANUAL SYNC**: Changes to enabler status automatically appear in all related capability views
+- **REDUCED MAINTENANCE**: Single point of data management for enabler metadata
+- **IMPROVED ACCURACY**: Eliminates possibility of outdated enabler data in capability files
+- **ENHANCED UX**: Always shows current enabler status without manual refresh
 
 ### v2.5.1 - Requirements Search Bug Fix ✅
 

@@ -1,4 +1,7 @@
 # AI AGENT SOFTWARE DEVELOPMENT PLAN
+**Version**: 3.0.1
+**Last Updated**: October 25, 2025
+**Author**: Darcy Davidson
 
 ## Overview
 This document provides comprehensive guidance for Claude Code to discover, analyze, design, implement, test, refactor, and retire software applications using the Anvil capability-driven framework. This is the single source of truth for all software development activities.
@@ -9,8 +12,16 @@ This document provides comprehensive guidance for Claude Code to discover, analy
   - [Components-Capabilities-Enablers-Requirements Model](#components-capabilities-enablers-requirements-model)
   - [Quality and Governance](#quality-and-governance)
   - [Documentation-First Approach](#documentation-first-approach)
+  - [FORBIDDEN ACTIONS](#forbidden-actions)
+  - [DISCOVERY EXCEPTION](#discovery-exception)
+  - [MANDATORY BEHAVIOR](#mandatory-behavior)
+  - [VIOLATION CONSEQUENCES](#violation-consequences)
 - [TASK: DISCOVERY](#task-discovery)
   - [🚨 CRITICAL WARNING - DISCOVERY LIMITATIONS 🚨](#-critical-warning---discovery-limitations-)
+    - [⚠️ ABSOLUTE PROHIBITION - NEVER PROCEED TO IMPLEMENTATION FROM DISCOVERY](#-absolute-prohibition---never-proceed-to-implementation-from-discovery)
+    - [🛡️ DISCOVERY SAFETY RULES](#-discovery-safety-rules)
+    - [🚫 FORBIDDEN DURING DISCOVERY](#-forbidden-during-discovery)
+    - [✅ ALLOWED DURING DISCOVERY](#-allowed-during-discovery)
   - [Purpose](#purpose)
   - [Discovery Process](#discovery-process)
     - [Phase 1: Project Analysis](#phase-1-project-analysis)
@@ -18,22 +29,93 @@ This document provides comprehensive guidance for Claude Code to discover, analy
     - [Phase 3: Enabler Identification](#phase-3-enabler-identification)
     - [Phase 4: Document Creation](#phase-4-document-creation)
   - [Critical Rules for Discovery](#critical-rules-for-discovery)
+  - [Discovery Document Configuration Rules](#discovery-document-configuration-rules)
+  - [🚨 FINAL CRITICAL REMINDER - DISCOVERY SAFETY 🚨](#-final-critical-reminder---discovery-safety-)
+    - [DISCOVERY = DOCUMENTATION ONLY](#discovery--documentation-only)
+    - [WHEN TO USE DISCOVERY](#when-to-use-discovery)
+    - [WHEN NOT TO USE DISCOVERY](#when-not-to-use-discovery)
 - [CAPABILITY DEVELOPMENT PLAN](#capability-development-plan)
   - [CRITICAL WORKFLOW RULES](#critical-workflow-rules)
+    - [APPROVAL vs STATE - FUNDAMENTAL DIFFERENCE](#approval-vs-state---fundamental-difference)
+    - [STATE MACHINE COMPLIANCE](#state-machine-compliance)
+    - [FORBIDDEN SHORTCUTS](#forbidden-shortcuts)
   - [Task 1: Approval Verification (MANDATORY)](#task-1-approval-verification-mandatory)
+    - [Pre-Conditions Verification](#pre-conditions-verification)
+    - [Critical Rules](#critical-rules)
+    - [Exit Criteria Checklist](#exit-criteria-checklist)
   - [Task 2: Analysis](#task-2-analysis)
+    - [Pre-Conditions Verification](#pre-conditions-verification-1)
+    - [Critical Rules](#critical-rules-1)
+    - [Perform Analysis](#perform-analysis)
+    - [🚨 CRITICAL ANALYSIS PHASE LIMITATIONS 🚨](#-critical-analysis-phase-limitations-)
+    - [Minimal Enabler Template for Analysis Phase](#minimal-enabler-template-for-analysis-phase)
+    - [🔴 METADATA FIELD VERIFICATION CHECKLIST 🔴](#-metadata-field-verification-checklist-)
+    - [Enabler Configuration Rules](#enabler-configuration-rules)
+    - [Post-Condition Transition](#post-condition-transition)
+    - [🚨 SEQUENTIAL EXECUTION RULES 🚨](#-sequential-execution-rules-)
+    - [Exit Criteria Checklist](#exit-criteria-checklist-1)
+    - [Critical Rules](#critical-rules-2)
   - [Task 3: Design](#task-3-design)
+    - [Pre-Conditions Verification (ABSOLUTELY MANDATORY)](#pre-conditions-verification-absolutely-mandatory)
+    - [Critical Rules](#critical-rules-3)
+    - [Perform Design](#perform-design)
+    - [🚨 CRITICAL DESIGN PHASE RULES 🚨](#-critical-design-phase-rules-)
+    - [Enabler State Processing](#enabler-state-processing)
+    - [Documentation Requirements](#documentation-requirements)
+    - [Post-Condition Transition](#post-condition-transition-1)
+    - [Absolute Prohibitions (ZERO TOLERANCE)](#absolute-prohibitions-zero-tolerance)
   - [Task 4: Develop the Enablers](#task-4-develop-the-enablers)
+    - [Pre-Conditions Verification (ABSOLUTELY MANDATORY)](#pre-conditions-verification-absolutely-mandatory-1)
+    - [Critical Rules](#critical-rules-4)
+    - [Develop Enabler](#develop-enabler)
+    - [Post-Condition Transition](#post-condition-transition-2)
+    - [Exit Criteria Checklist](#exit-criteria-checklist-2)
 - [ENABLER DEVELOPMENT PLAN](#enabler-development-plan)
   - [CRITICAL WORKFLOW RULES](#critical-workflow-rules-1)
+    - [APPROVAL vs STATE - FUNDAMENTAL DIFFERENCE](#approval-vs-state---fundamental-difference-1)
+    - [STATE MACHINE COMPLIANCE](#state-machine-compliance-1)
+    - [FORBIDDEN SHORTCUTS](#forbidden-shortcuts-1)
   - [Task 1: Approval Verification (MANDATORY)](#task-1-approval-verification-mandatory-1)
+    - [Pre-Conditions Verification](#pre-conditions-verification-2)
+    - [Critical Rules](#critical-rules-5)
+    - [Exit Criteria Checklist](#exit-criteria-checklist-3)
   - [Task 2: Analysis](#task-2-analysis-1)
+    - [Pre-Conditions Verification](#pre-conditions-verification-3)
+    - [Critical Rules](#critical-rules-6)
+    - [Perform Analysis](#perform-analysis-1)
+    - [Requirement Configuration Rules](#requirement-configuration-rules)
+    - [Post-Condition Transition](#post-condition-transition-3)
+    - [Exit Criteria Checklist](#exit-criteria-checklist-4)
+    - [Critical Rules](#critical-rules-7)
   - [Task 3: Design](#task-3-design-1)
+    - [Pre-Conditions Verification](#pre-conditions-verification-4)
+    - [Critical Rules](#critical-rules-8)
+    - [Perform Design](#perform-design-1)
+    - [Post-Condition Transition](#post-condition-transition-4)
+    - [Exit Criteria Checklist](#exit-criteria-checklist-5)
   - [Task 4: Implementation](#task-4-implementation)
+    - [Pre-Conditions Verification](#pre-conditions-verification-5)
+    - [Critical Rules](#critical-rules-9)
+    - [Perform Implementation](#perform-implementation)
+    - [Post-Condition Transition](#post-condition-transition-5)
+    - [Exit Criteria Checklist](#exit-criteria-checklist-6)
 - [STANDARDS AND CONVENTIONS](#standards-and-conventions)
   - [File Naming and ID Generation Schema](#file-naming-and-id-generation-schema)
+    - [Unique ID Format](#unique-id-format)
+    - [ID Generation Algorithm (Standalone)](#id-generation-algorithm-standalone)
+    - [File Naming Convention](#file-naming-convention)
+    - [File Placement Strategy](#file-placement-strategy)
   - [Naming Conventions for Capabilities and Enablers](#naming-conventions-for-capabilities-and-enablers)
+    - [Driving vs. Driven Naming Strategy](#driving-vs-driven-naming-strategy)
+    - [Driven Elements (Nouns)](#driven-elements-nouns)
+    - [Driving Elements (Verbs)](#driving-elements-verbs)
+    - [Dependency Relationship Patterns](#dependency-relationship-patterns)
+    - [Visual Relationship Diagram](#visual-relationship-diagram)
+    - [Best Practices for Naming](#best-practices-for-naming)
+    - [Impact on Architecture Clarity](#impact-on-architecture-clarity)
   - [Document Templates](#document-templates)
+    - [Capability Template Structure](#capability-template-structure)
+    - [Enabler Template Structure](#enabler-template-structure)
 
 ## Command Examples:
 
@@ -213,9 +295,9 @@ An Enabler is a specific technical implementation that realizes a Capability. En
 [Clear business value statement explaining what business problem this solves]
 
 ## Enablers
-| ID | Name | Status | Priority |
-|----|----|-----|---------|
-| ENB-654321 | [Enabler Name] | Implemented | [Priority] |
+| Enabler ID | Description |
+|------------|-------------|
+| ENB-644549 | [Enabler Description] |
 
 ## Dependencies
 [List other capabilities this depends on]
@@ -284,8 +366,9 @@ An Enabler is a specific technical implementation that realizes a Capability. En
   - **Requirement Status**: Set to "Implemented"
   - **Requirement Approval**: Set to "Approved"
 
-  **Rationale**: Discovery documents represent existing functionality being documented, not new features being planned.
-
+ **CRITICAL**: Discovery must update ALL discovered documents (both existing and newly created) to "Implemented" status to reflect that the functionality being
+  documented already exists.
+   **Rationale**: Discovery documents represent existing functionality being documented, not new features being planned.
 ---
 
 
@@ -463,11 +546,21 @@ Before proceeding to next step, verify enabler contains ALL these metadata field
 ## Task 3: Design
 **Purpose**: Create a design based only on approved and ready to implement Enablers by following the sections below.
 
+### Capability Status: Ready for Refactor
+**"Ready for Refactor"** is a new capability status that allows capabilities to re-enter the design phase for:
+- **Architecture improvements**: Updating technical design based on new requirements
+- **Performance optimizations**: Redesigning for better performance characteristics
+- **Technology upgrades**: Incorporating new technologies or frameworks
+- **Design debt reduction**: Improving existing design patterns and structures
+- **Scalability enhancements**: Redesigning to handle increased load or usage
+
+**Usage**: Set a capability to "Ready for Refactor" when implemented capabilities need design updates before further development. This status enables the same design workflow as "Ready for Design" but indicates refactoring intent rather than initial design.
+
 ### Pre-Conditions Verification (ABSOLUTELY MANDATORY)
 | Condition | Required Value | Action if True | Action if False |
 |-----------|----------------|---------|----------------------|
 | Capability Approval | "Approved" | continue to next pre-condition check | IMMEDIATE STOP |
-| Capability Status | "Ready for Design" | continue to next section | SKIP to Task 4: Develop the Enablers |
+| Capability Status | "Ready for Design" or "Ready for Refactor" | continue to next section | SKIP to Task 4: Develop the Enablers |
 
 #### Critical Rules
 - **ABSOLUTE PROHIBITION**: Never ask user to change Pre-Conditions values
@@ -502,9 +595,8 @@ Before proceeding to next step, verify enabler contains ALL these metadata field
 ### Enabler State Processing
 | Enabler State | Action |
 |------------------|--------|
-| "In Draft" | Do NOT include in design |
-| "Ready for Analysis" | Include in design |
-| "Ready for Design" | Include in design |
+| "In Draft" | DO NOT include in design |
+| "Ready for Analysis" | DO NOT Include in design |
 | "Ready for Implementation" | Include in design |
 | "Ready for Refactor" | Include in design |
 | "Ready for Retirement" | Remove from design completely |
@@ -670,7 +762,7 @@ Before proceeding to next step, verify enabler contains ALL these metadata field
 | Condition | Required Value | Action if True | Action if False |  
 |-----------|----------------|----------------|-----------------|  
 | Task 2 Completion | Must be "Passed" | Continue to next condition check | STOP - explain why you are stopping |  
-| Enabler Status | "Ready for Design" | Continue to Design Process Section | SKIP to Task 4: Implementation |  
+| Enabler Status | "Ready for Design" or "Ready for Refactor" | Continue to Design Process Section | SKIP to Task 4: Implementation |  
 | Requirement Status | "Ready for Design" or "Ready for Implementation" | Continue to Design Process Section | SKIP requirement from design process |  
 
 #### Critical Rules  

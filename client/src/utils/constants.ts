@@ -17,7 +17,8 @@ export const STATUS_VALUES = {
     IN_DESIGN: 'In Design',
     READY_FOR_IMPLEMENTATION: 'Ready for Implementation',
     IN_IMPLEMENTATION: 'In Implementation',
-    IMPLEMENTED: 'Implemented'
+    IMPLEMENTED: 'Implemented',
+    READY_FOR_REFACTOR: 'Ready for Refactor'
   } as const,
   ENABLER: {
     READY_FOR_ANALYSIS: 'Ready for Analysis',

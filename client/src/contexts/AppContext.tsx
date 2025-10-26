@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, ReactNode } from 'react'
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useState, useRef, ReactNode } from 'react'
 import { apiService } from '../services/apiService'
 import { websocketService } from '../services/websocketService'
 
@@ -113,6 +113,7 @@ interface AppContextValue extends AppState {
   activateWorkspace: (workspaceId: string) => Promise<boolean>
   setSearchTerm: (term: string) => void
   performSearch: (term: string) => void
+  suppressExternalChangeNotification: (filePath: string, duration?: number) => void
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined)
@@ -212,11 +213,16 @@ interface AppProviderProps {
 
 export function AppProvider({ children }: AppProviderProps): JSX.Element {
   const [state, dispatch] = useReducer(appReducer, initialState)
+  const [suppressedPaths, setSuppressedPaths] = useState<Set<string>>(new Set())
+
+  // Use refs to store latest function references for stable WebSocket handler
+  const loadDataRef = useRef<() => Promise<void>>()
+  const checkForMetadataChangesRef = useRef<(filePath: string, source?: 'form-save' | 'external-change') => Promise<void>>()
 
   const loadData = useCallback(async () => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true })
-      const data = await apiService.getCapabilities()
+      const data = await apiService.getCapabilitiesDynamic()
       dispatch({ type: 'SET_DATA', payload: data })
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: (error as Error).message })
@@ -376,6 +382,158 @@ export function AppProvider({ children }: AppProviderProps): JSX.Element {
     })
   }, [state.capabilities, state.enablers])
 
+  // Function to suppress external change notifications for user-initiated saves
+  const suppressExternalChangeNotification = useCallback((filePath: string, duration: number = 3000) => {
+    const normalizedPath = filePath.toLowerCase().replace(/\\/g, '/')
+
+    setSuppressedPaths(prev => {
+      const newSet = new Set(prev)
+      newSet.add(normalizedPath)
+      return newSet
+    })
+
+    // Remove suppression after duration
+    setTimeout(() => {
+      setSuppressedPaths(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(normalizedPath)
+        return newSet
+      })
+    }, duration)
+
+    console.log(`[AppContext] Suppressing external change notifications for: ${normalizedPath} (${duration}ms)`)
+  }, [])
+
+  // Helper function to extract metadata from content
+  const extractMetadata = useCallback((text: string) => {
+    const metadata: { [key: string]: string } = {}
+    const metadataFields = ['Status', 'Priority', 'Approval', 'Owner', 'Type']
+
+    metadataFields.forEach(field => {
+      const match = text.match(new RegExp(`${field}[^:]*:\\s*([^\\n-]+)`, 'i'))
+      if (match) {
+        metadata[field] = match[1].trim()
+      }
+    })
+
+    return metadata
+  }, [])
+
+  // Function to initialize metadata storage for all documents
+  const initializeMetadataStorage = useCallback(async () => {
+    try {
+      const allDocuments = [...state.capabilities, ...state.enablers]
+
+      for (const doc of allDocuments) {
+        try {
+          const response = await fetch(`/api/file/${doc.path}`)
+          if (response.ok) {
+            const data = await response.json()
+            const content = data.content || ''
+            const metadata = extractMetadata(content)
+            const storageKey = `metadata_${doc.path}`
+
+            // Only store if we don't already have metadata for this document
+            if (!localStorage.getItem(storageKey)) {
+              localStorage.setItem(storageKey, JSON.stringify(metadata))
+            }
+          }
+        } catch (err) {
+          // Skip documents that can't be loaded
+          console.warn(`Could not initialize metadata for ${doc.path}:`, err)
+        }
+      }
+    } catch (error) {
+      console.error('Error initializing metadata storage:', error)
+    }
+  }, [state.capabilities, state.enablers, extractMetadata])
+
+
+
+  // Function to check for metadata changes and show notifications
+  const checkForMetadataChanges = useCallback(async (filePath: string, source: 'form-save' | 'external-change' = 'external-change') => {
+    try {
+      // Only suppress notifications for form saves, not external changes
+      if (source === 'form-save') {
+        const normalizedPath = filePath.toLowerCase().replace(/\\/g, '/')
+        if (suppressedPaths.has(normalizedPath)) {
+          console.log(`[AppContext] Skipping notification for suppressed form save: ${normalizedPath}`)
+          return
+        }
+      }
+
+      // Get the current document content
+      const response = await fetch(`/api/file/${filePath}`)
+      if (!response.ok) return
+
+      const data = await response.json()
+      const content = data.content || ''
+
+      const currentMetadata = extractMetadata(content)
+
+      // Extract document ID and name for notification
+      const idMatch = content.match(/ID[^:]*:\s*([A-Z]{3}-\d+)/i) || content.match(/(CAP-\d+|ENB-\d+)/i)
+      const nameMatch = content.match(/Name[^:]*:\s*([^\n]+)/i)
+
+      const documentId = idMatch?.[1]?.trim() || 'Unknown ID'
+      const documentName = nameMatch?.[1]?.trim() || 'Unknown Document'
+
+      // Store current metadata to compare with future changes
+      const storageKey = `metadata_${filePath}`
+      const previousMetadata = JSON.parse(localStorage.getItem(storageKey) || '{}')
+
+      // Check for changes in Status or Approval
+      const statusChanged = previousMetadata.Status && currentMetadata.Status &&
+                           previousMetadata.Status !== currentMetadata.Status
+      const approvalChanged = previousMetadata.Approval && currentMetadata.Approval &&
+                             previousMetadata.Approval !== currentMetadata.Approval
+
+      if (statusChanged || approvalChanged) {
+        // Collect all changes to show in overlay
+        const changes: { field: string, oldValue: string, newValue: string }[] = []
+
+        if (statusChanged) {
+          changes.push({
+            field: 'Status',
+            oldValue: previousMetadata.Status,
+            newValue: currentMetadata.Status
+          })
+        }
+
+        if (approvalChanged) {
+          changes.push({
+            field: 'Approval',
+            oldValue: previousMetadata.Approval,
+            newValue: currentMetadata.Approval
+          })
+        }
+
+        // Trigger external change notification via custom event for DocumentView
+        const event = new CustomEvent('external-change', {
+          detail: {
+            documentId,
+            documentName,
+            changes,
+            filePath
+          }
+        })
+        window.dispatchEvent(event)
+      }
+
+      // Store current metadata for future comparisons
+      localStorage.setItem(storageKey, JSON.stringify(currentMetadata))
+
+    } catch (error) {
+      console.error('Error checking metadata changes:', error)
+    }
+  }, [extractMetadata, suppressedPaths])
+
+  // Update refs when functions change
+  useEffect(() => {
+    loadDataRef.current = loadData
+    checkForMetadataChangesRef.current = checkForMetadataChanges
+  }, [loadData, checkForMetadataChanges])
+
   useEffect(() => {
     loadData()
     loadConfig()
@@ -391,8 +549,16 @@ export function AppProvider({ children }: AppProviderProps): JSX.Element {
         if (filePath.endsWith('.md') && (filePath.includes('capability') || filePath.includes('enabler'))) {
           console.log('Markdown file changed, refreshing data:', data.filePath)
 
+          // Check for metadata changes and show toast notifications using ref
+          if (checkForMetadataChangesRef.current) {
+            checkForMetadataChangesRef.current(data.filePath || '')
+          }
+
           setTimeout(() => {
-            loadData()
+            // Use ref to call latest loadData function
+            if (loadDataRef.current) {
+              loadDataRef.current()
+            }
           }, 500)
         }
       }
@@ -402,7 +568,14 @@ export function AppProvider({ children }: AppProviderProps): JSX.Element {
       removeListener()
       websocketService.disconnect()
     }
-  }, [loadData, loadConfig, loadWorkspaces])
+  }, []) // Remove all dependencies to prevent re-running
+
+  // Initialize metadata storage when data is loaded
+  useEffect(() => {
+    if (state.capabilities.length > 0 || state.enablers.length > 0) {
+      initializeMetadataStorage()
+    }
+  }, [state.capabilities, state.enablers, initializeMetadataStorage])
 
   const value: AppContextValue = {
     ...state,
@@ -417,7 +590,8 @@ export function AppProvider({ children }: AppProviderProps): JSX.Element {
     loadWorkspaces,
     activateWorkspace,
     setSearchTerm,
-    performSearch
+    performSearch,
+    suppressExternalChangeNotification
   }
 
   return (
