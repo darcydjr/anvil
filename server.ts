@@ -376,6 +376,7 @@ async function scanDirectory(dirPath: string, baseUrl: string = ''): Promise<Doc
         type: itemType as any,
         path: baseUrl ? `${baseUrl.replace(/^\//, '')}/${file}` : file,
         projectPath: dirPath, // Add source project path for workspace support
+        fullPath: fullPath, // Add the absolute path for proper access
         id: id,
         system: system,
         component: component,
@@ -944,7 +945,7 @@ async function generateNonFunctionalRequirementId() {
 /**
  * Copy a capability document with all its enablers
  */
-async function copyCapability(originalContent, originalPath, configPaths) {
+async function copyCapability(originalContent, originalPath, configPaths, originalDirectory = null) {
   // Generate new capability ID
   const newCapabilityId = await generateCapabilityId();
 
@@ -983,9 +984,9 @@ async function copyCapability(originalContent, originalPath, configPaths) {
   const newFileName = fileName.replace(/^(.+)-capability\.md$/, `${numericId}-capability.md`);
   const newPath = [...pathParts.slice(0, -1), newFileName].join('/');
 
-  // Find the target directory (first project path for new files)
-  const targetDir = configPaths.projectPaths[0];
-  const fullNewPath = path.resolve(path.join(targetDir, newPath));
+  // Use original directory if provided, otherwise fall back to first project path
+  const targetDir = originalDirectory || configPaths.projectPaths[0];
+  const fullNewPath = path.resolve(path.join(targetDir, path.basename(newFileName)));
 
   // Create directory if it doesn't exist
   await fs.ensureDir(path.dirname(fullNewPath));
@@ -1005,8 +1006,21 @@ async function copyCapability(originalContent, originalPath, configPaths) {
   // Write new capability file with updated enabler table
   await fs.writeFile(fullNewPath, newContent);
 
+  // Return the new path relative to the project paths
+  let relativeNewPath = newPath;
+  if (originalDirectory) {
+    // Find which project path contains this directory
+    for (const projectPath of configPaths.projectPaths) {
+      const resolvedProjectPath = path.resolve(projectPath);
+      if (originalDirectory.startsWith(resolvedProjectPath)) {
+        relativeNewPath = path.relative(resolvedProjectPath, fullNewPath).replace(/\\/g, '/');
+        break;
+      }
+    }
+  }
+
   return {
-    newPath,
+    newPath: relativeNewPath,
     newId: newCapabilityId,
     newName,
     copiedEnablers
@@ -1091,16 +1105,26 @@ async function copyCapabilityEnablers(originalCapabilityId, newCapabilityId, con
       const newFileName = fileName.replace(/^(.+)-enabler\.md$/, `${numericId}-enabler.md`);
       const newPath = [...pathParts.slice(0, -1), newFileName].join('/');
 
-      // Write new enabler file
-      const targetDir = configPaths.projectPaths[0];
-      const fullNewPath = path.resolve(path.join(targetDir, newPath));
+      // Write new enabler file in the same directory as the original enabler
+      const originalEnablerDirectory = path.dirname(fullPath);
+      const fullNewPath = path.resolve(path.join(originalEnablerDirectory, path.basename(newFileName)));
       await fs.ensureDir(path.dirname(fullNewPath));
       await fs.writeFile(fullNewPath, newContent);
+
+      // Calculate relative path from project root
+      let relativeNewPath = newPath;
+      for (const projectPath of configPaths.projectPaths) {
+        const resolvedProjectPath = path.resolve(projectPath);
+        if (originalEnablerDirectory.startsWith(resolvedProjectPath)) {
+          relativeNewPath = path.relative(resolvedProjectPath, fullNewPath).replace(/\\/g, '/');
+          break;
+        }
+      }
 
       copiedEnablers.push({
         originalId: extractId(enablerContent),
         newId: newEnablerId,
-        newPath,
+        newPath: relativeNewPath,
         newName
       });
 
@@ -1116,7 +1140,7 @@ async function copyCapabilityEnablers(originalCapabilityId, newCapabilityId, con
 /**
  * Copy an enabler document with renumbered requirements
  */
-async function copyEnabler(originalContent, originalPath, configPaths) {
+async function copyEnabler(originalContent, originalPath, configPaths, originalDirectory = null) {
   // Generate new enabler ID
   const newEnablerId = await generateEnablerId();
 
@@ -1158,9 +1182,9 @@ async function copyEnabler(originalContent, originalPath, configPaths) {
   const newFileName = fileName.replace(/^(.+)-enabler\.md$/, `${numericId}-enabler.md`);
   const newPath = [...pathParts.slice(0, -1), newFileName].join('/');
 
-  // Find the target directory (first project path for new files)
-  const targetDir = configPaths.projectPaths[0];
-  const fullNewPath = path.resolve(path.join(targetDir, newPath));
+  // Use original directory if provided, otherwise fall back to first project path
+  const targetDir = originalDirectory || configPaths.projectPaths[0];
+  const fullNewPath = path.resolve(path.join(targetDir, path.basename(newFileName)));
 
   // Create directory if it doesn't exist
   await fs.ensureDir(path.dirname(fullNewPath));
@@ -1168,8 +1192,21 @@ async function copyEnabler(originalContent, originalPath, configPaths) {
   // Write new enabler file
   await fs.writeFile(fullNewPath, newContent);
 
+  // Return the new path relative to the project paths
+  let relativeNewPath = newPath;
+  if (originalDirectory) {
+    // Find which project path contains this directory
+    for (const projectPath of configPaths.projectPaths) {
+      const resolvedProjectPath = path.resolve(projectPath);
+      if (originalDirectory.startsWith(resolvedProjectPath)) {
+        relativeNewPath = path.relative(resolvedProjectPath, fullNewPath).replace(/\\/g, '/');
+        break;
+      }
+    }
+  }
+
   return {
-    newPath,
+    newPath: relativeNewPath,
     newId: newEnablerId,
     newName,
     capabilityId
@@ -1500,7 +1537,11 @@ app.get('/api/capabilities-with-dependencies', async (req, res) => {
         try {
           // Read the full capability file to extract dependencies
           let fullPath;
-          if (capability.projectPath) {
+          if (capability.fullPath) {
+            // Use the fullPath if it's already available
+            fullPath = capability.fullPath;
+          } else if (capability.projectPath) {
+            // Construct path from projectPath and relative path
             fullPath = path.join(capability.projectPath, path.basename(capability.path));
           } else {
             // Fallback: try to find the file in project paths
@@ -2036,13 +2077,16 @@ app.post('/api/copy/:type/*', async (req, res) => {
     // Read original file
     const originalContent = await fs.readFile(resolvedPath, 'utf8');
 
+    // Extract the original directory to preserve it for the copy
+    const originalDirectory = path.dirname(resolvedPath);
+
     if (type === 'capability') {
       // Copy capability with all its enablers
-      const result = await copyCapability(originalContent, originalPath, configPaths);
+      const result = await copyCapability(originalContent, originalPath, configPaths, originalDirectory);
       res.json(result);
     } else {
       // Copy enabler with renumbered requirements
-      const result = await copyEnabler(originalContent, originalPath, configPaths);
+      const result = await copyEnabler(originalContent, originalPath, configPaths, originalDirectory);
       res.json(result);
     }
 
@@ -2100,7 +2144,14 @@ async function updateBidirectionalDependencies(capabilityId, upstreamDeps, downs
 
     // Process each capability to update their dependencies
     for (const cap of capabilities) {
-      let fullPath = path.join(cap.projectPath, path.basename(cap.path));
+      let fullPath;
+      if (cap.fullPath) {
+        // Use the fullPath if it's already available
+        fullPath = cap.fullPath;
+      } else {
+        // Construct path from projectPath and relative path
+        fullPath = path.join(cap.projectPath, path.basename(cap.path));
+      }
 
       if (!await fs.pathExists(fullPath)) {
         continue;
@@ -2461,11 +2512,6 @@ app.post('/api/enabler-with-reparenting/*', async (req, res) => {
     await fs.writeFile(resolvedPath, content, 'utf8');
     console.log('[ENABLER-REPARENTING] Enabler file saved:', resolvedPath);
 
-    // Update enabler fields in parent capability table
-    if (enablerData.capabilityId) {
-      await updateCapabilityEnablerFields(enablerData, enablerData.capabilityId);
-    }
-
     // Handle reparenting/parenting if capability ID changed or assigned for first time
     if (enablerData.capabilityId && (!originalCapabilityId || originalCapabilityId !== enablerData.capabilityId)) {
       console.log('[ENABLER-REPARENTING] Capability assignment detected - updating capability enabler lists');
@@ -2491,9 +2537,12 @@ app.post('/api/enabler-with-reparenting/*', async (req, res) => {
         }
       }
 
-      await handleEnablerReparenting(enablerData.id, enablerData.name, originalCapabilityId, enablerData.capabilityId);
+      await handleEnablerReparenting(enablerData.id, enablerData.name, originalCapabilityId, enablerData.capabilityId, enablerData.description);
+    } else if (enablerData.capabilityId) {
+      // Not reparenting - just update enabler fields in the existing capability table
+      await updateCapabilityEnablerFields(enablerData, enablerData.capabilityId);
     }
-    
+
     const title = extractTitle(content);
     res.json({
       success: true,
@@ -2633,7 +2682,7 @@ async function updateCapabilityEnablerFields(enablerData, capabilityId) {
         if (file.endsWith('-capability.md')) {
           const filePath = path.join(resolvedPath, file);
           const content = await fs.readFile(filePath, 'utf8');
-          if (content.includes(`ID**: ${capabilityId}`)) {
+          if (content.includes(`**ID**: ${capabilityId}`)) {
             capabilityFile = filePath;
             console.log('[CAPABILITY-SYNC] Found capability file:', file);
             break;
@@ -2699,7 +2748,7 @@ async function findCapabilityDirectory(capabilityId) {
         if (file.endsWith('-capability.md')) {
           const filePath = path.join(resolvedPath, file);
           const content = await fs.readFile(filePath, 'utf8');
-          if (content.includes(`ID**: ${capabilityId}`)) {
+          if (content.includes(`**ID**: ${capabilityId}`)) {
             console.log('[CAPABILITY-DIRECTORY] Found capability directory:', resolvedPath);
             return resolvedPath;
           }
@@ -3748,7 +3797,7 @@ app.delete('/api/workspaces/:id/paths', async (req, res) => {
 });
 
 // Handle enabler reparenting by updating capability enabler lists
-async function handleEnablerReparenting(enablerId, enablerName, oldCapabilityId, newCapabilityId) {
+async function handleEnablerReparenting(enablerId, enablerName, oldCapabilityId, newCapabilityId, enablerDescription = null) {
   try {
     console.log(`[REPARENTING] Moving enabler ${enablerId} from ${oldCapabilityId} to ${newCapabilityId}`);
 
@@ -3761,7 +3810,7 @@ async function handleEnablerReparenting(enablerId, enablerName, oldCapabilityId,
 
     // Add enabler to new capability if specified
     if (newCapabilityId) {
-      await addEnablerToCapability(newCapabilityId, enablerId, enablerName, configPaths.projectPaths);
+      await addEnablerToCapability(newCapabilityId, enablerId, enablerName, configPaths.projectPaths, enablerDescription);
     }
 
     console.log(`[REPARENTING] Successfully reparented enabler ${enablerId}`);
@@ -3830,7 +3879,7 @@ async function removeEnablerFromCapability(capabilityId, enablerId, enablerName,
   }
 }
 
-async function addEnablerToCapability(capabilityId, enablerId, enablerName, projectPaths) {
+async function addEnablerToCapability(capabilityId, enablerId, enablerName, projectPaths, enablerDescription = null) {
   try {
     // Find the capability file
     const capabilityFile = await findCapabilityFile(capabilityId, projectPaths);
@@ -3880,7 +3929,8 @@ async function addEnablerToCapability(capabilityId, enablerId, enablerName, proj
     
     // Add the new enabler row after the last table row or after the header if no rows exist
     if (foundTableHeader) {
-      const newEnablerRow = `| ${enablerId} | ${enablerName} |`;
+      const description = enablerDescription || enablerName;
+      const newEnablerRow = `| ${enablerId} | ${description} |`;
       
       if (lastTableLineIndex >= 0) {
         // Insert after the last row

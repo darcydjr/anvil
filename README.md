@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-3.1.2-green.svg)]()
+[![Version](https://img.shields.io/badge/version-3.1.3-green.svg)]()
 
 ## Overview
 
@@ -29,77 +29,101 @@ Product development has two distinct sides:
 
 Anvil focuses exclusively on the right side, helping engineering teams define, organize, and manage the technical capabilities that enable product experiences. A new platform is coming soon for the left side that will marry **Experiences and Features** (Product Managers) with **Technical Capabilities and Enablers** (Engineers) to build the architectural runway needed to support exceptional user experiences.
 
-## What's New in v3.1.2
+## What's New in v3.1.3
 
-### 🗂️ **File Explorer Integration**
+### 🚀 **Performance & Stability Improvements**
+- **Path Concatenation Fix**: Resolved critical bug causing security errors when accessing files across multiple project paths in workspaces
+- **Document Scanning Optimization**: Fixed fullPath property handling in document items to prevent invalid path construction
+- **Multi-Workspace Support**: Enhanced file access across different project paths within the same workspace
+
+### 📁 **Copy Functionality Enhancements**
+- **Smart Directory Preservation**: When copying capabilities or enablers, they now maintain the same specification directory as the original
+- **Accurate Path Resolution**: Fixed copy functions to use original file directories instead of defaulting to first project path
+- **Cross-Project Copying**: Proper support for copying documents across different project paths within a workspace
+- **Relative Path Calculation**: Enhanced path handling to return correct relative paths for copied documents
+
+### 🔄 **Enabler Reassignment System**
+- **Capability Table Updates**: Moving an enabler to a new capability now properly updates both source and destination capability enabler tables
+- **Bi-Directional Sync**: Fixed logic to remove enabler from old capability and add to new capability with correct metadata
+- **Description Preservation**: Enabler descriptions are now properly preserved when moving between capabilities
+- **Automatic File Relocation**: Enabler files are automatically moved to the new capability's directory when reassigned
+
+### 🔧 **Technical Fixes**
+- **API Logic Reordering**: Fixed enabler reparenting logic flow to handle table updates in correct sequence
+- **Capability ID Lookup**: Standardized capability lookup patterns for consistent file finding across all functions
+- **WebSocket Broadcasting**: Enhanced file change notifications to trigger proper UI updates after enabler reassignments
+
+## Previous Releases
+
+### What's New in v3.1.2
+
+#### 🗂️ **File Explorer Integration**
 - **Folder Icon Feature**: Added clickable folder icon next to "Specification Path" in document viewer for capabilities and enablers
 - **File Explorer Access**: Click the folder icon to instantly open your system's file explorer to the document's directory
 - **Cross-Platform Support**: Works on Windows (explorer), macOS (open), and Linux (xdg-open) file managers
 - **Inline Display**: Folder icon appears seamlessly at the end of the specification path line, not on a separate line
 
-### 🧭 **Navigation Panel Improvements**
+#### 🧭 **Navigation Panel Improvements**
 - **Smart Workspace Collapsing**: Navigation panel now only collapses capabilities/enablers when switching workspaces
 - **Persistent Expansion**: Capabilities and enablers stay expanded when saving or creating new documents within the same workspace
 - **Improved User Experience**: No more unexpected navigation state changes during normal document operations
 
-### 🔧 **Technical Fixes**
+#### 🔧 **Technical Fixes**
 - **API Endpoint Correction**: Fixed double `/api` path issue in open-explorer endpoint that was causing 404 errors
 - **Fire-and-Forget Operation**: File explorer opening now returns success immediately without waiting for command completion
 - **Enhanced Error Handling**: Improved error reporting and success feedback for file explorer operations
 - **DOM Query Optimization**: Fixed querySelector scope to prevent null reference errors when attaching folder icon event handlers
 
-### 🎯 **Document Viewer Enhancements**
+#### 🎯 **Document Viewer Enhancements**
 - **Specification Path Visibility**: Enhanced specification path display in capability and enabler metadata sections
 - **Comprehensive Debugging**: Added detailed logging for troubleshooting document enhancement processes
 - **Improved HTML Enhancement**: Better DOM parsing and manipulation for adding interactive elements to rendered documents
 
-## Previous Release: v3.1.1
+### What's New in v3.1.1
 
-### 🚀 **Performance & User Experience Improvements**
+#### 🚀 **Performance & User Experience Improvements**
 - **Status Field Alphabetical Sorting**: Status dropdown fields in capability and enabler forms are now sorted alphabetically for easier selection
 - **New Capability Status**: Added "Ready for Refactor" status for capabilities to support design refactoring workflows
 - **External Change Notifications**: Fixed cross-project file access to enable proper notifications for approval and status changes
 - **Workspace Switching Improvements**: All capabilities and enablers now collapse automatically when switching workspaces for cleaner navigation
 - **Priority Field Fix**: Fixed capability form editor to correctly display enabler priority values from markdown files
 
-### 🛠️ **Critical Performance Fix**
+#### 🛠️ **Critical Performance Fix**
 - **Document Save Performance**: Resolved critical performance issue causing 150+ API calls after file saves, which was causing very long document view load times
 - **Stable WebSocket Handling**: Fixed useEffect dependency loop that was creating cascading API call storms
 - **Improved Load Times**: Document views now load quickly after saves with normal performance restored
 
-### 🔧 **Technical Improvements**
+#### 🔧 **Technical Improvements**
 - **Path Validation Enhancement**: Fixed server-side path validation to support cross-project file access in multi-project workspaces
 - **Enabler Priority Integration**: Added priority field to DocumentItem interface and server-side metadata extraction
 - **useRef Pattern Implementation**: Used stable function references for WebSocket handlers to prevent dependency loops
 - **Enhanced Error Handling**: Improved error logging and debugging for file access and metadata extraction
 
-### 🎯 **UI/UX Enhancements**
+#### 🎯 **UI/UX Enhancements**
 - **Form Field Organization**: Status dropdowns now display options in logical alphabetical order
 - **Workspace Management**: Cleaner workspace switching experience with automatic content collapse
 - **Priority Display**: Fixed priority field synchronization between capability tables and enabler files
 - **Responsive Navigation**: Improved navigation responsiveness after workspace changes
 
-## Previous Release: v3.1.0
+### What's New in v3.1.0
 
-### 🧹 **Code Cleanup & Simplification**
+#### 🧹 **Code Cleanup & Simplification**
 - **Agent System Removal**: Completely removed all agent-related code and infrastructure to simplify the codebase
 - **Configuration Cleanup**: Removed agent configuration files and references from TypeScript configuration
 - **UI Streamlining**: Removed agent dashboard components and navigation to focus on core document management functionality
 - **Logging System Enhancement**: Added comprehensive logging system with execution IDs, file output to logs directory, and configurable log levels
 - **Version Display**: Added version number display in the application header for better visibility
 
-### 🔧 **Technical Improvements**
+#### 🔧 **Technical Improvements**
 - **Global Log Level Configuration**: Log level now configurable via config.json with DEBUG, INFO, WARN, ERROR levels
 - **Enhanced Console Output**: Added colored console logging with timestamp and execution ID tracking
 - **Improved Error Handling**: Better error handling and logging throughout the application
 - **TypeScript Configuration**: Cleaned up TypeScript includes to remove agent references
 
-### 🎯 **Focus Shift**
+#### 🎯 **Focus Shift**
 - **Core Functionality Focus**: Streamlined application to focus exclusively on PRD management, capabilities, and enablers
 - **Simplified Architecture**: Removed complex agent orchestration in favor of direct document management workflow
 - **Performance Optimization**: Reduced application complexity and improved startup performance
-
-## Previous Releases
 
 ### What's New in v2.6.7
 
