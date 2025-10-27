@@ -19,10 +19,10 @@ Provide a web application for displaying hello world
 
 ## Enablers
 
-| Enabler ID | Name | Description | Status | Approval | Priority |
-|------------|------|-------------|--------|----------|----------|
-| ENB-678403 | Javascript Node Application |  | Ready for Design | Approved | High |
-| ENB-212431 | Application Lifecycle Logging |  | Ready for Design | Approved | High |
+| Enabler ID |
+|------------|
+| ENB-678403 |
+| ENB-212431 |
 
 ## Dependencies
 

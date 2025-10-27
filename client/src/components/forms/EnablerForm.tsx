@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Plus, Trash2, RefreshCcw } from 'lucide-react'
+import { Plus, Trash2, RefreshCcw, GripVertical } from 'lucide-react'
 import { apiService } from '../../services/apiService'
 import { generateFunctionalRequirementId, generateNonFunctionalRequirementId } from '../../utils/idGenerator'
 import { stateListenerManager } from '../../utils/stateListeners'
@@ -29,6 +29,7 @@ interface CapabilityLinksResponse {
 function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): JSX.Element {
   const [availableCapabilities, setAvailableCapabilities] = useState<CapabilityLink[]>([])
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
+  const [draggedItem, setDraggedItem] = useState<{ type: 'functional' | 'nonFunctional', index: number } | null>(null)
   const stateListenerRef = useRef(null)
   const requirementListenersRef = useRef(new Map())
 
@@ -289,6 +290,43 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
     }
   }, [onChange])
 
+  // Drag and drop handlers
+  const handleDragStart = useCallback((e: React.DragEvent, type: 'functional' | 'nonFunctional', index: number) => {
+    setDraggedItem({ type, index })
+    e.dataTransfer.effectAllowed = 'move'
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent, targetType: 'functional' | 'nonFunctional', targetIndex: number) => {
+    e.preventDefault()
+
+    if (!draggedItem || draggedItem.type !== targetType) {
+      setDraggedItem(null)
+      return
+    }
+
+    const sourceIndex = draggedItem.index
+    const field = targetType === 'functional' ? 'functionalRequirements' : 'nonFunctionalRequirements'
+    const requirements = [...(data[field] || [])]
+
+    // Remove from source position
+    const [removed] = requirements.splice(sourceIndex, 1)
+
+    // Insert at target position
+    requirements.splice(targetIndex, 0, removed)
+
+    onChange({ [field]: requirements })
+    setDraggedItem(null)
+  }, [draggedItem, data, onChange])
+
+  const handleDragEnd = useCallback(() => {
+    setDraggedItem(null)
+  }, [])
+
   return (
     <div className="space-y-6">
       {/* Basic Information */}
@@ -457,7 +495,8 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left p-2 text-sm font-medium text-foreground">ID</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground w-8"></th>
+                <th className="text-left p-2 text-sm font-medium text-foreground w-24">ID</th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Name</th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Requirement</th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Priority</th>
@@ -468,7 +507,18 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
             </thead>
             <tbody>
               {(data.functionalRequirements || []).map((req, index) => (
-                <tr key={index} className="border-b border-border hover:bg-accent">
+                <tr
+                  key={index}
+                  className="border-b border-border hover:bg-accent"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, 'functional', index)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, 'functional', index)}
+                  onDragEnd={handleDragEnd}
+                >
+                  <td className="p-2 cursor-move">
+                    <GripVertical className="w-4 h-4 text-muted-foreground" />
+                  </td>
                   <td className="p-2">
                     <input
                       type="text"
@@ -574,7 +624,8 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left p-2 text-sm font-medium text-foreground">ID</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground w-8"></th>
+                <th className="text-left p-2 text-sm font-medium text-foreground w-24">ID</th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Name</th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Type</th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Requirement</th>
@@ -586,7 +637,18 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
             </thead>
             <tbody>
               {(data.nonFunctionalRequirements || []).map((req, index) => (
-                <tr key={index} className="border-b border-border hover:bg-accent">
+                <tr
+                  key={index}
+                  className="border-b border-border hover:bg-accent"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, 'nonFunctional', index)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, 'nonFunctional', index)}
+                  onDragEnd={handleDragEnd}
+                >
+                  <td className="p-2 cursor-move">
+                    <GripVertical className="w-4 h-4 text-muted-foreground" />
+                  </td>
                   <td className="p-2">
                     <input
                       type="text"

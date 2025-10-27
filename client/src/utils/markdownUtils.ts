@@ -216,15 +216,15 @@ export function convertFormToMarkdown(formData: FormData, type: DocumentType): s
     // Enablers (comes right after metadata)
     markdown += `## Enablers\n\n`
     if (capData.enablers && capData.enablers.length > 0) {
-      markdown += `| Enabler ID | Description |\n`
-      markdown += `|------------|-------------|\n`
+      markdown += `| Enabler ID |\n`
+      markdown += `|------------|\n`
       capData.enablers.forEach(enabler => {
-        markdown += `| ${enabler.id || ''} | ${enabler.description || ''} |\n`
+        markdown += `| ${enabler.id || ''} |\n`
       })
     } else {
-      markdown += `| Enabler ID | Description |\n`
-      markdown += `|------------|-------------|\n`
-      markdown += `| | |\n`
+      markdown += `| Enabler ID |\n`
+      markdown += `|------------|\n`
+      markdown += `| |\n`
     }
     markdown += `\n`
 
@@ -389,7 +389,7 @@ function parseEnablersTable(markdown: string): Enabler[] {
       if (cells.length > 0 && cells[cells.length - 1] === '') cells.pop()
 
       // Flexible parsing based on available columns
-      if (cells.length >= 2) { // Minimum: ID, Description (for 2-column capability format)
+      if (cells.length >= 1) { // Minimum: ID (for single-column format)
         const enabler: Enabler = {
           id: '',
           name: '',
@@ -420,6 +420,7 @@ function parseEnablersTable(markdown: string): Enabler[] {
             // Fallback to positional mapping
             if (j === 0) {
               enabler.id = value
+              // For single-column format, just store the ID and we'll get the name from server data
             } else if (j === 1) {
               // For 2-column format, second column is description
               if (headerColumns.length === 2) {

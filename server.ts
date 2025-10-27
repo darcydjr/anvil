@@ -579,38 +579,41 @@ async function enhanceEnablerTablesWithDynamicData(html) {
                 const enablerData = enablerMap.get(enablerId);
 
                 if (enablerData) {
-                  // Check if this is the old format (6 columns) or new format (2 columns)
+                  // Check if this is single column (1), old 2-column format (2), or legacy 6-column format
                   const cellCount = (rowMatch.match(/<td[^>]*>/g) || []).length;
 
-                  if (cellCount === 2) {
-                    // New format: Only ID and Description
+                  if (cellCount === 1) {
+                    // Single column format: Only ID
+                    return `<tr>
+                      <td>${enablerData.id}</td>
+                      <td>${enablerData.name}</td>
+                      <td><span class="status-${enablerData.status.toLowerCase().replace(/\s+/g, '-')}">${enablerData.status}</span></td>
+                      <td><span class="approval-${enablerData.approval.toLowerCase().replace(/\s+/g, '-')}">${enablerData.approval}</span></td>
+                      <td><span class="priority-${enablerData.priority.toLowerCase()}">${enablerData.priority}</span></td>
+                    </tr>`;
+                  } else if (cellCount === 2) {
+                    // Two column format: ID and Description
                     // Transform to full format with dynamic data
                     const descriptionMatch = rowMatch.match(/<td[^>]*>(?:ENB-\d+)<\/td>\s*<td[^>]*>(.*?)<\/td>/);
                     const description = descriptionMatch ? descriptionMatch[1] : '';
 
                     return `<tr>
-                      <td><strong>${enablerData.id}</strong></td>
-                      <td><strong>${enablerData.name}</strong></td>
-                      <td>${description}</td>
+                      <td>${enablerData.id}</td>
+                      <td>${enablerData.name}</td>
                       <td><span class="status-${enablerData.status.toLowerCase().replace(/\s+/g, '-')}">${enablerData.status}</span></td>
                       <td><span class="approval-${enablerData.approval.toLowerCase().replace(/\s+/g, '-')}">${enablerData.approval}</span></td>
                       <td><span class="priority-${enablerData.priority.toLowerCase()}">${enablerData.priority}</span></td>
                     </tr>`;
                   } else {
-                    // Old format: Update with fresh data
-                    return rowMatch.replace(
-                      /<td[^>]*>([^<]*)<\/td>/g,
-                      (cellMatch, cellContent, cellIndex) => {
-                        switch(cellIndex) {
-                          case 0: return `<td><strong>${enablerData.id}</strong></td>`;
-                          case 1: return `<td><strong>${enablerData.name}</strong></td>`;
-                          case 3: return `<td><span class="status-${enablerData.status.toLowerCase().replace(/\s+/g, '-')}">${enablerData.status}</span></td>`;
-                          case 4: return `<td><span class="approval-${enablerData.approval.toLowerCase().replace(/\s+/g, '-')}">${enablerData.approval}</span></td>`;
-                          case 5: return `<td><span class="priority-${enablerData.priority.toLowerCase()}">${enablerData.priority}</span></td>`;
-                          default: return cellMatch; // Keep description as-is
-                        }
-                      }
-                    );
+                    // Legacy format: Update with fresh data
+                    // Transform old format to new format without description column
+                    return `<tr>
+                      <td>${enablerData.id}</td>
+                      <td>${enablerData.name}</td>
+                      <td><span class="status-${enablerData.status.toLowerCase().replace(/\s+/g, '-')}">${enablerData.status}</span></td>
+                      <td><span class="approval-${enablerData.approval.toLowerCase().replace(/\s+/g, '-')}">${enablerData.approval}</span></td>
+                      <td><span class="priority-${enablerData.priority.toLowerCase()}">${enablerData.priority}</span></td>
+                    </tr>`;
                   }
                 } else {
                   // Enabler not found - show warning
@@ -629,13 +632,12 @@ async function enhanceEnablerTablesWithDynamicData(html) {
       }
     );
 
-    // Also update the table header if it's the new format
+    // Also update the table header if it's the new format (single column or old format)
     enhancedHtml = enhancedHtml.replace(
-      /<tr[^>]*>\s*<th[^>]*>Enabler ID<\/th>\s*<th[^>]*>Description<\/th>\s*<\/tr>/,
+      /<tr[^>]*>\s*<th[^>]*>Enabler ID<\/th>\s*(<th[^>]*>Description<\/th>\s*)?<\/tr>/,
       `<tr>
         <th>Enabler ID</th>
         <th>Name</th>
-        <th>Description</th>
         <th>Status</th>
         <th>Approval</th>
         <th>Priority</th>

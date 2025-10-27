@@ -19,9 +19,9 @@ Display Hello World
 
 ## Enablers
 
-| Enabler ID | Name | Description | Status | Approval | Priority |
-|------------|------|-------------|--------|----------|----------|
-| ENB-670075 | Display Hello World |  | Ready for Design | Approved | High |
+| Enabler ID |
+|------------|
+| ENB-670075 |
 
 ## Dependencies
 

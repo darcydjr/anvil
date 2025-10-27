@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-3.1.3-green.svg)]()
+[![Version](https://img.shields.io/badge/version-3.1.4-green.svg)]()
 
 ## Overview
 
@@ -29,7 +29,38 @@ Product development has two distinct sides:
 
 Anvil focuses exclusively on the right side, helping engineering teams define, organize, and manage the technical capabilities that enable product experiences. A new platform is coming soon for the left side that will marry **Experiences and Features** (Product Managers) with **Technical Capabilities and Enablers** (Engineers) to build the architectural runway needed to support exceptional user experiences.
 
-## What's New in v3.1.3
+## What's New in v3.1.4
+
+### 🎨 **UI/UX Improvements**
+- **Streamlined Enabler Tables**: Removed Description column from Enabler tables in capability editor and viewer for cleaner interface
+- **Simplified Column Headers**: Enabler tables now display only "Enabler ID" column with enhanced readability
+- **Removed Bold Formatting**: Cleaned up Enabler ID and Name formatting in capability view for consistent styling
+
+### 🖱️ **Drag-and-Drop Functionality**
+- **Requirements Reordering**: Added drag-and-drop functionality for Functional and Non-Functional Requirements in enabler editor
+- **Enabler Reordering**: Implemented drag-and-drop for enablers in capability editor for better organization
+- **Visual Drag Handles**: Added hamburger menu grip icons (GripVertical) for intuitive drag operations
+- **Smooth Interactions**: Enhanced user experience with proper drag states and visual feedback
+
+### 🔧 **Critical Bug Fixes**
+- **Enabler Display After Save**: Fixed issue where enablers would disappear from capability editor after save/edit cycles
+- **Column Header Display**: Resolved missing column headers problem in capability view (previously only showing "Enabler ID")
+- **Single-Column Table Support**: Enhanced parsing logic to handle new streamlined single-column enabler table format
+- **Server-Side Enhancement**: Updated table enhancement patterns to support both legacy and new table formats
+
+### 📊 **Table Optimizations**
+- **Reduced ID Column Width**: Decreased ID column width by 40% in requirements tables for better space utilization
+- **Improved Table Layout**: Optimized table structure for better readability and screen space usage
+- **Enhanced Responsive Design**: Better table display across different screen sizes
+
+### 🔄 **Data Management**
+- **Backward Compatibility**: Maintained support for existing two-column enabler tables while supporting new single-column format
+- **Enhanced Parsing Logic**: Improved markdown table parsing to handle varying column structures
+- **Table Format Migration**: Seamless transition from old format to new streamlined format
+
+## Previous Releases
+
+### What's New in v3.1.3
 
 ### 🚀 **Performance & Stability Improvements**
 - **Path Concatenation Fix**: Resolved critical bug causing security errors when accessing files across multiple project paths in workspaces

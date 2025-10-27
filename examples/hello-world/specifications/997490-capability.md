@@ -19,9 +19,9 @@ Provide a logging capability
 
 ## Enablers
 
-| Enabler ID | Name | Description | Status | Approval | Priority |
-|------------|------|-------------|--------|----------|----------|
-| ENB-507753 | Event Logging |  | Ready for Design | Approved | High |
+| Enabler ID |
+|------------|
+| ENB-507753 |
 
 ## Dependencies
 

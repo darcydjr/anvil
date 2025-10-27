@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useCallback, useMemo, useState } from 'react'
-import { Plus, Trash2, FileText, RefreshCcw } from 'lucide-react'
+import { Plus, Trash2, FileText, RefreshCcw, GripVertical } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../../contexts/AppContext'
 import { generateEnablerId } from '../../utils/idGenerator'
@@ -45,6 +45,7 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
   const [workspaces, setWorkspaces] = useState<WorkspacesData>({ workspaces: [], activeWorkspaceId: null })
   const [originalPath, setOriginalPath] = useState<string | null>(null)
   const [availableCapabilities, setAvailableCapabilities] = useState<CapabilityLink[]>([])
+  const [draggedEnablerIndex, setDraggedEnablerIndex] = useState<number | null>(null)
 
   // State to track if we've already enriched the data
   const [hasEnriched, setHasEnriched] = useState(false)
@@ -376,6 +377,41 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
     }
   }, [onChange])
 
+  // Drag and drop handlers for enablers
+  const handleEnablerDragStart = useCallback((e: React.DragEvent, index: number) => {
+    setDraggedEnablerIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+  }, [])
+
+  const handleEnablerDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }, [])
+
+  const handleEnablerDrop = useCallback((e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault()
+
+    if (draggedEnablerIndex === null || draggedEnablerIndex === targetIndex) {
+      setDraggedEnablerIndex(null)
+      return
+    }
+
+    const enablers = [...(data.enablers || [])]
+
+    // Remove from source position
+    const [removed] = enablers.splice(draggedEnablerIndex, 1)
+
+    // Insert at target position
+    enablers.splice(targetIndex, 0, removed)
+
+    onChange({ enablers })
+    setDraggedEnablerIndex(null)
+  }, [draggedEnablerIndex, data.enablers, onChange])
+
+  const handleEnablerDragEnd = useCallback(() => {
+    setDraggedEnablerIndex(null)
+  }, [])
+
   return (
     <div className="space-y-6">
       {/* Basic Information */}
@@ -570,9 +606,9 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-border">
+                <th className="text-left p-2 text-sm font-medium text-foreground w-8"></th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Enabler ID</th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Name</th>
-                <th className="text-left p-2 text-sm font-medium text-foreground">Description</th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Status</th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Approval</th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Priority</th>
@@ -581,7 +617,18 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
             </thead>
             <tbody>
               {enrichedEnablers.map((enabler, index) => (
-                <tr key={index} className="border-b border-border hover:bg-accent">
+                <tr
+                  key={index}
+                  className="border-b border-border hover:bg-accent"
+                  draggable
+                  onDragStart={(e) => handleEnablerDragStart(e, index)}
+                  onDragOver={handleEnablerDragOver}
+                  onDrop={(e) => handleEnablerDrop(e, index)}
+                  onDragEnd={handleEnablerDragEnd}
+                >
+                  <td className="p-2 cursor-move">
+                    <GripVertical className="w-4 h-4 text-muted-foreground" />
+                  </td>
                   <td className="p-2">
                     <input
                       type="text"
@@ -598,14 +645,6 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
                       value={enabler.name || ''}
                       onChange={(e) => handleArrayChange('enablers', index, 'name', e.target.value)}
                       placeholder="Enabler name"
-                    />
-                  </td>
-                  <td className="p-2">
-                    <textarea
-                      className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-y"
-                      value={enabler.description || ''}
-                      onChange={(e) => handleArrayChange('enablers', index, 'description', e.target.value)}
-                      placeholder="Brief description (stored in capability)"
                     />
                   </td>
                   <td className="p-2">
