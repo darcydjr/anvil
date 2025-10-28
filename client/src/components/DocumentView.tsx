@@ -548,7 +548,7 @@ export default function DocumentView(): React.ReactElement {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-6">
       <div className="bg-card rounded-lg shadow-sm border border-border mb-6 p-4 flex items-center justify-between">
         <div className="flex-1">
           {document?.title && type !== 'template' && (

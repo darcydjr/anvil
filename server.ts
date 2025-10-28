@@ -1604,6 +1604,7 @@ app.get('/api/file/*', async (req, res) => {
     let fullPath;
     let projectRoot;
     let cleanFilePath;
+    let fileLocation = null;
 
     if (filePath.startsWith('templates/')) {
       cleanFilePath = filePath.replace('templates/', '');
@@ -1619,7 +1620,7 @@ app.get('/api/file/*', async (req, res) => {
         cleanFilePath = filePath.replace('specifications/', '');
       }
 
-      const fileLocation = await findFileInProjectPaths(cleanFilePath, configPaths.projectPaths);
+      fileLocation = await findFileInProjectPaths(cleanFilePath, configPaths.projectPaths);
       if (fileLocation) {
         fullPath = fileLocation.fullPath;
         projectRoot = fileLocation.projectRoot;
@@ -1634,9 +1635,13 @@ app.get('/api/file/*', async (req, res) => {
     // Enhanced security validation
     let resolvedPath
     try {
-      // When file was found by findFileInProjectPaths, use the relative path from actual project root
-      const relativePath = fullPath ? path.relative(projectRoot, fullPath) : cleanFilePath
-      resolvedPath = validateAndResolvePath(relativePath, projectRoot, 'file path')
+      if (fileLocation) {
+        // File was found by findFileInProjectPaths - it's already validated to be in an allowed project path
+        resolvedPath = fileLocation.fullPath
+      } else {
+        // File not found in project paths - validate against project root
+        resolvedPath = validateAndResolvePath(cleanFilePath, projectRoot, 'file path')
+      }
 
       // Additional file type validation
       if (!resolvedPath.endsWith('.md')) {
@@ -1697,7 +1702,8 @@ app.post('/api/file/*', async (req, res) => {
     let fullPath;
     let projectRoot;
     let cleanFilePath;
-    
+    let fileLocation = null;
+
     if (filePath.startsWith('templates/')) {
       const configPaths = getConfigPaths(config);
       const templatePath = path.resolve(configPaths.templates);
@@ -1718,7 +1724,7 @@ app.post('/api/file/*', async (req, res) => {
       }
 
       // Try to find existing file in project paths
-      const fileLocation = await findFileInProjectPaths(cleanFilePath, configPaths.projectPaths);
+      fileLocation = await findFileInProjectPaths(cleanFilePath, configPaths.projectPaths);
       if (fileLocation) {
         fullPath = fileLocation.fullPath;
         projectRoot = fileLocation.projectRoot;
@@ -1738,7 +1744,13 @@ app.post('/api/file/*', async (req, res) => {
     
     let resolvedPath
     try {
-      resolvedPath = validateAndResolvePath(cleanFilePath, projectRoot, 'save path')
+      if (fileLocation) {
+        // File was found by findFileInProjectPaths - it's already validated to be in an allowed project path
+        resolvedPath = fileLocation.fullPath
+      } else {
+        // New file - validate against project root
+        resolvedPath = validateAndResolvePath(cleanFilePath, projectRoot, 'save path')
+      }
       
       // Additional file type validation
       if (!resolvedPath.endsWith('.md')) {
@@ -1820,7 +1832,8 @@ app.delete('/api/file/*', async (req, res) => {
     let fullPath;
     let projectRoot;
     let cleanFilePath;
-    
+    let fileLocation = null;
+
     if (filePath.startsWith('templates/')) {
       const configPaths = getConfigPaths(config);
       cleanFilePath = filePath.replace('templates/', '');
@@ -1839,7 +1852,7 @@ app.delete('/api/file/*', async (req, res) => {
       }
 
       // Try to find file in project paths
-      const fileLocation = await findFileInProjectPaths(cleanFilePath, configPaths.projectPaths);
+      fileLocation = await findFileInProjectPaths(cleanFilePath, configPaths.projectPaths);
       if (fileLocation) {
         fullPath = fileLocation.fullPath;
         projectRoot = fileLocation.projectRoot;
@@ -1853,7 +1866,13 @@ app.delete('/api/file/*', async (req, res) => {
     
     let resolvedPath
     try {
-      resolvedPath = validateAndResolvePath(cleanFilePath, projectRoot, 'delete path')
+      if (fileLocation) {
+        // File was found by findFileInProjectPaths - it's already validated to be in an allowed project path
+        resolvedPath = fileLocation.fullPath
+      } else {
+        // File not found in project paths - validate against project root
+        resolvedPath = validateAndResolvePath(cleanFilePath, projectRoot, 'delete path')
+      }
       
       // Additional file type validation
       if (!resolvedPath.endsWith('.md')) {
@@ -2301,7 +2320,13 @@ app.post('/api/capability-with-dependencies/*', async (req, res) => {
     }
     let resolvedPath;
     try {
-      resolvedPath = validateAndResolvePath(cleanFilePath, projectRoot, 'capability path')
+      if (fileLocation) {
+        // File was found by findFileInProjectPaths - it's already validated to be in an allowed project path
+        resolvedPath = fileLocation.fullPath
+      } else {
+        // New file - validate against project root
+        resolvedPath = validateAndResolvePath(cleanFilePath, projectRoot, 'capability path')
+      }
       
       // Additional file type validation
       if (!resolvedPath.endsWith('.md')) {
@@ -2335,15 +2360,16 @@ app.post('/api/capability-with-enablers/*', async (req, res) => {
   try {
     const filePath = req.params[0];
     const { content, capabilityId, upstreamDeps, downstreamDeps, enablers } = req.body;
-    
+
     console.log('[CAPABILITY-ENABLERS] Saving capability with enablers:', capabilityId, `Found ${enablers.length} enablers`);
-    
+
     // First save the main capability file
     const configPaths = getConfigPaths(config);
 
     console.log('[CAPABILITY-ENABLERS] Processing filePath:', filePath);
 
     let fullPath, projectRoot;
+    let fileLocation = null;
 
     // Check if the filePath contains a specific workspace path
     const matchingProjectPath = configPaths.projectPaths.find(projectPath => {
@@ -2392,7 +2418,7 @@ app.post('/api/capability-with-enablers/*', async (req, res) => {
       }
 
       // Try to find existing file or use first project path for new files
-      const fileLocation = await findFileInProjectPaths(cleanFilePath, configPaths.projectPaths);
+      fileLocation = await findFileInProjectPaths(cleanFilePath, configPaths.projectPaths);
       if (fileLocation) {
         fullPath = fileLocation.fullPath;
         projectRoot = fileLocation.projectRoot;
@@ -2404,12 +2430,17 @@ app.post('/api/capability-with-enablers/*', async (req, res) => {
       console.log('[CAPABILITY-ENABLERS] Using legacy path resolution:', { cleanFilePath, fullPath, projectRoot });
     }
 
-    // Get the relative path for validation
-    const relativePath = path.relative(projectRoot, fullPath);
     let resolvedPath = path.resolve(fullPath);
 
     try {
-      resolvedPath = validateAndResolvePath(relativePath, projectRoot, 'capability-enablers path')
+      if (fileLocation) {
+        // File was found by findFileInProjectPaths - it's already validated to be in an allowed project path
+        resolvedPath = fileLocation.fullPath
+      } else {
+        // New file - validate against project root
+        const relativePath = path.relative(projectRoot, fullPath);
+        resolvedPath = validateAndResolvePath(relativePath, projectRoot, 'capability-enablers path')
+      }
       
       if (!resolvedPath.endsWith('.md')) {
         throw new Error('Only .md files can be saved as capabilities with enablers')
@@ -2497,9 +2528,15 @@ app.post('/api/enabler-with-reparenting/*', async (req, res) => {
       projectRoot = firstProjectPath;
     }
     let resolvedPath = path.resolve(fullPath);
-    
+
     try {
-      resolvedPath = validateAndResolvePath(cleanFilePath, projectRoot, 'capability-enablers path')
+      if (fileLocation) {
+        // File was found by findFileInProjectPaths - it's already validated to be in an allowed project path
+        resolvedPath = fileLocation.fullPath
+      } else {
+        // New file - validate against project root
+        resolvedPath = validateAndResolvePath(cleanFilePath, projectRoot, 'capability-enablers path')
+      }
       
       if (!resolvedPath.endsWith('.md')) {
         throw new Error('Only .md files can be saved as capabilities with enablers')

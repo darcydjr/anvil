@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../contexts/AppContext'
-import { FileText, Plus, ArrowLeft, ChevronDown, ChevronRight, Settings, Box, Zap, PencilRuler, Ruler, Microscope } from 'lucide-react'
+import { FileText, Plus, ArrowLeft, ChevronDown, ChevronRight, Settings, Box, Zap, PencilRuler, Ruler, Microscope, GripHorizontal } from 'lucide-react'
 
 interface SidebarExpandedSections {
   capabilities: boolean
@@ -73,6 +73,11 @@ export default function Sidebar(): JSX.Element {
 
   // Track workspace changes to collapse navigation when switching workspaces
   const [previousWorkspaceId, setPreviousWorkspaceId] = useState<string | null>(null)
+
+  // Resizable sections state
+  const [capabilitiesHeight, setCapabilitiesHeight] = useState<number>(50) // Percentage
+  const [isDragging, setIsDragging] = useState<boolean>(false)
+  const sidebarRef = useRef<HTMLDivElement>(null)
 
   const navigate = useNavigate()
 
@@ -205,6 +210,48 @@ export default function Sidebar(): JSX.Element {
   }
 
   const associatedCapabilityId = getAssociatedCapabilityId()
+
+  // Handle resizer drag functionality
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }, [])
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging || !sidebarRef.current) return
+
+    const rect = sidebarRef.current.getBoundingClientRect()
+    const totalHeight = rect.height - 120 // Account for header and padding
+    const relativeY = e.clientY - rect.top - 60 // Account for header
+    const percentage = Math.max(20, Math.min(80, (relativeY / totalHeight) * 100))
+
+    setCapabilitiesHeight(percentage)
+  }, [isDragging])
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false)
+  }, [])
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+      document.body.style.userSelect = 'none'
+      document.body.style.cursor = 'ns-resize'
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      document.body.style.userSelect = ''
+      document.body.style.cursor = ''
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      document.body.style.userSelect = ''
+      document.body.style.cursor = ''
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp])
 
   if (loading) {
     return (
@@ -350,7 +397,7 @@ export default function Sidebar(): JSX.Element {
   }
 
   return (
-    <div className="bg-card text-foreground rounded-[10px] p-6 shadow-md overflow-y-auto max-h-[calc(100vh-120px)]">
+    <div ref={sidebarRef} className="bg-card text-foreground rounded-[10px] p-6 shadow-md flex flex-col max-h-[calc(100vh-120px)]">
       {navigationHistory.length > 0 && (
         <button onClick={handleBackClick} className="flex items-center gap-2 py-2 px-4 mb-4 bg-card/70 border border-border rounded cursor-pointer text-sm text-primary w-full transition-all duration-150 ease-in-out backdrop-blur-[1px] hover:bg-accent hover:text-primary/80 hover:backdrop-blur-[2px]">
           <ArrowLeft size={16} />
@@ -358,9 +405,13 @@ export default function Sidebar(): JSX.Element {
         </button>
       )}
 
-      <div className="mb-6">
+      <div
+        className="flex flex-col"
+        style={{ height: `${capabilitiesHeight}%` }}
+      >
+        {/* Sticky Capabilities Header */}
         <div
-          className="flex items-center gap-2 py-3 font-semibold text-xl text-foreground cursor-pointer border-b-2 border-primary mb-3 justify-between uppercase tracking-wide hover:text-foreground/90"
+          className="flex items-center gap-2 py-3 font-semibold text-xl text-foreground cursor-pointer border-b-2 border-primary mb-3 justify-between uppercase tracking-wide hover:text-foreground/90 bg-card sticky top-0 z-10"
           onClick={(): void => toggleSection('capabilities')}
         >
           {expandedSections.capabilities ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
@@ -377,7 +428,9 @@ export default function Sidebar(): JSX.Element {
           </button>
         </div>
 
+        {/* Scrollable Capabilities Content */}
         {expandedSections.capabilities && (
+          <div className="overflow-y-auto flex-1">
           <div className="flex flex-col gap-1">
             {Object.entries(capabilityGroups)
               .sort(([a], [b]) => {
@@ -446,12 +499,32 @@ export default function Sidebar(): JSX.Element {
                 )
               })}
           </div>
+          </div>
         )}
       </div>
 
-      <div className="mb-6 last:mb-0">
+      {/* Resizable separator */}
+      <div
+        className={`flex items-center justify-center h-3 cursor-ns-resize select-none transition-colors duration-200 ${
+          isDragging ? 'bg-primary/20' : 'hover:bg-primary/10'
+        }`}
+        onMouseDown={handleMouseDown}
+      >
+        <GripHorizontal
+          size={16}
+          className={`text-muted-foreground transition-colors duration-200 ${
+            isDragging ? 'text-primary' : 'hover:text-primary'
+          }`}
+        />
+      </div>
+
+      <div
+        className="flex flex-col"
+        style={{ height: `${100 - capabilitiesHeight}%` }}
+      >
+        {/* Sticky Enablers Header */}
         <div
-          className="flex items-center gap-2 py-3 font-semibold text-xl text-foreground cursor-pointer border-b-2 border-primary mb-3 justify-between uppercase tracking-wide hover:text-foreground/90"
+          className="flex items-center gap-2 py-3 font-semibold text-xl text-foreground cursor-pointer border-b-2 border-primary mb-3 justify-between uppercase tracking-wide hover:text-foreground/90 bg-card sticky top-0 z-10"
           onClick={(): void => toggleSection('enablers')}
         >
           {expandedSections.enablers ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
@@ -468,7 +541,9 @@ export default function Sidebar(): JSX.Element {
           </button>
         </div>
 
+        {/* Scrollable Enablers Content */}
         {expandedSections.enablers && (
+          <div className="overflow-y-auto flex-1">
           <div className="ml-4 border-l-2 border-primary/20 pl-2">
             {filteredEnablers
               .sort((a, b) => {
@@ -504,6 +579,7 @@ export default function Sidebar(): JSX.Element {
                   </div>
                 )
               })}
+          </div>
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Plus, Trash2, RefreshCcw, GripVertical } from 'lucide-react'
+import { Plus, Trash2, RefreshCcw, GripVertical, Maximize2, Minimize2 } from 'lucide-react'
 import { apiService } from '../../services/apiService'
 import { generateFunctionalRequirementId, generateNonFunctionalRequirementId } from '../../utils/idGenerator'
 import { stateListenerManager } from '../../utils/stateListeners'
@@ -30,6 +30,7 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
   const [availableCapabilities, setAvailableCapabilities] = useState<CapabilityLink[]>([])
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
   const [draggedItem, setDraggedItem] = useState<{ type: 'functional' | 'nonFunctional', index: number } | null>(null)
+  const [expandedRequirements, setExpandedRequirements] = useState<Set<string>>(new Set())
   const stateListenerRef = useRef(null)
   const requirementListenersRef = useRef(new Map())
 
@@ -327,6 +328,20 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
     setDraggedItem(null)
   }, [])
 
+  // Toggle requirement expansion
+  const toggleRequirementExpansion = useCallback((type: 'functional' | 'nonFunctional', index: number) => {
+    const key = `${type}_${index}`
+    setExpandedRequirements(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(key)) {
+        newSet.delete(key)
+      } else {
+        newSet.add(key)
+      }
+      return newSet
+    })
+  }, [])
+
   return (
     <div className="space-y-6">
       {/* Basic Information */}
@@ -496,12 +511,12 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
             <thead>
               <tr className="border-b border-border">
                 <th className="text-left p-2 text-sm font-medium text-foreground w-8"></th>
-                <th className="text-left p-2 text-sm font-medium text-foreground w-24">ID</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground w-28">ID</th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Name</th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Requirement</th>
-                <th className="text-left p-2 text-sm font-medium text-foreground">Priority</th>
-                <th className="text-left p-2 text-sm font-medium text-foreground">Status</th>
-                <th className="text-left p-2 text-sm font-medium text-foreground">Approval</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground w-24">Priority</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground w-24">Status</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground w-20">Approval</th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Actions</th>
               </tr>
             </thead>
@@ -539,10 +554,13 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
                   </td>
                   <td className="p-2">
                     <textarea
-                      className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-y"
+                      className={`w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-y ${
+                        expandedRequirements.has(`functional_${index}`) ? 'min-h-32' : ''
+                      }`}
                       value={req.requirement || ''}
                       onChange={(e) => handleArrayChange('functionalRequirements', index, 'requirement', e.target.value)}
                       placeholder="Describe the functional requirement"
+                      rows={expandedRequirements.has(`functional_${index}`) ? 8 : 2}
                     />
                   </td>
                   <td className="p-2">
@@ -584,13 +602,27 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
                     </select>
                   </td>
                   <td className="p-2">
-                    <button
-                      type="button"
-                      onClick={() => removeArrayItem('functionalRequirements', index)}
-                      className="p-1 bg-destructive text-destructive-foreground rounded hover:bg-destructive/90 transition-colors"
-                    >
-                      <Trash2 size={12} />
-                    </button>
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => removeArrayItem('functionalRequirements', index)}
+                        className="p-1 bg-destructive text-destructive-foreground rounded hover:bg-destructive/90 transition-colors"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleRequirementExpansion('functional', index)}
+                        className="p-1 bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded text-primary hover:text-primary transition-colors"
+                        title={expandedRequirements.has(`functional_${index}`) ? 'Collapse' : 'Expand'}
+                      >
+                        {expandedRequirements.has(`functional_${index}`) ? (
+                          <Minimize2 size={12} />
+                        ) : (
+                          <Maximize2 size={12} />
+                        )}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -625,13 +657,13 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
             <thead>
               <tr className="border-b border-border">
                 <th className="text-left p-2 text-sm font-medium text-foreground w-8"></th>
-                <th className="text-left p-2 text-sm font-medium text-foreground w-24">ID</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground w-28">ID</th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Name</th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Type</th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Requirement</th>
-                <th className="text-left p-2 text-sm font-medium text-foreground">Priority</th>
-                <th className="text-left p-2 text-sm font-medium text-foreground">Status</th>
-                <th className="text-left p-2 text-sm font-medium text-foreground">Approval</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground w-24">Priority</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground w-24">Status</th>
+                <th className="text-left p-2 text-sm font-medium text-foreground w-20">Approval</th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Actions</th>
               </tr>
             </thead>
@@ -681,10 +713,13 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
                   </td>
                   <td className="p-2">
                     <textarea
-                      className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-y"
+                      className={`w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-y ${
+                        expandedRequirements.has(`nonFunctional_${index}`) ? 'min-h-32' : ''
+                      }`}
                       value={req.requirement || ''}
                       onChange={(e) => handleArrayChange('nonFunctionalRequirements', index, 'requirement', e.target.value)}
                       placeholder="Describe the non-functional requirement"
+                      rows={expandedRequirements.has(`nonFunctional_${index}`) ? 8 : 2}
                     />
                   </td>
                   <td className="p-2">
@@ -726,13 +761,27 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
                     </select>
                   </td>
                   <td className="p-2">
-                    <button
-                      type="button"
-                      onClick={() => removeArrayItem('nonFunctionalRequirements', index)}
-                      className="p-1 bg-destructive text-destructive-foreground rounded hover:bg-destructive/90 transition-colors"
-                    >
-                      <Trash2 size={12} />
-                    </button>
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => removeArrayItem('nonFunctionalRequirements', index)}
+                        className="p-1 bg-destructive text-destructive-foreground rounded hover:bg-destructive/90 transition-colors"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleRequirementExpansion('nonFunctional', index)}
+                        className="p-1 bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded text-primary hover:text-primary transition-colors"
+                        title={expandedRequirements.has(`nonFunctional_${index}`) ? 'Collapse' : 'Expand'}
+                      >
+                        {expandedRequirements.has(`nonFunctional_${index}`) ? (
+                          <Minimize2 size={12} />
+                        ) : (
+                          <Maximize2 size={12} />
+                        )}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
