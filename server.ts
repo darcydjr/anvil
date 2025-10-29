@@ -2154,6 +2154,94 @@ app.get('/api/links/capabilities', async (req, res) => {
   }
 });
 
+// Get all enablers for linking
+app.get('/api/links/enablers', async (req, res) => {
+  try {
+    const configPaths = getConfigPaths(config);
+    const allItems = await scanProjectPaths(configPaths.projectPaths);
+
+    // Filter to only include files that end with -enabler.md
+    const enablers = allItems.filter(item => {
+      if (item.type !== 'enabler') return false;
+
+      const fileName = path.basename(item.path || '');
+      return fileName.endsWith('-enabler.md');
+    });
+
+    const enablersWithIds = await Promise.all(
+      enablers.map(async (enabler) => {
+        const filePath = path.join(enabler.projectPath, path.basename(enabler.path));
+        const content = await fs.readFile(filePath, 'utf8');
+        const capabilityId = extractCapabilityId(content);
+
+        // Find the capability to get its metadata
+        let capabilityName = '';
+        let capabilitySystem = '';
+        let capabilityComponent = '';
+
+        if (capabilityId) {
+          // Find the capability document
+          const capability = allItems.find(item =>
+            item.type === 'capability' &&
+            path.basename(item.path || '').endsWith('-capability.md')
+          );
+
+          if (capability) {
+            try {
+              const capFilePath = path.join(capability.projectPath, path.basename(capability.path));
+              const capContent = await fs.readFile(capFilePath, 'utf8');
+              const capId = extractId(capContent);
+
+              if (capId === capabilityId) {
+                capabilityName = capability.title;
+                capabilitySystem = extractSystem(capContent) || '';
+                capabilityComponent = extractComponent(capContent) || '';
+              }
+            } catch (error) {
+              console.warn(`Could not read capability file for ${capabilityId}:`, error);
+            }
+          }
+
+          // If we didn't find the capability above, search more thoroughly
+          if (!capabilityName) {
+            for (const cap of allItems.filter(item => item.type === 'capability')) {
+              try {
+                const capFilePath = path.join(cap.projectPath, path.basename(cap.path));
+                const capContent = await fs.readFile(capFilePath, 'utf8');
+                const capId = extractId(capContent);
+
+                if (capId === capabilityId) {
+                  capabilityName = cap.title;
+                  capabilitySystem = extractSystem(capContent) || '';
+                  capabilityComponent = extractComponent(capContent) || '';
+                  break;
+                }
+              } catch (error) {
+                // Continue searching
+              }
+            }
+          }
+        }
+
+        return {
+          id: extractId(content),
+          name: enabler.title,
+          path: enabler.path,
+          capabilityId,
+          capabilityName,
+          capabilitySystem,
+          capabilityComponent
+        };
+      })
+    );
+
+    res.json(enablersWithIds);
+  } catch (error) {
+    console.error('[ENABLERS] Error loading enablers for links:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Note: extractId function is already defined earlier in the file
 
 // Update bi-directional dependencies when a capability is saved

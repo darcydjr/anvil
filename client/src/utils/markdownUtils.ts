@@ -70,6 +70,10 @@ export interface EnablerFormData {
   capabilityId?: string
   technicalOverview?: string
   purpose?: string
+  internalUpstream?: Dependency[]
+  internalDownstream?: Dependency[]
+  externalUpstream?: string
+  externalDownstream?: string
   functionalRequirements?: FunctionalRequirement[]
   nonFunctionalRequirements?: NonFunctionalRequirement[]
   technicalSpecifications?: string
@@ -161,6 +165,10 @@ export function parseMarkdownToForm(markdown: string, type: DocumentType): FormD
     // Preserve Development Plan section from template
     result.implementationPlan = extractImplementationPlan(markdown)
   } else if (type === 'enabler') {
+    result.internalUpstream = parseEnablerDependencyTable(markdown, 'Internal Upstream Dependency')
+    result.internalDownstream = parseEnablerDependencyTable(markdown, 'Internal Downstream Impact')
+    result.externalUpstream = extractExternalDependency(markdown, 'External Upstream Dependencies')
+    result.externalDownstream = extractExternalDependency(markdown, 'External Downstream Impact')
     result.functionalRequirements = parseFunctionalRequirements(markdown)
     result.nonFunctionalRequirements = parseNonFunctionalRequirements(markdown)
     // Preserve Technical Specifications section from template
@@ -272,6 +280,7 @@ export function convertFormToMarkdown(formData: FormData, type: DocumentType): s
     }
   } else if (type === 'enabler') {
     const enbData = formData as EnablerFormData
+
     // Functional Requirements
     markdown += `## Functional Requirements\n\n`
     if (enbData.functionalRequirements && enbData.functionalRequirements.length > 0) {
@@ -301,6 +310,35 @@ export function convertFormToMarkdown(formData: FormData, type: DocumentType): s
       markdown += `| | | | | | | |\n`
     }
     markdown += `\n`
+
+    // Dependencies Section
+    markdown += `## Dependencies\n\n`
+
+    // Internal Dependencies
+    markdown += `### Internal Upstream Dependency\n\n`
+    if (enbData.internalUpstream && enbData.internalUpstream.length > 0) {
+      markdown += createEnablerDependencyTable(enbData.internalUpstream)
+      markdown += `\n`
+    } else {
+      markdown += `| Enabler ID | Description |\n`
+      markdown += `|------------|-------------|\n`
+      markdown += `| | |\n\n`
+    }
+
+    markdown += `### Internal Downstream Impact\n\n`
+    if (enbData.internalDownstream && enbData.internalDownstream.length > 0) {
+      markdown += createEnablerDependencyTable(enbData.internalDownstream)
+      markdown += `\n`
+    } else {
+      markdown += `| Enabler ID | Description |\n`
+      markdown += `|------------|-------------|\n`
+      markdown += `| | |\n\n`
+    }
+
+    // External Dependencies
+    markdown += `### External Dependencies\n\n`
+    markdown += `**External Upstream Dependencies**: ${enbData.externalUpstream || 'None identified.'}\n\n`
+    markdown += `**External Downstream Impact**: ${enbData.externalDownstream || 'None identified.'}\n\n`
 
     // Technical Specifications logic - preserve existing, only add for completely new documents
     if (enbData.technicalSpecifications && enbData.technicalSpecifications.trim().length > 0) {
@@ -350,6 +388,80 @@ export function parseTable(markdown: string, sectionTitle: string): Dependency[]
           id: cells[0] || '',
           description: cells[1] || ''
         })
+      }
+    } else if (foundTable && line.startsWith('#')) {
+      break
+    }
+  }
+
+  return result.filter(row => row.id.trim() || row.description.trim()) // Filter completely empty rows
+}
+
+export function parseEnablerDependencyTable(markdown: string, sectionTitle: string): Dependency[] {
+  const lines = markdown.split('\n')
+  const sectionIndex = lines.findIndex(line => line.includes(sectionTitle))
+
+  if (sectionIndex === -1) {
+    return []
+  }
+
+  const result: Dependency[] = []
+  let foundTable = false
+  let headerColumns: string[] = []
+
+  for (let i = sectionIndex; i < lines.length; i++) {
+    const line = lines[i]
+
+    if (line.startsWith('|') && !line.includes('---')) {
+      if (!foundTable) {
+        foundTable = true
+        // Capture header columns to determine table structure
+        const headerCells = line.split('|').map(cell => cell.trim())
+        if (headerCells.length > 0 && headerCells[0] === '') headerCells.shift()
+        if (headerCells.length > 0 && headerCells[headerCells.length - 1] === '') headerCells.pop()
+        headerColumns = headerCells.map(h => h.toLowerCase())
+        continue // Skip header row
+      }
+
+      const cells = line.split('|').map(cell => cell.trim())
+      // Remove first and last empty cells (from leading/trailing pipes)
+      if (cells.length > 0 && cells[0] === '') cells.shift()
+      if (cells.length > 0 && cells[cells.length - 1] === '') cells.pop()
+
+      if (cells.length >= 2) {
+        // Determine if this is a new format (Enabler ID, Description) or old format (Name, Status, Approval, Priority)
+        let id = ''
+        let description = ''
+
+        if (headerColumns.length >= 2) {
+          // Check header structure to determine parsing approach
+          const hasEnablerIdColumn = headerColumns.some(h => h.includes('enabler') && h.includes('id'))
+          const hasDescriptionColumn = headerColumns.some(h => h.includes('description'))
+
+          if (hasEnablerIdColumn && hasDescriptionColumn) {
+            // New format: Enabler ID, Description
+            const idIndex = headerColumns.findIndex(h => h.includes('enabler') && h.includes('id'))
+            const descIndex = headerColumns.findIndex(h => h.includes('description'))
+
+            id = cells[idIndex] || ''
+            description = cells[descIndex] || ''
+          } else if (headerColumns.includes('name') || headerColumns.includes('status') || headerColumns.includes('approval')) {
+            // Old format: assume it's an enabler name/status table, skip it
+            continue
+          } else {
+            // Default: assume first two columns are ID and Description
+            id = cells[0] || ''
+            description = cells[1] || ''
+          }
+        } else {
+          // Fallback: use first two columns
+          id = cells[0] || ''
+          description = cells[1] || ''
+        }
+
+        if (id.trim() || description.trim()) {
+          result.push({ id, description })
+        }
       }
     } else if (foundTable && line.startsWith('#')) {
       break
@@ -711,6 +823,21 @@ function extractImplementationPlan(markdown: string): string {
 export function createDependencyTable(dependencies: Dependency[]): string {
   let table = `| Capability ID | Description |\n`
   table += `|---------------|-------------|\n`
+
+  if (dependencies.length === 0) {
+    table += `| | |\n`
+  } else {
+    dependencies.forEach(dep => {
+      table += `| ${dep.id || ''} | ${dep.description || ''} |\n`
+    })
+  }
+
+  return table
+}
+
+export function createEnablerDependencyTable(dependencies: Dependency[]): string {
+  let table = `| Enabler ID | Description |\n`
+  table += `|------------|-------------|\n`
 
   if (dependencies.length === 0) {
     table += `| | |\n`

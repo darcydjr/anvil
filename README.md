@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-3.1.4-green.svg)]()
+[![Version](https://img.shields.io/badge/version-3.2.1-green.svg)]()
 
 ## Overview
 
@@ -217,6 +217,18 @@ Claude Code will automatically:
 - **Smart Template Loading**: Automatically populates metadata with current date and generated IDs
 - **Form-based Editor**: User-friendly web forms with markdown editing toggle
 - **Auto-naming Convention**: Ensures proper file naming (-capability.md, -enabler.md)
+
+### Dependency Management (v3.2.1)
+- **Enabler-to-Enabler Dependencies**: Complete dependency mapping between enablers with hierarchical selection
+- **Hierarchical Selection**: System → Component → Capability → Enabler structure for easy navigation
+- **Upstream Dependencies**: Define enablers that deliver inputs, services, or data required by the current enabler
+- **Downstream Impact**: Track enablers that consume outputs or services produced by the current enabler
+- **External Dependencies**: Text fields for dependencies outside the project scope
+- **Visual Guidance**: Informational message boxes explain upstream and downstream relationships
+- **Consistent UX**: Matches capability dependency structure for familiar user experience
+- **Proper Positioning**: Dependencies section appears after Non-Functional Requirements in both form and view modes
+- **Clean Table Display**: Fixed enabler dependency viewer to show only Enabler ID and Description columns, filtering out status metadata
+- **Smart Data Extraction**: Intelligently extracts enabler IDs and descriptions while removing extraneous data from legacy table formats
 
 ## Architecture
 

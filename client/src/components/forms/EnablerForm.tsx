@@ -6,7 +6,7 @@ import { stateListenerManager } from '../../utils/stateListeners'
 import { STATUS_VALUES, APPROVAL_VALUES, PRIORITY_VALUES, REVIEW_VALUES } from '../../utils/constants'
 import toast from 'react-hot-toast'
 
-import { EnablerFormData, FunctionalRequirement, NonFunctionalRequirement, generateEnablerTechnicalSpecificationsTemplate } from '../../utils/markdownUtils'
+import { EnablerFormData, FunctionalRequirement, NonFunctionalRequirement, Dependency, generateEnablerTechnicalSpecificationsTemplate } from '../../utils/markdownUtils'
 
 interface EnablerFormProps {
   data: EnablerFormData
@@ -21,6 +21,15 @@ interface CapabilityLink {
   component?: string
 }
 
+interface EnablerLink {
+  id: string
+  name: string
+  capabilityId: string
+  capabilityName: string
+  capabilitySystem?: string
+  capabilityComponent?: string
+}
+
 interface CapabilityLinksResponse {
   capabilities: CapabilityLink[]
 }
@@ -28,6 +37,7 @@ interface CapabilityLinksResponse {
 
 function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): JSX.Element {
   const [availableCapabilities, setAvailableCapabilities] = useState<CapabilityLink[]>([])
+  const [availableEnablers, setAvailableEnablers] = useState<EnablerLink[]>([])
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
   const [draggedItem, setDraggedItem] = useState<{ type: 'functional' | 'nonFunctional', index: number } | null>(null)
   const [expandedRequirements, setExpandedRequirements] = useState<Set<string>>(new Set())
@@ -36,6 +46,7 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
 
   useEffect(() => {
     loadCapabilities()
+    loadEnablers()
   }, [])
 
   // Validation effect
@@ -145,6 +156,15 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
     }
   }
 
+  const loadEnablers = async () => {
+    try {
+      const enablers = await apiService.getEnablerLinks()
+      setAvailableEnablers(enablers || [])
+    } catch (error) {
+      console.warn('Could not load enablers for dropdown:', error)
+    }
+  }
+
   const handleBasicChange = useCallback(async (field, value) => {
     onChange({ [field]: value })
     
@@ -216,22 +236,24 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
 
   // Memoize templates and dropdown options
   const templates = useMemo(() => ({
-    functionalReq: { 
-      id: '', 
-      name: '', 
-      requirement: '', 
-      priority: PRIORITY_VALUES.REQUIREMENT.MUST_HAVE, 
-      status: STATUS_VALUES.REQUIREMENT.IN_DRAFT, 
-      approval: APPROVAL_VALUES.NOT_APPROVED 
+    upstream: { id: '', description: '' },
+    downstream: { id: '', description: '' },
+    functionalReq: {
+      id: '',
+      name: '',
+      requirement: '',
+      priority: PRIORITY_VALUES.REQUIREMENT.MUST_HAVE,
+      status: STATUS_VALUES.REQUIREMENT.IN_DRAFT,
+      approval: APPROVAL_VALUES.NOT_APPROVED
     },
-    nonFunctionalReq: { 
-      id: '', 
-      name: '', 
-      type: '', 
-      requirement: '', 
-      priority: PRIORITY_VALUES.REQUIREMENT.MUST_HAVE, 
-      status: STATUS_VALUES.REQUIREMENT.IN_DRAFT, 
-      approval: APPROVAL_VALUES.NOT_APPROVED 
+    nonFunctionalReq: {
+      id: '',
+      name: '',
+      type: '',
+      requirement: '',
+      priority: PRIORITY_VALUES.REQUIREMENT.MUST_HAVE,
+      status: STATUS_VALUES.REQUIREMENT.IN_DRAFT,
+      approval: APPROVAL_VALUES.NOT_APPROVED
     }
   }), [])
   
@@ -274,6 +296,33 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
 
     return groups
   }, [availableCapabilities])
+
+  // Group enablers by system, component, and capability
+  const groupedEnablers = useMemo(() => {
+    const groups = {}
+
+    availableEnablers.forEach(enabler => {
+      const system = enabler.capabilitySystem || 'Unknown System'
+      const component = enabler.capabilityComponent || 'Unknown Component'
+      const capabilityKey = enabler.capabilityName || 'Unknown Capability'
+
+      if (!groups[system]) {
+        groups[system] = {}
+      }
+
+      if (!groups[system][component]) {
+        groups[system][component] = {}
+      }
+
+      if (!groups[system][component][capabilityKey]) {
+        groups[system][component][capabilityKey] = []
+      }
+
+      groups[system][component][capabilityKey].push(enabler)
+    })
+
+    return groups
+  }, [availableEnablers])
 
   const nfrTypes = [
     'Performance', 'Scalability', 'Security', 'Reliability', 'Availability',
@@ -804,6 +853,185 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
             >
               Approve All
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Dependencies Section */}
+      <div className="bg-card rounded-lg border border-border p-6 space-y-6">
+        <h4 className="text-lg font-semibold text-foreground">Dependencies</h4>
+        <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+          <div className="text-sm text-blue-800">
+            <p className="mb-1"><strong>Upstream Enablers:</strong> Deliver inputs, services, or data required by this enabler.</p>
+            <p><strong>Downstream Enablers:</strong> Consume outputs or services produced by this enabler.</p>
+          </div>
+        </div>
+
+        {/* Internal Upstream Dependencies */}
+        <div className="space-y-4">
+          <h5 className="text-base font-medium text-foreground">Internal Upstream Dependencies</h5>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left p-2 text-sm font-medium text-foreground">Enabler ID</th>
+                  <th className="text-left p-2 text-sm font-medium text-foreground">Description</th>
+                  <th className="text-left p-2 text-sm font-medium text-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(data.internalUpstream || []).map((dep, index) => (
+                  <tr key={index} className="border-b border-border hover:bg-accent">
+                    <td className="p-2">
+                      <select
+                        className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                        value={dep.id || ''}
+                        onChange={(e) => handleArrayChange('internalUpstream', index, 'id', e.target.value)}
+                      >
+                        <option value="">Select enabler</option>
+                        {Object.keys(groupedEnablers).sort().map((system) =>
+                          Object.keys(groupedEnablers[system]).sort().map((component) =>
+                            Object.keys(groupedEnablers[system][component]).sort().map((capabilityKey) => (
+                              <optgroup key={`${system}-${component}-${capabilityKey}`} label={`${system} → ${component} → ${capabilityKey}`}>
+                                {groupedEnablers[system][component][capabilityKey].map((enabler) => (
+                                  <option key={enabler.id} value={enabler.id}>
+                                    {enabler.id} - {enabler.name}
+                                  </option>
+                                ))}
+                              </optgroup>
+                            ))
+                          )
+                        )}
+                      </select>
+                    </td>
+                    <td className="p-2">
+                      <textarea
+                        className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-y"
+                        value={dep.description || ''}
+                        onChange={(e) => handleArrayChange('internalUpstream', index, 'description', e.target.value)}
+                        placeholder="Describe the dependency"
+                      />
+                    </td>
+                    <td className="p-2">
+                      <button
+                        type="button"
+                        onClick={() => removeArrayItem('internalUpstream', index)}
+                        className="p-1 bg-destructive text-destructive-foreground rounded hover:bg-destructive/90 transition-colors"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={() => addArrayItem('internalUpstream', templates.upstream)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+              >
+                <Plus size={14} />
+                Add Dependency
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Internal Downstream Impact */}
+        <div className="space-y-4">
+          <h5 className="text-base font-medium text-foreground">Internal Downstream Impact</h5>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left p-2 text-sm font-medium text-foreground">Enabler ID</th>
+                  <th className="text-left p-2 text-sm font-medium text-foreground">Description</th>
+                  <th className="text-left p-2 text-sm font-medium text-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(data.internalDownstream || []).map((impact, index) => (
+                  <tr key={index} className="border-b border-border hover:bg-accent">
+                    <td className="p-2">
+                      <select
+                        className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                        value={impact.id || ''}
+                        onChange={(e) => handleArrayChange('internalDownstream', index, 'id', e.target.value)}
+                      >
+                        <option value="">Select enabler</option>
+                        {Object.keys(groupedEnablers).sort().map((system) =>
+                          Object.keys(groupedEnablers[system]).sort().map((component) =>
+                            Object.keys(groupedEnablers[system][component]).sort().map((capabilityKey) => (
+                              <optgroup key={`${system}-${component}-${capabilityKey}`} label={`${system} → ${component} → ${capabilityKey}`}>
+                                {groupedEnablers[system][component][capabilityKey].map((enabler) => (
+                                  <option key={enabler.id} value={enabler.id}>
+                                    {enabler.id} - {enabler.name}
+                                  </option>
+                                ))}
+                              </optgroup>
+                            ))
+                          )
+                        )}
+                      </select>
+                    </td>
+                    <td className="p-2">
+                      <textarea
+                        className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-y"
+                        value={impact.description || ''}
+                        onChange={(e) => handleArrayChange('internalDownstream', index, 'description', e.target.value)}
+                        placeholder="Describe the impact"
+                      />
+                    </td>
+                    <td className="p-2">
+                      <button
+                        type="button"
+                        onClick={() => removeArrayItem('internalDownstream', index)}
+                        className="p-1 bg-destructive text-destructive-foreground rounded hover:bg-destructive/90 transition-colors"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={() => addArrayItem('internalDownstream', templates.downstream)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+              >
+                <Plus size={14} />
+                Add Dependency
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* External Dependencies */}
+        <div className="space-y-4">
+          <h5 className="text-base font-medium text-foreground">External Dependencies</h5>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-foreground">External Upstream Dependencies</label>
+              <textarea
+                className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent resize-y min-h-[100px]"
+                value={data.externalUpstream || ''}
+                onChange={(e) => handleBasicChange('externalUpstream', e.target.value)}
+                placeholder="Describe external upstream dependencies..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-foreground">External Downstream Impact</label>
+              <textarea
+                className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent resize-y min-h-[100px]"
+                value={data.externalDownstream || ''}
+                onChange={(e) => handleBasicChange('externalDownstream', e.target.value)}
+                placeholder="Describe external downstream impact..."
+              />
+            </div>
           </div>
         </div>
       </div>

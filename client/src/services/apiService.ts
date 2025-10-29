@@ -82,6 +82,16 @@ export interface CapabilityLink {
   component?: string
 }
 
+export interface EnablerLink {
+  id: string
+  name: string
+  path: string
+  capabilityId: string
+  capabilityName: string
+  capabilitySystem?: string
+  capabilityComponent?: string
+}
+
 export interface Config {
   owner?: string
   analysisReview?: string
@@ -250,6 +260,16 @@ export const apiService = {
     } catch (error) {
       console.error('Failed to get capability links:', error)
       throw new Error(`Failed to load capability links: ${(error as Error).message}`)
+    }
+  },
+
+  async getEnablerLinks(): Promise<EnablerLink[]> {
+    try {
+      const response = await api.get<EnablerLink[]>('/links/enablers')
+      return response.data
+    } catch (error) {
+      console.error('Failed to get enabler links:', error)
+      throw new Error(`Failed to load enabler links: ${(error as Error).message}`)
     }
   },
 

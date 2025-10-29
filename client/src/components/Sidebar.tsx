@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../contexts/AppContext'
-import { FileText, Plus, ArrowLeft, ChevronDown, ChevronRight, Settings, Box, Zap, PencilRuler, Ruler, Microscope, GripHorizontal } from 'lucide-react'
+import { FileText, Plus, ArrowLeft, ChevronDown, ChevronRight, Settings, Box, Zap, PencilRuler, Ruler, Microscope, GripHorizontal, Filter } from 'lucide-react'
 
 interface SidebarExpandedSections {
   capabilities: boolean
@@ -74,6 +74,9 @@ export default function Sidebar(): JSX.Element {
   // Track workspace changes to collapse navigation when switching workspaces
   const [previousWorkspaceId, setPreviousWorkspaceId] = useState<string | null>(null)
 
+  // Enabler filtering toggle state
+  const [filterEnablersByCapability, setFilterEnablersByCapability] = useState<boolean>(true)
+
   // Resizable sections state
   const [capabilitiesHeight, setCapabilitiesHeight] = useState<number>(50) // Percentage
   const [isDragging, setIsDragging] = useState<boolean>(false)
@@ -142,7 +145,7 @@ export default function Sidebar(): JSX.Element {
     goBack()
   }
 
-  const filteredEnablers = selectedCapability
+  const filteredEnablers = (selectedCapability && filterEnablersByCapability)
     ? enablers.filter(enabler => enabler.capabilityId === selectedCapability.id)
     : enablers
 
@@ -529,6 +532,20 @@ export default function Sidebar(): JSX.Element {
         >
           {expandedSections.enablers ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           <span className="flex-1 ml-2">Enablers</span>
+          <button
+            onClick={(e: React.MouseEvent<HTMLButtonElement>): void => {
+              e.stopPropagation()
+              setFilterEnablersByCapability(!filterEnablersByCapability)
+            }}
+            className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors duration-200 shadow-sm border ${
+              filterEnablersByCapability
+                ? 'bg-primary text-primary-foreground border-primary/20 hover:bg-primary/90'
+                : 'bg-secondary text-secondary-foreground border-secondary/20 hover:bg-secondary/90'
+            }`}
+            title={filterEnablersByCapability ? "Show All Enablers" : "Filter by Selected Capability"}
+          >
+            <Filter size={16} strokeWidth={2.5} />
+          </button>
           <button
             onClick={(e: React.MouseEvent<HTMLButtonElement>): void => {
               e.stopPropagation()

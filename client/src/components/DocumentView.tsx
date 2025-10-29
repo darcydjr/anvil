@@ -237,6 +237,138 @@ export default function DocumentView(): React.ReactElement {
     return currentPath
   }, [])
 
+  // Function to clean up enabler dependency tables in HTML
+  const cleanEnablerDependencyTables = useCallback((html: string): string => {
+    if (!html || !type || type !== 'enabler') return html
+
+    // Create a DOM parser to modify HTML
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(html, 'text/html')
+
+    // Find dependency sections for enablers
+    const headings = doc.querySelectorAll('h3')
+    for (const heading of Array.from(headings)) {
+      const headingText = heading.textContent?.toLowerCase() || ''
+
+      if (headingText.includes('internal upstream dependency') || headingText.includes('internal downstream impact')) {
+        // Find the table that follows this heading
+        let nextElement = heading.nextElementSibling
+        while (nextElement && nextElement.tagName !== 'TABLE') {
+          nextElement = nextElement.nextElementSibling
+        }
+
+        if (nextElement && nextElement.tagName === 'TABLE') {
+          const table = nextElement as HTMLTableElement
+
+          // Check if this table needs cleaning by examining the data rows
+          const headerRow = table.querySelector('thead tr') || table.querySelector('tr')
+          if (headerRow) {
+            const headers = Array.from(headerRow.querySelectorAll('th, td'))
+            const dataRows = Array.from(table.querySelectorAll('tbody tr, tr')).slice(1) // Skip header row
+
+            // Check if any data row has more than 2 cells or if cells contain status values
+            const needsCleaning = dataRows.some(row => {
+              const cells = Array.from(row.querySelectorAll('td'))
+              if (cells.length > 2) return true // More than 2 columns of data
+
+              // Check if the second cell contains status/metadata values instead of description
+              if (cells.length >= 2) {
+                const secondCellText = cells[1]?.textContent?.trim() || ''
+                const containsStatusValue = ['in draft', 'ready for', 'in progress', 'completed', 'implemented', 'approved', 'not approved', 'high', 'medium', 'low', 'critical'].some(status =>
+                  secondCellText.toLowerCase().includes(status)
+                )
+                return containsStatusValue
+              }
+              return false
+            })
+
+            if (needsCleaning) {
+              // This is an old format table, rebuild it to show only Enabler ID and Description
+              const rows = Array.from(table.querySelectorAll('tbody tr, tr')).slice(1) // Skip header row
+
+              // Extract header column names for analysis
+              const headerColumns = headers.map(h => h.textContent?.toLowerCase().trim() || '')
+
+              // Create new table structure
+              const newTable = doc.createElement('table')
+              newTable.innerHTML = `
+                <thead>
+                  <tr>
+                    <th>Enabler ID</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              `
+
+              const tbody = newTable.querySelector('tbody')!
+
+              // Process data rows
+              for (const row of rows) {
+                const cells = Array.from(row.querySelectorAll('td'))
+                if (cells.length > 0) {
+                  // Extract enabler ID from first cell or any cell that contains it
+                  let enablerId = ''
+                  let description = ''
+
+                  // Look for ENB-XXXXXX in all cells
+                  for (let i = 0; i < cells.length; i++) {
+                    const cellText = cells[i]?.textContent?.trim() || ''
+                    const enablerIdMatch = cellText.match(/ENB-\d+/)
+                    if (enablerIdMatch) {
+                      enablerId = enablerIdMatch[0]
+                      break
+                    }
+                  }
+
+                  // Skip empty rows or rows without valid enabler IDs
+                  if (enablerId) {
+                    // Try to find description from various strategies
+                    if (headerColumns.length >= 2) {
+                      const descIndex = headerColumns.findIndex(h => h.includes('description'))
+
+                      if (descIndex >= 0 && descIndex < cells.length) {
+                        // Found description column
+                        const descCell = cells[descIndex]?.textContent?.trim() || ''
+                        const isStatusValue = ['in draft', 'ready for', 'in progress', 'completed', 'implemented', 'approved', 'not approved', 'high', 'medium', 'low', 'critical'].some(status =>
+                          descCell.toLowerCase().includes(status)
+                        )
+                        if (descCell && descCell !== enablerId && !isStatusValue) {
+                          description = descCell
+                        }
+                      } else if (cells.length >= 2) {
+                        // No explicit description column, check second cell
+                        const secondCellText = cells[1]?.textContent?.trim() || ''
+                        const isStatusValue = ['in draft', 'ready for', 'in progress', 'completed', 'implemented', 'approved', 'not approved', 'high', 'medium', 'low', 'critical'].some(status =>
+                          secondCellText.toLowerCase().includes(status)
+                        )
+                        if (secondCellText && secondCellText !== enablerId && !isStatusValue) {
+                          description = secondCellText
+                        }
+                      }
+                    }
+
+                    const newRow = doc.createElement('tr')
+                    newRow.innerHTML = `
+                      <td>${enablerId}</td>
+                      <td>${description}</td>
+                    `
+                    tbody.appendChild(newRow)
+                  }
+                }
+              }
+
+              // Replace the old table with the new one
+              table.parentNode?.replaceChild(newTable, table)
+            }
+          }
+        }
+      }
+    }
+
+    return doc.body.innerHTML
+  }, [type])
+
   // Function to enhance HTML with file path information
   const enhanceHtmlWithFilePath = useCallback((html: string, filePath?: string, allFilePaths?: string[]): string => {
     if (!html || !filePath) return html
@@ -370,8 +502,9 @@ export default function DocumentView(): React.ReactElement {
       const data = await apiService.getFile(path!)
       console.log('[DocumentView] API response received:', data ? 'Success' : 'No data')
 
-      // Enhance HTML with file path information
-      const enhanced = enhanceHtmlWithFilePath(data?.html, data?.filePath, data?.allFilePaths)
+      // Clean up enabler dependency tables first, then enhance with file path info
+      const cleanedHtml = cleanEnablerDependencyTables(data?.html || '')
+      const enhanced = enhanceHtmlWithFilePath(cleanedHtml, data?.filePath, data?.allFilePaths)
 
       // Use enhanced HTML directly without change detection for internal changes
       let finalHtml = enhanced
@@ -406,7 +539,7 @@ export default function DocumentView(): React.ReactElement {
       setLoading(false)
       console.log('[DocumentView] Loading finished, setting loading to false')
     }
-  }, [path, type, setSelectedDocument, enhanceHtmlWithFilePath, isExternalReload])
+  }, [path, type, setSelectedDocument, enhanceHtmlWithFilePath, cleanEnablerDependencyTables, isExternalReload])
 
   useEffect(() => {
     loadDocument()

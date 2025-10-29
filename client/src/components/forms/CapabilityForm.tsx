@@ -735,6 +735,12 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
       {/* Dependencies Section */}
       <div className="bg-card rounded-lg border border-border p-6 space-y-6">
         <h4 className="text-lg font-semibold text-foreground">Dependencies</h4>
+        <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+          <div className="text-sm text-blue-800">
+            <p className="mb-1"><strong>Upstream Capabilities:</strong> Deliver inputs, services, or data required by this capability.</p>
+            <p><strong>Downstream Capabilities:</strong> Consume outputs or services produced by this capability.</p>
+          </div>
+        </div>
 
         {/* Internal Upstream Dependencies */}
         <div className="space-y-4">
