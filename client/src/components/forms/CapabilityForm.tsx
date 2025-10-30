@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useCallback, useMemo, useState } from 'react'
-import { Plus, Trash2, FileText, RefreshCcw, GripVertical } from 'lucide-react'
+import { Plus, Trash2, FileText, RefreshCcw, GripVertical, Edit3 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../../contexts/AppContext'
 import { generateEnablerId } from '../../utils/idGenerator'
@@ -46,6 +46,7 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
   const [originalPath, setOriginalPath] = useState<string | null>(null)
   const [availableCapabilities, setAvailableCapabilities] = useState<CapabilityLink[]>([])
   const [draggedEnablerIndex, setDraggedEnablerIndex] = useState<number | null>(null)
+  const [selectedEnablers, setSelectedEnablers] = useState<Set<number>>(new Set())
 
   // State to track if we've already enriched the data
   const [hasEnriched, setHasEnriched] = useState(false)
@@ -250,7 +251,20 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
     const newArray = [...(data[field] || [])]
     newArray.splice(index, 1)
     onChange({ [field]: newArray })
-  }, [data, onChange])
+
+    // Clear selections for the removed item and adjust indices
+    if (field === 'enablers') {
+      const newSelected = new Set()
+      selectedEnablers.forEach(i => {
+        if (i < index) {
+          newSelected.add(i)
+        } else if (i > index) {
+          newSelected.add(i - 1)
+        }
+      })
+      setSelectedEnablers(newSelected)
+    }
+  }, [data, onChange, selectedEnablers])
 
   const handleCreateEnablerDocument = useCallback((enabler, index) => {
     if (!enabler.id || !enabler.name) {
@@ -282,6 +296,21 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
       ...enabler,
       approval: APPROVAL_VALUES.APPROVED
     }))
+
+    onChange({ enablers: newArray })
+  }, [data, onChange])
+
+  // Bulk edit functions for enablers
+  const bulkEditEnablers = useCallback((updates, selectedIndices) => {
+    const enablerData = data.enablers || []
+    if (enablerData.length === 0) return
+
+    const newArray = enablerData.map((enabler, index) => {
+      if (selectedIndices.has(index)) {
+        return { ...enabler, ...updates }
+      }
+      return enabler
+    })
 
     onChange({ enablers: newArray })
   }, [data, onChange])
@@ -411,6 +440,144 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
   const handleEnablerDragEnd = useCallback(() => {
     setDraggedEnablerIndex(null)
   }, [])
+
+  // Bulk Edit Panel Component for Enablers
+  const BulkEditPanel = ({ onBulkEdit, enablerCount, selectedEnablers, onSelectAll, onSelectNone }) => {
+    const [isExpanded, setIsExpanded] = useState(false)
+    const [bulkPriority, setBulkPriority] = useState('')
+    const [bulkStatus, setBulkStatus] = useState('')
+    const [bulkApproval, setBulkApproval] = useState('')
+
+    const handleBulkApply = () => {
+      const updates = {}
+      if (bulkPriority) updates.priority = bulkPriority
+      if (bulkStatus) updates.status = bulkStatus
+      if (bulkApproval) updates.approval = bulkApproval
+
+      if (Object.keys(updates).length > 0 && selectedEnablers.size > 0) {
+        onBulkEdit(updates, selectedEnablers)
+        // Reset form
+        setBulkPriority('')
+        setBulkStatus('')
+        setBulkApproval('')
+        setIsExpanded(false)
+      }
+    }
+
+    const hasUpdates = bulkPriority || bulkStatus || bulkApproval
+    const canApply = hasUpdates && selectedEnablers.size > 0
+
+    if (enablerCount === 0) return null
+
+    return (
+      <div className="mb-4 border border-border rounded-md">
+        <button
+          type="button"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full px-4 py-2 bg-accent text-foreground rounded-t-md hover:bg-accent/80 transition-colors flex items-center justify-between"
+        >
+          <div className="flex items-center gap-2">
+            <Edit3 size={16} />
+            <span className="font-medium">Bulk Edit Enablers</span>
+            <span className="text-sm text-muted-foreground">({selectedEnablers.size} of {enablerCount} selected)</span>
+          </div>
+          <span className="text-sm">{isExpanded ? '▲' : '▼'}</span>
+        </button>
+
+        {isExpanded && (
+          <div className="p-4 bg-card border-t border-border space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-sm text-muted-foreground">
+                Apply the same values to selected enablers. Leave fields empty to skip updating them.
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={onSelectAll}
+                  className="px-3 py-1 bg-primary/10 text-primary rounded-md hover:bg-primary/20 transition-colors text-sm"
+                >
+                  Select All
+                </button>
+                <button
+                  type="button"
+                  onClick={onSelectNone}
+                  className="px-3 py-1 bg-muted text-muted-foreground rounded-md hover:bg-muted/80 transition-colors text-sm"
+                >
+                  Select None
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-foreground">Priority</label>
+                <select
+                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                  value={bulkPriority}
+                  onChange={(e) => setBulkPriority(e.target.value)}
+                >
+                  <option value="">Select priority...</option>
+                  {priorityOptions.map(priority => (
+                    <option key={priority} value={priority}>{priority}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-foreground">Status</label>
+                <select
+                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                  value={bulkStatus}
+                  onChange={(e) => setBulkStatus(e.target.value)}
+                >
+                  <option value="">Select status...</option>
+                  {enablerStatusOptions.map(status => (
+                    <option key={status} value={status}>{status}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-foreground">Approval</label>
+                <select
+                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                  value={bulkApproval}
+                  onChange={(e) => setBulkApproval(e.target.value)}
+                >
+                  <option value="">Select approval...</option>
+                  {approvalOptions.map(approval => (
+                    <option key={approval} value={approval}>{approval}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={handleBulkApply}
+                disabled={!canApply}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Apply to {selectedEnablers.size} Selected Enablers
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setBulkPriority('')
+                  setBulkStatus('')
+                  setBulkApproval('')
+                }}
+                className="px-4 py-2 bg-muted text-muted-foreground rounded-md hover:bg-muted/80 transition-colors"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -606,6 +773,20 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-border">
+                <th className="text-left p-2 text-sm font-medium text-foreground w-8">
+                  <input
+                    type="checkbox"
+                    checked={selectedEnablers.size === enrichedEnablers.length && enrichedEnablers.length > 0}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedEnablers(new Set(enrichedEnablers.map((_, index) => index)))
+                      } else {
+                        setSelectedEnablers(new Set())
+                      }
+                    }}
+                    className="rounded"
+                  />
+                </th>
                 <th className="text-left p-2 text-sm font-medium text-foreground w-8"></th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Enabler ID</th>
                 <th className="text-left p-2 text-sm font-medium text-foreground">Name</th>
@@ -626,6 +807,22 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
                   onDrop={(e) => handleEnablerDrop(e, index)}
                   onDragEnd={handleEnablerDragEnd}
                 >
+                  <td className="p-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedEnablers.has(index)}
+                      onChange={(e) => {
+                        const newSelected = new Set(selectedEnablers)
+                        if (e.target.checked) {
+                          newSelected.add(index)
+                        } else {
+                          newSelected.delete(index)
+                        }
+                        setSelectedEnablers(newSelected)
+                      }}
+                      className="rounded"
+                    />
+                  </td>
                   <td className="p-2 cursor-move">
                     <GripVertical className="w-4 h-4 text-muted-foreground" />
                   </td>
@@ -730,6 +927,14 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
             </button>
           </div>
         </div>
+
+        <BulkEditPanel
+          onBulkEdit={bulkEditEnablers}
+          enablerCount={enrichedEnablers.length}
+          selectedEnablers={selectedEnablers}
+          onSelectAll={() => setSelectedEnablers(new Set(enrichedEnablers.map((_, index) => index)))}
+          onSelectNone={() => setSelectedEnablers(new Set())}
+        />
       </div>
 
       {/* Dependencies Section */}
