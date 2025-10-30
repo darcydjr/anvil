@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-3.2.1-green.svg)]()
+[![Version](https://img.shields.io/badge/version-3.3.0-green.svg)]()
 
 ## Overview
 
@@ -309,6 +309,38 @@ Anvil supports **workspace-based configuration** for managing multiple document 
 - **mermaid**: Diagram rendering
 
 ## Release Notes & Version History
+
+### v3.3.0 - Enhanced Enabler Dependencies & Navigation Fixes ✅
+
+#### 🎯 **Enhanced Enabler Dependency Filtering**
+- **INLINE DROPDOWN FILTERING**: Replaced separate filter input fields with integrated searchable dropdown selectors for enabler dependencies
+- **REAL-TIME SEARCH**: Type directly in dropdown to instantly filter enablers by ID, name, capability, system, or component
+- **ESC KEY SUPPORT**: Press ESC to clear search and close dropdown with seamless interaction
+- **VISUAL IMPROVEMENTS**: Fixed z-index and positioning issues ensuring dropdowns appear above all elements without causing scrollbars
+
+#### 🔧 **Critical Navigation Panel Fixes**
+- **PROJECT PATH FILTERING**: Fixed enablers from different project paths (gimbal-driver, landing-service, tracking-service) incorrectly appearing in all capability navigation panels
+- **SAME-PATH ASSOCIATION**: Enablers now only appear with capabilities from the same project path, eliminating cross-project contamination
+- **CLEAR WARNINGS**: Added console warnings when enablers reference capabilities from different project paths for debugging
+- **BACKWARD COMPATIBILITY**: Maintains existing functionality while providing logical separation of project concerns
+
+#### 🚀 **Enhanced Path Change Handling**
+- **MOVE INSTEAD OF COPY**: Fixed capability path changes to properly move files instead of creating duplicates
+- **AUTOMATIC ENABLER RELOCATION**: When capability paths change, all associated enabler files are automatically moved to maintain relationships
+- **DUPLICATE ELIMINATION**: Resolves navigation panel showing duplicate enablers across different project paths
+- **CONSISTENT FILE MANAGEMENT**: Ensures file operations maintain data integrity across project boundaries
+
+#### ⚙️ **Technical Implementation**
+- **API ENDPOINT FIXES**: Enhanced `/api/capabilities-dynamic` and `/api/links/enablers` to respect project path boundaries
+- **GROUPED ENABLER FILTERING**: Improved enabler grouping logic with project-path-aware filtering
+- **SEARCHABLE DROPDOWN COMPONENT**: Created reusable SearchableEnablerSelect component with modern UX patterns
+- **FIXED POSITIONING**: Resolved dropdown positioning issues using fixed positioning with proper z-index layering
+
+#### 📊 **Benefits**
+- **IMPROVED NAVIGATION**: Clean, logical separation of project concerns in navigation panel
+- **ENHANCED UX**: Intuitive inline filtering without cluttering the interface
+- **DATA INTEGRITY**: Proper file movement operations prevent data duplication and orphaned files
+- **BETTER ORGANIZATION**: Project-specific enabler associations improve system architecture understanding
 
 ### v3.0.0 - Dynamic Enabler Status System ✅
 

@@ -1083,9 +1083,9 @@ This naming strategy provides several benefits:
 [Clear business value statement]
 
 ## Enablers
-| ID | Name | Status | Priority |
-|----|------|--------|----------|
-| ENB-XXXXXX | [Enabler Name] | [Status] | [Priority] |
+| ID |
+|----|
+| ENB-XXXXXX |
 
 ## Dependencies
 

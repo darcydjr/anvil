@@ -1356,11 +1356,19 @@ app.get('/api/capabilities-dynamic', async (req, res) => {
     const capabilities = filteredItems.filter(item => item.type === 'capability');
     const enablers = filteredItems.filter(item => item.type === 'enabler');
 
-    // Create enabler lookup map for fast access
+    // Create enabler lookup map for fast access, grouped by project path
     const enablerMap = new Map();
+    const enablersByProjectPath = new Map();
+
     enablers.forEach(enabler => {
-      if (enabler.id) {
+      if (enabler.id && enabler.projectPath) {
         enablerMap.set(enabler.id, enabler);
+
+        // Group enablers by project path
+        if (!enablersByProjectPath.has(enabler.projectPath)) {
+          enablersByProjectPath.set(enabler.projectPath, new Map());
+        }
+        enablersByProjectPath.get(enabler.projectPath).set(enabler.id, enabler);
       }
     });
 
@@ -1375,9 +1383,30 @@ app.get('/api/capabilities-dynamic', async (req, res) => {
           // Parse enabler table to extract enabler IDs
           const enablerIds = extractEnablerIds(content);
 
-          // Lookup enabler data dynamically
+          // Get enablers from the same project path as the capability
+          const projectPathEnablers = enablersByProjectPath.get(capability.projectPath) || new Map();
+
+          // Lookup enabler data dynamically - only from the same project path
           const enablerDetails = enablerIds.map(enablerIdRow => {
-            const enablerData = enablerMap.get(enablerIdRow.id);
+            // First try to find enabler in the same project path
+            let enablerData = projectPathEnablers.get(enablerIdRow.id);
+
+            // If not found in same project path, check globally (for backwards compatibility)
+            // but warn about it
+            if (!enablerData) {
+              enablerData = enablerMap.get(enablerIdRow.id);
+              if (enablerData && enablerData.projectPath !== capability.projectPath) {
+                console.warn(`[NAVIGATION] Enabler ${enablerIdRow.id} found in different project path:`, {
+                  capability: capability.path,
+                  capabilityProjectPath: capability.projectPath,
+                  enablerProjectPath: enablerData.projectPath,
+                  enablerPath: enablerData.path
+                });
+                // Don't include cross-project enablers
+                enablerData = null;
+              }
+            }
+
             if (enablerData) {
               return {
                 id: enablerData.id,
@@ -1388,10 +1417,10 @@ app.get('/api/capabilities-dynamic', async (req, res) => {
                 priority: enablerData.priority
               };
             } else {
-              // Return placeholder if enabler not found
+              // Return placeholder if enabler not found in same project path
               return {
                 id: enablerIdRow.id,
-                name: 'Enabler Not Found',
+                name: 'Enabler Not Found (Different Project)',
                 description: enablerIdRow.description || '',
                 status: 'Unknown',
                 approval: 'Unknown',
@@ -2180,13 +2209,15 @@ app.get('/api/links/enablers', async (req, res) => {
         let capabilityComponent = '';
 
         if (capabilityId) {
-          // Find the capability document
-          const capability = allItems.find(item =>
+          // First, try to find the capability in the same project path as the enabler
+          const capabilitiesInSameProject = allItems.filter(item =>
             item.type === 'capability' &&
+            item.projectPath === enabler.projectPath &&
             path.basename(item.path || '').endsWith('-capability.md')
           );
 
-          if (capability) {
+          // Search capabilities in the same project path first
+          for (const capability of capabilitiesInSameProject) {
             try {
               const capFilePath = path.join(capability.projectPath, path.basename(capability.path));
               const capContent = await fs.readFile(capFilePath, 'utf8');
@@ -2196,13 +2227,14 @@ app.get('/api/links/enablers', async (req, res) => {
                 capabilityName = capability.title;
                 capabilitySystem = extractSystem(capContent) || '';
                 capabilityComponent = extractComponent(capContent) || '';
+                break;
               }
             } catch (error) {
               console.warn(`Could not read capability file for ${capabilityId}:`, error);
             }
           }
 
-          // If we didn't find the capability above, search more thoroughly
+          // If we didn't find the capability in the same project, warn about cross-project reference
           if (!capabilityName) {
             for (const cap of allItems.filter(item => item.type === 'capability')) {
               try {
@@ -2211,7 +2243,12 @@ app.get('/api/links/enablers', async (req, res) => {
                 const capId = extractId(capContent);
 
                 if (capId === capabilityId) {
-                  capabilityName = cap.title;
+                  console.warn(`[ENABLER-LINKS] Enabler ${extractId(content)} references capability ${capabilityId} from different project path:`, {
+                    enablerProjectPath: enabler.projectPath,
+                    capabilityProjectPath: cap.projectPath
+                  });
+                  // Still include it for backwards compatibility, but mark it
+                  capabilityName = `${cap.title} (Different Project)`;
                   capabilitySystem = extractSystem(capContent) || '';
                   capabilityComponent = extractComponent(capContent) || '';
                   break;
@@ -2456,6 +2493,26 @@ app.post('/api/capability-with-enablers/*', async (req, res) => {
 
     console.log('[CAPABILITY-ENABLERS] Processing filePath:', filePath);
 
+    // Check if this capability already exists somewhere else (path change detection)
+    let existingCapabilityPath = null;
+    if (capabilityId) {
+      existingCapabilityPath = await findCapabilityDirectory(capabilityId);
+      if (existingCapabilityPath) {
+        // Find the exact capability file
+        const files = await fs.readdir(existingCapabilityPath);
+        for (const file of files) {
+          if (file.endsWith('-capability.md')) {
+            const existingFilePath = path.join(existingCapabilityPath, file);
+            const existingContent = await fs.readFile(existingFilePath, 'utf8');
+            if (existingContent.includes(`**ID**: ${capabilityId}`)) {
+              existingCapabilityPath = existingFilePath;
+              break;
+            }
+          }
+        }
+      }
+    }
+
     let fullPath, projectRoot;
     let fileLocation = null;
 
@@ -2529,7 +2586,7 @@ app.post('/api/capability-with-enablers/*', async (req, res) => {
         const relativePath = path.relative(projectRoot, fullPath);
         resolvedPath = validateAndResolvePath(relativePath, projectRoot, 'capability-enablers path')
       }
-      
+
       if (!resolvedPath.endsWith('.md')) {
         throw new Error('Only .md files can be saved as capabilities with enablers')
       }
@@ -2537,15 +2594,62 @@ app.post('/api/capability-with-enablers/*', async (req, res) => {
       console.error('[CAPABILITY-ENABLERS] Security validation failed:', securityError.message);
       return res.status(403).json({ error: 'Access denied: ' + securityError.message });
     }
-    
-    
-    await fs.writeFile(resolvedPath, content, 'utf8');
-    console.log('[CAPABILITY-ENABLERS] Main capability file saved:', resolvedPath);
-    
+
+    // Check if this is a path change (existing capability being moved to new location)
+    const isPathChange = existingCapabilityPath &&
+                        path.resolve(existingCapabilityPath) !== path.resolve(resolvedPath);
+
+    if (isPathChange) {
+      console.log('[CAPABILITY-ENABLERS] Path change detected - moving capability and enablers');
+      console.log('[CAPABILITY-ENABLERS] From:', existingCapabilityPath);
+      console.log('[CAPABILITY-ENABLERS] To:', resolvedPath);
+
+      // Ensure the target directory exists
+      await fs.ensureDir(path.dirname(resolvedPath));
+
+      // Move the capability file
+      if (await fs.pathExists(existingCapabilityPath)) {
+        await fs.move(existingCapabilityPath, resolvedPath);
+        console.log('[CAPABILITY-ENABLERS] Moved capability file');
+      }
+
+      // Find and move all associated enabler files
+      const oldDirectory = path.dirname(existingCapabilityPath);
+      const newDirectory = path.dirname(resolvedPath);
+
+      if (enablers && enablers.length > 0) {
+        for (const enabler of enablers) {
+          if (enabler.id && enabler.id !== 'ENB-XXXXXX') {
+            const enablerFileName = `${enabler.id.replace(/^(CAP|ENB)-/i, '')}-enabler.md`;
+            const oldEnablerPath = path.join(oldDirectory, enablerFileName);
+            const newEnablerPath = path.join(newDirectory, enablerFileName);
+
+            if (await fs.pathExists(oldEnablerPath) &&
+                path.resolve(oldEnablerPath) !== path.resolve(newEnablerPath)) {
+              try {
+                await fs.move(oldEnablerPath, newEnablerPath);
+                console.log('[CAPABILITY-ENABLERS] Moved enabler file:', enablerFileName);
+              } catch (moveError) {
+                console.error('[CAPABILITY-ENABLERS] Failed to move enabler file:', enablerFileName, moveError.message);
+              }
+            }
+          }
+        }
+      }
+
+      // Write the updated content to the new location
+      await fs.writeFile(resolvedPath, content, 'utf8');
+      console.log('[CAPABILITY-ENABLERS] Updated capability file content at new location');
+    } else {
+      // Normal save operation
+      await fs.writeFile(resolvedPath, content, 'utf8');
+      console.log('[CAPABILITY-ENABLERS] Main capability file saved:', resolvedPath);
+    }
+
     // Update bi-directional dependencies
     await updateBidirectionalDependencies(capabilityId, upstreamDeps || [], downstreamDeps || []);
-    
-    // Create enabler files for each enabler with content
+
+    // Create/update enabler files for each enabler with content
     if (enablers && enablers.length > 0) {
       for (const enabler of enablers) {
         // Skip enablers with placeholder IDs
@@ -2556,12 +2660,13 @@ app.post('/api/capability-with-enablers/*', async (req, res) => {
         }
       }
     }
-    
+
     const title = extractTitle(content);
     res.json({
       success: true,
       title,
-      enablersCreated: enablers.filter(e => e.id && e.name && e.id !== 'ENB-XXXXXX').length
+      enablersCreated: enablers.filter(e => e.id && e.name && e.id !== 'ENB-XXXXXX').length,
+      pathChanged: isPathChange
     });
   } catch (error) {
     console.error('[CAPABILITY-ENABLERS] Error saving capability with enablers:', error);
