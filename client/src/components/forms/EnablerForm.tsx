@@ -1068,24 +1068,6 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
               ))}
             </tbody>
           </table>
-          <div className="mt-4 flex gap-2">
-            <button
-              type="button"
-              onClick={() => addArrayItem('functionalRequirements', templates.functionalReq)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-            >
-              <Plus size={14} />
-              Add Functional Requirement
-            </button>
-            <button
-              type="button"
-              onClick={() => approveAllRequirements('functionalRequirements')}
-              className="px-4 py-2 bg-chart-2 text-white rounded-md hover:bg-chart-2/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              disabled={!data.functionalRequirements || data.functionalRequirements.length === 0}
-            >
-              Approve All
-            </button>
-          </div>
         </div>
 
         <BulkEditPanel
@@ -1096,6 +1078,25 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
           onSelectAll={() => setSelectedFunctionalRequirements(new Set((data.functionalRequirements || []).map((_, index) => index)))}
           onSelectNone={() => setSelectedFunctionalRequirements(new Set())}
         />
+
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => addArrayItem('functionalRequirements', templates.functionalReq)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+          >
+            <Plus size={14} />
+            Add Functional Requirement
+          </button>
+          <button
+            type="button"
+            onClick={() => approveAllRequirements('functionalRequirements')}
+            className="px-4 py-2 bg-chart-2 text-white rounded-md hover:bg-chart-2/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            disabled={!data.functionalRequirements || data.functionalRequirements.length === 0}
+          >
+            Approve All
+          </button>
+        </div>
       </div>
 
       {/* Non-Functional Requirements */}
@@ -1266,24 +1267,6 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
               ))}
             </tbody>
           </table>
-          <div className="mt-4 flex gap-2">
-            <button
-              type="button"
-              onClick={() => addArrayItem('nonFunctionalRequirements', templates.nonFunctionalReq)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-            >
-              <Plus size={14} />
-              Add Non-Functional Requirement
-            </button>
-            <button
-              type="button"
-              onClick={() => approveAllRequirements('nonFunctionalRequirements')}
-              className="px-4 py-2 bg-chart-2 text-white rounded-md hover:bg-chart-2/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              disabled={!data.nonFunctionalRequirements || data.nonFunctionalRequirements.length === 0}
-            >
-              Approve All
-            </button>
-          </div>
         </div>
 
         <BulkEditPanel
@@ -1294,6 +1277,25 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
           onSelectAll={() => setSelectedNonFunctionalRequirements(new Set((data.nonFunctionalRequirements || []).map((_, index) => index)))}
           onSelectNone={() => setSelectedNonFunctionalRequirements(new Set())}
         />
+
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => addArrayItem('nonFunctionalRequirements', templates.nonFunctionalReq)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+          >
+            <Plus size={14} />
+            Add Non-Functional Requirement
+          </button>
+          <button
+            type="button"
+            onClick={() => approveAllRequirements('nonFunctionalRequirements')}
+            className="px-4 py-2 bg-chart-2 text-white rounded-md hover:bg-chart-2/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            disabled={!data.nonFunctionalRequirements || data.nonFunctionalRequirements.length === 0}
+          >
+            Approve All
+          </button>
+        </div>
       </div>
 
       {/* Dependencies Section */}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
 import { useApp } from '../contexts/AppContext'
-import { Plus, Trash2, Save, Edit2, Check, Folder, FolderOpen } from 'lucide-react'
+import { Plus, Trash2, Save, Edit2, Check, Folder, FolderOpen, GripVertical } from 'lucide-react'
 
 interface PathItem {
   path: string
@@ -39,6 +39,8 @@ export default function ManageWorkspaces(): JSX.Element {
   const [editWorkspaceCopySwPlan, setEditWorkspaceCopySwPlan] = useState<boolean>(true)
   const [showCreateForm, setShowCreateForm] = useState<boolean>(false)
   const [showEditForm, setShowEditForm] = useState<boolean>(false)
+  const [draggedNewPathIndex, setDraggedNewPathIndex] = useState<number | null>(null)
+  const [draggedEditPathIndex, setDraggedEditPathIndex] = useState<number | null>(null)
 
   useEffect(() => {
     loadWorkspacesData()
@@ -226,6 +228,68 @@ export default function ManageWorkspaces(): JSX.Element {
     setEditWorkspacePaths(editWorkspacePaths.filter((_, i) => i !== index))
   }
 
+  // Drag and drop handlers for new workspace paths
+  const handleNewPathDragStart = (e: React.DragEvent, index: number): void => {
+    setDraggedNewPathIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleNewPathDragOver = (e: React.DragEvent): void => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleNewPathDrop = (e: React.DragEvent, targetIndex: number): void => {
+    e.preventDefault()
+
+    if (draggedNewPathIndex === null || draggedNewPathIndex === targetIndex) {
+      setDraggedNewPathIndex(null)
+      return
+    }
+
+    const paths = [...newWorkspacePaths]
+    const [removed] = paths.splice(draggedNewPathIndex, 1)
+    paths.splice(targetIndex, 0, removed)
+
+    setNewWorkspacePaths(paths)
+    setDraggedNewPathIndex(null)
+  }
+
+  const handleNewPathDragEnd = (): void => {
+    setDraggedNewPathIndex(null)
+  }
+
+  // Drag and drop handlers for edit workspace paths
+  const handleEditPathDragStart = (e: React.DragEvent, index: number): void => {
+    setDraggedEditPathIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleEditPathDragOver = (e: React.DragEvent): void => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleEditPathDrop = (e: React.DragEvent, targetIndex: number): void => {
+    e.preventDefault()
+
+    if (draggedEditPathIndex === null || draggedEditPathIndex === targetIndex) {
+      setDraggedEditPathIndex(null)
+      return
+    }
+
+    const paths = [...editWorkspacePaths]
+    const [removed] = paths.splice(draggedEditPathIndex, 1)
+    paths.splice(targetIndex, 0, removed)
+
+    setEditWorkspacePaths(paths)
+    setDraggedEditPathIndex(null)
+  }
+
+  const handleEditPathDragEnd = (): void => {
+    setDraggedEditPathIndex(null)
+  }
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto p-6">
@@ -291,7 +355,18 @@ export default function ManageWorkspaces(): JSX.Element {
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Project Paths</label>
                 {newWorkspacePaths.map((path, index) => (
-                  <div key={index} className="flex items-center gap-2 mb-2">
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 mb-2"
+                    draggable
+                    onDragStart={(e) => handleNewPathDragStart(e, index)}
+                    onDragOver={handleNewPathDragOver}
+                    onDrop={(e) => handleNewPathDrop(e, index)}
+                    onDragEnd={handleNewPathDragEnd}
+                  >
+                    <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-muted-foreground cursor-move">
+                      <GripVertical size={16} />
+                    </div>
                     <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-muted-foreground">
                       <Folder size={16} />
                     </div>
@@ -389,7 +464,18 @@ export default function ManageWorkspaces(): JSX.Element {
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Project Paths</label>
                 {editWorkspacePaths.map((path, index) => (
-                  <div key={index} className="flex items-center gap-2 mb-2">
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 mb-2"
+                    draggable
+                    onDragStart={(e) => handleEditPathDragStart(e, index)}
+                    onDragOver={handleEditPathDragOver}
+                    onDrop={(e) => handleEditPathDrop(e, index)}
+                    onDragEnd={handleEditPathDragEnd}
+                  >
+                    <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-muted-foreground cursor-move">
+                      <GripVertical size={16} />
+                    </div>
                     <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-muted-foreground">
                       <Folder size={16} />
                     </div>

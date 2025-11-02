@@ -172,6 +172,49 @@ Located in `examples/weather-example-1/specifications/`, this example demonstrat
 
 This example showcases how Anvil transforms high-level business capabilities into implementable technical specifications while maintaining clarity and traceability throughout the development process.
 
+### Weather Example 2: Advanced Multi-Component Architecture
+
+Located in `examples/weather-example-2/specifications/`, this complex example demonstrates a comprehensive weather monitoring and forecasting system that showcases advanced system architecture patterns including:
+
+#### **Engineering Standards & Patterns**
+- Design patterns and coding standards for enterprise applications
+- API specifications and communication protocols
+- Security and authentication frameworks
+- Data management and storage architectures
+
+#### **Driver Layer Components**
+- **Sensor Communication Drivers** - Hardware abstraction for weather sensor interfaces
+- **Device Management Drivers** - Monitor and control physical sensor hardware
+- **Protocol Adapters** - Support multiple sensor communication standards
+
+#### **Service Layer Architecture**
+- **Data Collection Service** - Real-time aggregation from distributed sensors
+- **Weather Analysis Service** - Advanced data processing and pattern recognition
+- **Forecasting Service** - Machine learning-powered weather prediction
+- **Alert Service** - Intelligent warning systems and notification management
+
+#### **Application Layer**
+- **Weather Dashboard** - Administrative interface with real-time monitoring
+- **Public Weather App** - Consumer-facing web application
+- **Mobile Weather App** - Native iOS/Android applications
+- **API Gateway** - External API access for third-party integrations
+
+#### **Messaging & Communication Middleware**
+- **Event Bus** - System-wide event distribution and orchestration
+- **Message Queue** - Asynchronous communication between microservices
+- **Real-time Notifications** - WebSocket-based live update systems
+- **Data Synchronization** - Multi-service consistency and state management
+
+#### **Key Architecture Demonstrations**
+🏗️ **Microservices Architecture** - Distributed system design with service boundaries
+⚡ **Event-Driven Communication** - Loose coupling through message passing
+📊 **Scalable Data Processing** - High-volume sensor data ingestion and analysis
+🌐 **Multi-Channel Delivery** - Web, mobile, and API access patterns
+⏱️ **Real-time Systems** - Live monitoring with sub-second responsiveness
+🔌 **Integration Patterns** - External services and third-party API management
+
+This advanced example is ideal for exploring complex system design, learning microservices patterns, and understanding how Anvil manages large-scale, multi-component architectures with sophisticated capability and enabler relationships.
+
 ### Hello World Example
 
 Located in `examples/hello-world/specifications/`, this provides a foundational example of basic web application capabilities and enablers.

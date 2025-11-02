@@ -907,25 +907,6 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
               ))}
             </tbody>
           </table>
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={() => addArrayItem('enablers', templates.enabler)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-            >
-              <Plus size={14} />
-              Add Enabler
-            </button>
-            <button
-              type="button"
-              onClick={approveAllEnablers}
-              className="btn btn-success btn-sm"
-              disabled={!enrichedEnablers || enrichedEnablers.length === 0}
-              style={{ marginLeft: '10px' }}
-            >
-              Approve All
-            </button>
-          </div>
         </div>
 
         <BulkEditPanel
@@ -935,6 +916,26 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
           onSelectAll={() => setSelectedEnablers(new Set(enrichedEnablers.map((_, index) => index)))}
           onSelectNone={() => setSelectedEnablers(new Set())}
         />
+
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => addArrayItem('enablers', templates.enabler)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+          >
+            <Plus size={14} />
+            Add Enabler
+          </button>
+          <button
+            type="button"
+            onClick={approveAllEnablers}
+            className="btn btn-success btn-sm"
+            disabled={!enrichedEnablers || enrichedEnablers.length === 0}
+            style={{ marginLeft: '10px' }}
+          >
+            Approve All
+          </button>
+        </div>
       </div>
 
       {/* Dependencies Section */}
