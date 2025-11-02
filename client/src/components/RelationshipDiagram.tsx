@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react'
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import mermaid from 'mermaid'
 import { useApp } from '../contexts/AppContext'
+import { Maximize2, Minimize2, X, Move, RotateCcw } from 'lucide-react'
 
 interface DiagramData {
   capabilities: any[]
@@ -10,9 +11,16 @@ interface DiagramData {
 export default function RelationshipDiagram(): JSX.Element {
   const { loadDataWithDependencies, loading } = useApp()
   const mermaidRef = useRef<HTMLDivElement>(null)
+  const expandedMermaidRef = useRef<HTMLDivElement>(null)
   const [diagramId] = useState<string>(() => `diagram-${Date.now()}`)
+  const [expandedDiagramId] = useState<string>(() => `expanded-diagram-${Date.now()}`)
   const [diagramData, setDiagramData] = useState<DiagramData | null>(null)
   const [diagramLoading, setDiagramLoading] = useState<boolean>(true)
+  const [isExpanded, setIsExpanded] = useState<boolean>(false)
+  const [isPanMode, setIsPanMode] = useState<boolean>(false)
+  const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState<boolean>(false)
+  const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
 
   // Load diagram data with dependencies
   useEffect(() => {
@@ -226,10 +234,12 @@ graph TB
         const { svg } = await mermaid.render(diagramId, diagramSyntax)
         mermaidRef.current.innerHTML = svg
 
-        // Add click handlers for navigation
+        // Add click handlers for navigation and apply pan transform
         const svgElement = mermaidRef.current.querySelector('svg')
         if (svgElement) {
           svgElement.addEventListener('click', handleDiagramClick)
+          svgElement.style.transform = `translate(${panOffset.x}px, ${panOffset.y}px)`
+          svgElement.style.cursor = isPanMode ? (isDragging ? 'grabbing' : 'grab') : 'default'
         }
 
       } catch (error) {
@@ -254,7 +264,7 @@ graph TB
         svgElement.removeEventListener('click', handleDiagramClick)
       }
     }
-  }, [diagramSyntax, diagramId])
+  }, [diagramSyntax, diagramId, panOffset, isPanMode, isDragging])
 
   const handleDiagramClick = (event: MouseEvent): void => {
     // Find clicked node
@@ -267,6 +277,150 @@ graph TB
     // TODO: Add navigation logic here
     // Could navigate to the specific capability or enabler view
   }
+
+  const handleExpand = (): void => {
+    setIsExpanded(true)
+  }
+
+  const handleCollapse = (): void => {
+    setIsExpanded(false)
+  }
+
+  const togglePanMode = (): void => {
+    setIsPanMode(!isPanMode)
+  }
+
+  const resetPan = (): void => {
+    setPanOffset({ x: 0, y: 0 })
+  }
+
+  const handleMouseDown = useCallback((event: React.MouseEvent) => {
+    if (!isPanMode) return
+
+    setIsDragging(true)
+    setDragStart({
+      x: event.clientX - panOffset.x,
+      y: event.clientY - panOffset.y
+    })
+    event.preventDefault()
+  }, [isPanMode, panOffset])
+
+  const handleMouseMove = useCallback((event: React.MouseEvent) => {
+    if (!isDragging || !isPanMode) return
+
+    const newOffset = {
+      x: event.clientX - dragStart.x,
+      y: event.clientY - dragStart.y
+    }
+    setPanOffset(newOffset)
+  }, [isDragging, isPanMode, dragStart])
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false)
+  }, [])
+
+  const handleMouseLeave = useCallback(() => {
+    setIsDragging(false)
+  }, [])
+
+  // Close expanded view on escape key
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape' && isExpanded) {
+        handleCollapse()
+      }
+    }
+
+    if (isExpanded) {
+      document.addEventListener('keydown', handleEscape)
+      return () => {
+        document.removeEventListener('keydown', handleEscape)
+      }
+    }
+  }, [isExpanded])
+
+  // Render diagram in expanded view
+  useEffect(() => {
+    if (!diagramSyntax || !expandedMermaidRef.current || !isExpanded) return
+
+    const renderExpandedDiagram = async (): Promise<void> => {
+      try {
+        // Initialize mermaid with the same configuration
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'base',
+          themeVariables: {
+            primaryColor: '#ffffff',
+            primaryTextColor: '#2d3748',
+            primaryBorderColor: '#4299e1',
+            lineColor: '#718096',
+            secondaryColor: '#ebf8ff',
+            secondaryTextColor: '#2b6cb0',
+            secondaryBorderColor: '#3182ce',
+            tertiaryColor: '#faf5ff',
+            tertiaryTextColor: '#6b46c1',
+            tertiaryBorderColor: '#8b5cf6',
+            background: '#f7fafc',
+            mainBkg: '#ffffff',
+            cScale0: '#ebf8ff',
+            cScale1: '#bee3f8',
+            cScale2: '#90cdf4',
+            edgeLabelBackground: '#ffffff',
+            clusterBkg: '#f7fafc',
+            clusterBorder: '#e2e8f0',
+            textColor: '#2d3748',
+            nodeTextColor: '#2d3748',
+            errorBkgColor: '#fed7d7',
+            errorTextColor: '#c53030'
+          },
+          flowchart: {
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis',
+            diagramPadding: 20
+          },
+          fontFamily: '"Inter", "Segoe UI", system-ui, sans-serif',
+          fontSize: 16
+        })
+
+        // Clear previous diagram
+        expandedMermaidRef.current.innerHTML = ''
+
+        // Render new diagram with expanded ID
+        const { svg } = await mermaid.render(expandedDiagramId, diagramSyntax)
+        expandedMermaidRef.current.innerHTML = svg
+
+        // Add click handlers for navigation and apply pan transform
+        const svgElement = expandedMermaidRef.current.querySelector('svg')
+        if (svgElement) {
+          svgElement.addEventListener('click', handleDiagramClick)
+          svgElement.style.transform = `translate(${panOffset.x}px, ${panOffset.y}px)`
+          svgElement.style.cursor = isPanMode ? (isDragging ? 'grabbing' : 'grab') : 'default'
+        }
+
+      } catch (error) {
+        console.error('Error rendering expanded diagram:', error)
+        if (expandedMermaidRef.current) {
+          expandedMermaidRef.current.innerHTML = `
+          <div class="diagram-error">
+            <p>Error rendering diagram</p>
+            <small>${error instanceof Error ? error.message : 'Unknown error'}</small>
+          </div>
+        `
+        }
+      }
+    }
+
+    renderExpandedDiagram()
+
+    // Cleanup
+    return () => {
+      const svgElement = expandedMermaidRef.current?.querySelector('svg')
+      if (svgElement) {
+        svgElement.removeEventListener('click', handleDiagramClick)
+      }
+    }
+  }, [diagramSyntax, expandedDiagramId, isExpanded, panOffset, isPanMode, isDragging])
 
   if (loading || diagramLoading) {
     return (
@@ -283,18 +437,88 @@ graph TB
   const enablers = diagramData?.enablers || []
 
   return (
-    <div className="bg-card rounded-lg shadow-md border border-border p-6 mb-8">
-      <div className="mb-4">
-        <h3 className="text-2xl font-semibold text-foreground mb-1">System Architecture</h3>
-        <p className="text-sm text-muted-foreground">
-          {capabilities.length === 0
-            ? 'Template showing capability dependencies'
-            : `${capabilities.length} capabilities with dependency relationships`
-          }
-        </p>
+    <div className={`bg-card rounded-lg shadow-md border border-border p-6 mb-8 transition-all duration-300 ${isExpanded ? 'fixed inset-4 z-40 overflow-hidden' : ''}`}>
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h3 className="text-2xl font-semibold text-foreground mb-1">
+            System Architecture{isExpanded ? ' - Expanded View' : ''}
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {capabilities.length === 0
+              ? 'Template showing capability dependencies'
+              : `${capabilities.length} capabilities with dependency relationships`
+            }
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={togglePanMode}
+            className={`flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors ${
+              isPanMode
+                ? 'bg-secondary text-secondary-foreground hover:bg-secondary/90'
+                : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+            }`}
+            title={isPanMode ? 'Disable pan mode' : 'Enable pan mode'}
+          >
+            <Move size={16} />
+            {isPanMode ? 'Pan: ON' : 'Pan'}
+          </button>
+          {isPanMode && (
+            <button
+              onClick={resetPan}
+              className="flex items-center gap-2 px-3 py-2 text-sm bg-muted text-muted-foreground rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+              title="Reset pan position"
+            >
+              <RotateCcw size={16} />
+              Reset
+            </button>
+          )}
+          {isExpanded ? (
+            <>
+              <button
+                onClick={handleCollapse}
+                className="flex items-center gap-2 px-3 py-2 text-sm bg-muted text-muted-foreground rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                title="Exit expanded view"
+              >
+                <Minimize2 size={16} />
+                Collapse
+              </button>
+              <button
+                onClick={handleCollapse}
+                className="flex items-center justify-center w-8 h-8 text-muted-foreground rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleExpand}
+              className="flex items-center gap-2 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+              title="Expand diagram"
+            >
+              <Maximize2 size={16} />
+              Expand
+            </button>
+          )}
+        </div>
       </div>
-      <div className="bg-muted rounded-lg p-4 overflow-x-auto">
-        <div ref={mermaidRef} className="mermaid" />
+      <div
+        className={`bg-muted rounded-lg p-4 overflow-hidden transition-all duration-300 ${isExpanded ? 'h-[calc(100vh-200px)]' : ''}`}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        style={{
+          cursor: isPanMode ? (isDragging ? 'grabbing' : 'grab') : 'default',
+          userSelect: isPanMode ? 'none' : 'auto'
+        }}
+      >
+        {isExpanded ? (
+          <div ref={expandedMermaidRef} className="mermaid w-full h-full" />
+        ) : (
+          <div ref={mermaidRef} className="mermaid" />
+        )}
       </div>
     </div>
   )

@@ -443,8 +443,8 @@ export default function DocumentEditor(): JSX.Element {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="bg-card border-b border-border shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="sticky -top-4 z-10 bg-card border-b border-border shadow-sm mb-4 p-4 pt-8">
+        <div className="flex items-center justify-between">
           <div>
             <h3 className="text-xl font-semibold text-foreground">{isNew ? `Create ${type}` : `Edit ${type}`}</h3>
           </div>

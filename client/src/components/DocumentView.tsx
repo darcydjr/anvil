@@ -681,49 +681,53 @@ export default function DocumentView(): React.ReactElement {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="bg-card rounded-lg shadow-sm border border-border mb-6 p-4 flex items-center justify-between">
-        <div className="flex-1">
-          {document?.title && type !== 'template' && (
-            <h1 className="text-2xl font-bold text-foreground">
-              {document.title} | {type === 'capability' ? 'Capability' : type === 'enabler' ? 'Enabler' : ''}
-            </h1>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={handleBack} className="flex items-center gap-2 px-3 py-2 text-sm bg-muted text-muted-foreground rounded-md hover:bg-accent hover:text-accent-foreground transition-colors">
-            <ArrowLeft size={16} />
-            Back
-          </button>
-          {type === 'template' ? (
-            <button onClick={handleEdit} className="flex items-center gap-2 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
-              <Edit size={16} />
-              Edit
+    <div className="min-h-screen bg-background">
+      <div className="sticky top-0 z-10 bg-card border-b border-border shadow-sm -m-4 mb-4 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            {document?.title && type !== 'template' && (
+              <h1 className="text-2xl font-bold text-foreground">
+                {document.title} | {type === 'capability' ? 'Capability' : type === 'enabler' ? 'Enabler' : ''}
+              </h1>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={handleBack} className="flex items-center gap-2 px-3 py-2 text-sm bg-muted text-muted-foreground rounded-md hover:bg-accent hover:text-accent-foreground transition-colors">
+              <ArrowLeft size={16} />
+              Back
             </button>
-          ) : (
-            <>
+            {type === 'template' ? (
               <button onClick={handleEdit} className="flex items-center gap-2 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
                 <Edit size={16} />
                 Edit
               </button>
-              <button onClick={handleDelete} className="flex items-center gap-2 px-3 py-2 text-sm bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 transition-colors">
-                <Trash2 size={16} />
-                Delete
-              </button>
-              <button onClick={handleCopy} className="flex items-center gap-2 px-3 py-2 text-sm bg-chart-2 text-white border border-chart-2 rounded-md hover:bg-chart-2/90 transition-colors">
-                <Copy size={16} />
-                Copy
-              </button>
-            </>
-          )}
+            ) : (
+              <>
+                <button onClick={handleEdit} className="flex items-center gap-2 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+                  <Edit size={16} />
+                  Edit
+                </button>
+                <button onClick={handleDelete} className="flex items-center gap-2 px-3 py-2 text-sm bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 transition-colors">
+                  <Trash2 size={16} />
+                  Delete
+                </button>
+                <button onClick={handleCopy} className="flex items-center gap-2 px-3 py-2 text-sm bg-chart-2 text-white border border-chart-2 rounded-md hover:bg-chart-2/90 transition-colors">
+                  <Copy size={16} />
+                  Copy
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      <div
-        ref={contentRef}
-        className="bg-card rounded-lg shadow-sm border border-border p-6 markdown-content"
-        dangerouslySetInnerHTML={{ __html: enhancedHtml || document?.html || '' }}
-      />
+      <div>
+        <div
+          ref={contentRef}
+          className="bg-card rounded-lg shadow-sm border border-border p-6 markdown-content"
+          dangerouslySetInnerHTML={{ __html: enhancedHtml || document?.html || '' }}
+        />
+      </div>
     </div>
   )
 }

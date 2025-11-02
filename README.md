@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-3.4.2-green.svg)]()
+[![Version](https://img.shields.io/badge/version-3.4.12-green.svg)]()
 
 ## Overview
 
@@ -312,12 +312,12 @@ Anvil supports **workspace-based configuration** for managing multiple document 
 
 ### 📋 **Recent Major Features Summary**
 
+- **v3.4.12**: Removed unused Imported Components functionality from Settings
+- **v3.4.11**: Improved DocumentEditor header positioning within layout boundaries
+- **v3.4.7**: Added pan functionality to System Architecture diagram
+- **v3.4.6**: Enhanced DocumentView sticky header within content area
 - **v3.4.2**: Bulk edit for Capability Form enablers with selective editing
 - **v3.4.1**: Enhanced requirement bulk edit with individual selection checkboxes
-- **v3.4.0**: Initial bulk edit implementation for Enabler Form requirements
-- **v3.3.0**: Enhanced enabler dependencies with navigation fixes
-- **v3.2.1**: Enabler dependency table display improvements
-- **v3.1.4**: UI layout scaling with drag-and-drop features
 
 ### 🚀 **Bulk Edit Feature Evolution** (v3.4.0 → v3.4.2)
 
@@ -372,6 +372,144 @@ This evolution provides a unified, consistent bulk editing experience across all
 - ✅ Consistent cross-form interface
 
 ---
+
+### v3.4.12 - Removed Unused Imported Components Functionality ✅
+
+#### 🧹 **Settings Cleanup**
+- **REMOVED IMPORTED COMPONENTS**: Eliminated non-functional "Imported Components" section from Settings page
+- **INTERFACE SIMPLIFICATION**: Cleaned up Settings interface by removing unused "Add Import" functionality
+- **CODE CLEANUP**: Removed all related interfaces, state management, and UI components for imported components
+- **REDUCED COMPLEXITY**: Streamlined Settings page to focus on actively used configuration options
+
+#### 🔧 **Technical Implementation**
+- **COMPONENT INTERFACES**: Removed `ImportedComponent` interface and related TypeScript definitions
+- **STATE MANAGEMENT**: Eliminated `newImportPath`, `newImportName` state variables and related functions
+- **UI COMPONENTS**: Removed entire imported components section including table, forms, and controls
+- **ICON CLEANUP**: Removed unused `Plus` and `Trash2` imports from Lucide React
+
+#### ⚙️ **Components Updated**
+- **Settings.tsx**: Comprehensive cleanup removing 200+ lines of unused functionality
+- **Configuration Interface**: Simplified `Config` interface to remove `importedComponents` field
+- **Form Logic**: Removed `addImportedComponent`, `removeImportedComponent`, and `toggleComponentEnabled` functions
+
+#### 📊 **Benefits**
+- **CLEANER INTERFACE**: Settings page now focuses only on functional configuration options
+- **REDUCED MAINTENANCE**: Eliminates dead code that was not integrated with the rest of the application
+- **IMPROVED UX**: Users no longer confused by non-functional import controls
+- **CODEBASE CLARITY**: Simplified component structure and reduced technical debt
+
+### v3.4.11 - Improved DocumentEditor Header Positioning ✅
+
+#### 🎯 **Header Positioning Refinement**
+- **LAYOUT-CONTAINED HEADERS**: DocumentEditor headers now properly contained within main display panel
+- **VERTICAL POSITIONING**: Headers moved up vertically while staying within content boundaries
+- **HORIZONTAL FIT**: Reverted horizontal sizing to fit within display panel instead of extending to edges
+- **BACKGROUND COVERAGE**: Enhanced positioning prevents background show-through
+
+#### 🔧 **Technical Implementation**
+- **STICKY POSITIONING**: Uses `sticky -top-4` for optimal vertical positioning
+- **PROPER PADDING**: Added `pt-8` to compensate for upward positioning
+- **BOUNDARY RESPECT**: Removed negative margins to keep headers within content area
+- **Z-INDEX MANAGEMENT**: Proper layering ensures headers stay above content without overlaying navigation
+
+#### ⚙️ **User Experience**
+- **CONSISTENT INTERFACE**: Headers behave predictably within application layout
+- **NO OVERLAY**: Headers don't interfere with navigation sidebar access
+- **SEAMLESS EDITING**: Edit controls remain accessible while respecting layout boundaries
+- **VISUAL POLISH**: Clean header positioning eliminates visual gaps and overlaps
+
+### v3.4.10 - v3.4.7 - Pan Functionality & Enhanced Navigation ✅
+
+#### 🎯 **System Architecture Pan Controls**
+- **PAN MODE TOGGLE**: Added pan functionality to System Architecture diagram with toggle button
+- **MOUSE INTERACTION**: Drag to pan when pan mode enabled with visual cursor feedback
+- **RESET FUNCTIONALITY**: Reset button to restore diagram to original position
+- **DUAL VIEW SUPPORT**: Pan works in both normal and expanded diagram views
+
+#### 🔧 **Enhanced Navigation Experience**
+- **STICKY HEADERS**: Document headers stay at top of content area during scrolling
+- **FLOATING CONTROLS**: Navigation buttons remain accessible without overlaying sidebar
+- **SMOOTH INTERACTIONS**: Enhanced cursor states and visual feedback during pan operations
+- **LAYOUT AWARENESS**: All expansions and positioning respect application layout boundaries
+
+---
+
+### v3.4.5 - Layout-Respecting Expanded Diagram ✅
+
+#### 🎯 **Improved Expanded View Positioning**
+- **LAYOUT-AWARE EXPANSION**: Modified expanded diagram to stay within main display area instead of overlaying navigation panel
+- **IN-PLACE EXPANSION**: Diagram now expands within the dashboard layout boundaries using fixed positioning with proper insets
+- **RESPECTS SIDEBAR**: Expanded view no longer covers the navigation sidebar, maintaining application layout integrity
+- **SMOOTH TRANSITIONS**: Added CSS transitions for smooth expand/collapse animations
+
+#### 🔧 **Enhanced User Experience**
+- **CONTEXTUAL EXPANSION**: Users can expand diagram while maintaining access to navigation and other dashboard elements
+- **PROPER BOUNDARIES**: Expanded view uses `fixed inset-4` positioning to respect application layout margins
+- **DYNAMIC HEIGHT**: Expanded diagram uses calculated height `h-[calc(100vh-200px)]` for optimal viewing space
+- **CONDITIONAL RENDERING**: Different diagram refs and rendering logic for normal vs expanded states
+
+#### ⚙️ **Technical Improvements**
+- **SIMPLIFIED IMPLEMENTATION**: Removed complex full-screen modal in favor of in-place expansion
+- **BETTER POSITIONING**: Uses `fixed inset-4 z-40` for expansion that respects layout boundaries
+- **CONDITIONAL CLASSES**: Dynamic className application for seamless state transitions
+- **CLEANER STATE MANAGEMENT**: Simplified expand/collapse logic without body scroll manipulation
+
+#### 📊 **Layout Benefits**
+- **MAINTAINS NAVIGATION**: Users can still access sidebar navigation while viewing expanded diagram
+- **BETTER UX FLOW**: No jarring full-screen overlay that disrupts application context
+- **RESPONSIVE DESIGN**: Expansion works properly within application's responsive grid layout
+- **CONSISTENT EXPERIENCE**: Expanded view feels like natural extension of dashboard rather than separate modal
+
+### v3.4.4 - Expandable System Architecture Diagram ✅
+
+#### 🎯 **Enhanced Diagram Viewing Experience**
+- **EXPAND BUTTON**: Added expand button to System Architecture diagram on Documentation Dashboard for full-screen viewing
+- **FULL SCREEN MODE**: System Architecture diagram can now be viewed in full-screen overlay with dedicated controls
+- **DUAL VIEW SUPPORT**: Both compact dashboard view and expanded full-screen view with independent diagram rendering
+- **SEAMLESS NAVIGATION**: Easy toggle between normal and expanded views with intuitive controls
+
+#### 🔧 **User Interface Enhancements**
+- **FLOATING HEADER**: Full-screen mode includes fixed header with title, description, and control buttons
+- **MULTIPLE EXIT OPTIONS**: Both "Exit Full Screen" button and "X" close button for user preference
+- **KEYBOARD SUPPORT**: ESC key closes expanded view for quick navigation
+- **SCROLL PREVENTION**: Body scroll disabled during full-screen mode to prevent background interaction
+
+#### ⚙️ **Technical Implementation**
+- **DUAL REFS**: Separate mermaidRef and expandedMermaidRef for independent diagram rendering
+- **UNIQUE IDs**: Different diagram IDs for normal and expanded views to prevent conflicts
+- **MODAL OVERLAY**: Full-screen implementation using fixed positioning with proper z-index layering
+- **CLEANUP MANAGEMENT**: Proper event listener cleanup and body style restoration on modal close
+
+#### 📊 **Workflow Benefits**
+- **DETAILED ANALYSIS**: Large diagrams can be viewed clearly in full-screen mode
+- **BETTER VISIBILITY**: Complex system architectures with multiple capabilities and dependencies are easier to analyze
+- **ENHANCED PRODUCTIVITY**: Users can study architecture diagrams without dashboard clutter
+- **IMPROVED ACCESSIBILITY**: Larger diagram view improves readability for detailed system analysis
+
+### v3.4.3 - Floating Navigation Headers ✅
+
+#### 🎯 **Enhanced User Experience with Persistent Navigation**
+- **FLOATING HEADERS**: Both Document Editor and Document Viewer now have fixed navigation headers that remain visible during scrolling
+- **ALWAYS ACCESSIBLE ACTIONS**: Name, Back, Edit, Delete, Copy, and Save buttons stay visible at all times for improved workflow efficiency
+- **SEAMLESS EDITING**: Form/Markdown toggle buttons remain accessible throughout long documents
+- **CONSISTENT INTERFACE**: Unified floating header design across all document viewing and editing interfaces
+
+#### 🔧 **Technical Implementation**
+- **FIXED POSITIONING**: Headers use `fixed top-0 left-0 right-0 z-50` positioning to float above content
+- **PROPER SPACING**: Added `mt-20` top margin to content areas to prevent overlap with floating headers
+- **RESPONSIVE DESIGN**: Headers maintain full width responsiveness while floating
+- **Z-INDEX MANAGEMENT**: Proper layering ensures headers stay above all content including modals and dropdowns
+
+#### ⚙️ **Components Updated**
+- **DocumentEditor**: Fixed header with Create/Edit title, Form/Markdown toggle, Back, and Save buttons
+- **DocumentView**: Fixed header with document title, Back, Edit, Delete, and Copy buttons
+- **CONSISTENT STYLING**: Both components use matching visual design patterns for seamless user experience
+
+#### 📊 **Workflow Benefits**
+- **IMPROVED PRODUCTIVITY**: No more scrolling to top to access navigation or action buttons
+- **REDUCED FRICTION**: Critical actions always within reach during document review and editing
+- **BETTER NAVIGATION**: Back button always visible for quick navigation between documents
+- **ENHANCED ACCESSIBILITY**: Important controls remain accessible regardless of document length
 
 ### v3.4.2 - Bulk Edit for Capability Enablers ✅
 
