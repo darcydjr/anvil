@@ -142,6 +142,40 @@ Once you have your specifications ready in Anvil:
 - **Technical Debt Assessment**: Understand current architecture before refactoring
 - **Compliance Documentation**: Generate technical specifications for audit requirements
 
+## Examples
+
+Anvil includes practical examples that demonstrate the **Capabilities → Enablers** approach using human-understandable language patterns.
+
+### Weather Example 1: Simple Verb-to-Noun Architecture
+
+Located in `examples/weather-example-1/specifications/`, this example demonstrates Anvil's core philosophy of **human-readable capability definition** using a simple weather application.
+
+#### Capability Structure (Verbs → Actions)
+- **"Display Weather"** (`CAP-547983`) - The action of showing weather information to users
+- **"Simulate Weather"** (`CAP-268566`) - The action of generating weather data for the application
+
+#### Enabler Implementation (Nouns → Components)
+- **Weather Display Interface** (`ENB-457798`) - The UI component that renders weather information
+- **Weather Data Provider** (`ENB-442410`) - The service that supplies weather data
+- **Local Web Server** (`ENB-530243`) - The server infrastructure hosting the application
+- **Weather Simulation Engine** (`ENB-174293`) - The logic component generating simulated weather
+
+#### Key Design Principles Demonstrated
+
+🎯 **Human-Understandable Capabilities**: Capabilities use natural language verbs ("Display", "Simulate") that clearly express **what the system does** from a user perspective.
+
+⚙️ **Technical Enabler Implementation**: Enablers use concrete nouns ("Interface", "Provider", "Server", "Engine") that describe **how the system works** from an implementation perspective.
+
+🔄 **Dependency Flow**: Clear relationships showing how capabilities depend on each other and how enablers implement capabilities through specific technical components.
+
+📋 **Requirements Traceability**: Each enabler contains detailed functional and non-functional requirements that map directly to implementation tasks.
+
+This example showcases how Anvil transforms high-level business capabilities into implementable technical specifications while maintaining clarity and traceability throughout the development process.
+
+### Hello World Example
+
+Located in `examples/hello-world/specifications/`, this provides a foundational example of basic web application capabilities and enablers.
+
 ## Implementation Workflow
 
 Anvil is designed to work seamlessly with Claude Code for automated development implementation:

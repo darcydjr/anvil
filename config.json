@@ -16,6 +16,19 @@
         }
       ],
       "createdDate": "2025-09-17T22:30:00.000Z"
+    },
+    {
+      "id": "ws-weather-example",
+      "name": "Simple Weather Example",
+      "description": "Weather application demonstrating verb-to-noun capability architecture",
+      "isActive": false,
+      "projectPaths": [
+        {
+          "path": "./examples/weather-example-1/specifications",
+          "icon": "Cloud"
+        }
+      ],
+      "createdDate": "2025-11-02T17:00:00.000Z"
     }
   ],
   "activeWorkspaceId": "ws-default",
