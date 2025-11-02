@@ -13,10 +13,6 @@
         {
           "path": "./examples/hello-world/specifications",
           "icon": "Box"
-        },
-        {
-          "path": "./anvil-test-projects/version-3.0/test-application/specifications",
-          "icon": "TestTube"
         }
       ],
       "createdDate": "2025-09-17T22:30:00.000Z"
@@ -39,6 +35,5 @@
     "analysisReview": "Required",
     "designReview": "Required",
     "codeReview": "Not Required"
-  },
-  "importedComponents": []
+  }
 }
