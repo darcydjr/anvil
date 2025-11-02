@@ -21,8 +21,7 @@ Collect weather sensor readings that include current temperature, wind speed, wi
 
 | Enabler ID |
 |------------|
-| ENB-XXXXXX |
-| ENB-621403 | Weather Sensor Driver MQTT  Port |
+| ENB-621403 |
 
 ## Dependencies
 

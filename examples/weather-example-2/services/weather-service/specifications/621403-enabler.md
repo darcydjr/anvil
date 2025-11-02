@@ -8,7 +8,7 @@
 - **Approval**: Approved
 - **Capability ID**: CAP-955448
 - **Owner**: Product Team
-- **Status**: In Draft
+- **Status**: Ready for Design
 - **Priority**: High
 - **Analysis Review**: Required
 - **Code Review**: Required
