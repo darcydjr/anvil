@@ -1,28 +1,27 @@
-# REST API
+# Controller
 
 ## Metadata
 
-- **Name**: REST API
+- **Name**: Controller
 - **Type**: Enabler
-- **ID**: ENB-499838
-- **Approval**: Approved
-- **Capability ID**: CAP-418430
+- **ID**: ENB-939804
+- **Approval**: Not Approved
+- **Capability ID**: CAP-XXXXXX (Parent Capability) (Parent Capability)
 - **Owner**: Product Team
-- **Status**: Ready for Design
+- **Status**: In Draft
 - **Priority**: High
 - **Analysis Review**: Required
-- **Code Review**: Not Required
+- **Code Review**: Required
 
 ## Technical Overview
 ### Purpose
-Provide a REST API for retrieving current weather conditions
+Provides a control orcestrator
 
 ## Functional Requirements
 
 | ID | Name | Requirement | Priority | Status | Approval |
 |----|------|-------------|----------|--------|----------|
-| FR-083645 | Provide a REST API endpoint for querying weather conditions | Provide current temperature, wind speed, wind direction, precipitation rate, pressure and sky condition. | Must Have | Ready for Design | Approved |
-| FR-259765 | Swagger API | Provide a SWAGGER API for all endpoints | Must Have | Ready for Design | Approved |
+| FR-429186 | Weather Reading Storage | When a collection occurs it will be stored using the SQLite DB Port adaptor | Must Have | Ready for Design | Approved |
 
 ## Non-Functional Requirements
 
@@ -55,7 +54,7 @@ Provide a REST API for retrieving current weather conditions
 ### Enabler Dependency Flow Diagram
 ```mermaid
 flowchart TD
-    ENB_XXXXXX["ENB-499838<br/>REST API<br/>📡"]
+    ENB_XXXXXX["ENB-939804<br/>[Enabler Name]<br/>📡"]
 
     %% Add your dependency flows here
 

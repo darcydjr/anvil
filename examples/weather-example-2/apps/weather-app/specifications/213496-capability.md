@@ -1,29 +1,27 @@
-# Engineering Standards
+# Display Current Weather
 
 ## Metadata
 
-- **Name**: Engineering Standards
+- **Name**: Display Current Weather
 - **Type**: Capability
-- **System**: engineering
-- **Component**: standards
-- **ID**: CAP-733028
+- **System**: weather
+- **Component**: weather-app
+- **ID**: CAP-213496
 - **Approval**: Approved
 - **Owner**: Product Team
-- **Status**: Ready for Design
+- **Status**: In Draft
 - **Priority**: High
 - **Analysis Review**: Required
 
 ## Technical Overview
 ### Purpose
-Provides Engineering Standards for this drirver
+TO DO: Finish this
 
 ## Enablers
 
 | Enabler ID |
 |------------|
-| ENB-172819 |
-| ENB-930272 |
-| ENB-712847 |
+| ENB-152292 |
 
 ## Dependencies
 
@@ -37,12 +35,7 @@ Provides Engineering Standards for this drirver
 
 | Capability ID | Description |
 |---------------|-------------|
-| CAP-396729 | Auto-generated reverse dependency |
-| CAP-597263 | Auto-generated reverse dependency |
-| CAP-955448 | Auto-generated reverse dependency |
-| CAP-418430 | Auto-generated reverse dependency |
-| CAP-172776 | Auto-generated reverse dependency |
-| CAP-597588 | Auto-generated reverse dependency |
+| | |
 
 ### External Dependencies
 

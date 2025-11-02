@@ -15,13 +15,14 @@
 
 ## Technical Overview
 ### Purpose
-Collect weather sensor readings that include current temperature, wind speed, wind direction, precipitation rate, pressure and sky condition.
+Collect weather sensor readings that include current temperature, wind speed, wind direction, precipitation rate, pressure and sky condition.  Collects weather readings using the MQTT port adaptor
 
 ## Enablers
 
 | Enabler ID |
 |------------|
 | ENB-621403 |
+| ENB-601511 | Controller |
 
 ## Dependencies
 
@@ -30,12 +31,16 @@ Collect weather sensor readings that include current temperature, wind speed, wi
 | Capability ID | Description |
 |---------------|-------------|
 | CAP-396729 |  |
+| CAP-338573 |  |
+| CAP-733028 |  |
+| CAP-280437 |  |
 
 ### Internal Downstream Impact
 
 | Capability ID | Description |
 |---------------|-------------|
 | CAP-418430 | Auto-generated reverse dependency |
+| CAP-597588 | Auto-generated reverse dependency |
 
 ### External Dependencies
 

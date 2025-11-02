@@ -29,7 +29,10 @@ Provide a history of weather conditions
 
 | Capability ID | Description |
 |---------------|-------------|
-| | |
+| CAP-338573 |  |
+| CAP-733028 |  |
+| CAP-280437 |  |
+| CAP-597588 |  |
 
 ### Internal Downstream Impact
 

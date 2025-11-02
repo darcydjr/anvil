@@ -29,13 +29,17 @@ Store weather conditions
 
 | Capability ID | Description |
 |---------------|-------------|
-| | |
+| CAP-338573 |  |
+| CAP-733028 |  |
+| CAP-280437 |  |
+| CAP-955448 |  |
+| CAP-754548 |  |
 
 ### Internal Downstream Impact
 
 | Capability ID | Description |
 |---------------|-------------|
-| | |
+| CAP-172776 | Auto-generated reverse dependency |
 
 ### External Dependencies
 

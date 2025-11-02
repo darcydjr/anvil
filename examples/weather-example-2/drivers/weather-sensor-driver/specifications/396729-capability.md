@@ -36,6 +36,7 @@ Provides current Weather Sensor Readings. Provides current temperature, wind spe
 | CAP-733028 | Adheres to engineering standards |
 | CAP-597263 | Auto-generated reverse dependency |
 | CAP-164714 |  |
+| CAP-280437 | Auto-generated reverse dependency |
 
 ### Internal Downstream Impact
 

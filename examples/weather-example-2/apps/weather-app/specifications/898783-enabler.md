@@ -1,34 +1,33 @@
-# REST API
+# Left Panel Display
 
 ## Metadata
 
-- **Name**: REST API
+- **Name**: Left Panel Display
 - **Type**: Enabler
-- **ID**: ENB-499838
+- **ID**: ENB-898783
 - **Approval**: Approved
-- **Capability ID**: CAP-418430
+- **Capability ID**: CAP-145524
 - **Owner**: Product Team
-- **Status**: Ready for Design
+- **Status**: In Draft
 - **Priority**: High
 - **Analysis Review**: Required
-- **Code Review**: Not Required
+- **Code Review**: Required
 
 ## Technical Overview
 ### Purpose
-Provide a REST API for retrieving current weather conditions
+Left Panel
 
 ## Functional Requirements
 
 | ID | Name | Requirement | Priority | Status | Approval |
 |----|------|-------------|----------|--------|----------|
-| FR-083645 | Provide a REST API endpoint for querying weather conditions | Provide current temperature, wind speed, wind direction, precipitation rate, pressure and sky condition. | Must Have | Ready for Design | Approved |
-| FR-259765 | Swagger API | Provide a SWAGGER API for all endpoints | Must Have | Ready for Design | Approved |
+| FR-XXXXXX | [Name] | [Requirement Description] | [Priority] | [Status] | [Approval] |
 
 ## Non-Functional Requirements
 
 | ID | Name | Type | Requirement | Priority | Status | Approval |
 |----|------|------|-------------|----------|--------|----------|
-| | | | | | | |
+| NFR-XXXXXX | [Name] | [Type] | [Requirement Description] | [Priority] | [Status] | [Approval] |
 
 ## Dependencies
 
@@ -55,7 +54,7 @@ Provide a REST API for retrieving current weather conditions
 ### Enabler Dependency Flow Diagram
 ```mermaid
 flowchart TD
-    ENB_XXXXXX["ENB-499838<br/>REST API<br/>📡"]
+    ENB_XXXXXX["ENB-898783<br/>[Enabler Name]<br/>📡"]
 
     %% Add your dependency flows here
 

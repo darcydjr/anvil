@@ -1,28 +1,27 @@
-# REST API
+# Runtime Environment
 
 ## Metadata
 
-- **Name**: REST API
+- **Name**: Runtime Environment
 - **Type**: Enabler
-- **ID**: ENB-499838
+- **ID**: ENB-284429
 - **Approval**: Approved
-- **Capability ID**: CAP-418430
+- **Capability ID**: CAP-280437
 - **Owner**: Product Team
 - **Status**: Ready for Design
 - **Priority**: High
 - **Analysis Review**: Required
-- **Code Review**: Not Required
+- **Code Review**: Required
 
 ## Technical Overview
 ### Purpose
-Provide a REST API for retrieving current weather conditions
+Define the Runtime Environment
 
 ## Functional Requirements
 
 | ID | Name | Requirement | Priority | Status | Approval |
 |----|------|-------------|----------|--------|----------|
-| FR-083645 | Provide a REST API endpoint for querying weather conditions | Provide current temperature, wind speed, wind direction, precipitation rate, pressure and sky condition. | Must Have | Ready for Design | Approved |
-| FR-259765 | Swagger API | Provide a SWAGGER API for all endpoints | Must Have | Ready for Design | Approved |
+| FR-286132 | Cross Platform Support | Software must execute on Windows, Linux and Mac | Must Have | Ready for Design | Approved |
 
 ## Non-Functional Requirements
 
@@ -55,7 +54,7 @@ Provide a REST API for retrieving current weather conditions
 ### Enabler Dependency Flow Diagram
 ```mermaid
 flowchart TD
-    ENB_XXXXXX["ENB-499838<br/>REST API<br/>📡"]
+    ENB_XXXXXX["ENB-114920<br/>[Enabler Name]<br/>📡"]
 
     %% Add your dependency flows here
 

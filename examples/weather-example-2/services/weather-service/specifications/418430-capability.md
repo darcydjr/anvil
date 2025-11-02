@@ -30,6 +30,9 @@ Provide weather conditions which includes current temperature, wind speed, wind 
 | Capability ID | Description |
 |---------------|-------------|
 | CAP-955448 |  |
+| CAP-338573 |  |
+| CAP-733028 |  |
+| CAP-280437 |  |
 
 ### Internal Downstream Impact
 

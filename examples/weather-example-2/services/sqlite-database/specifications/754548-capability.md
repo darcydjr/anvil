@@ -1,29 +1,29 @@
-# Engineering Standards
+# Provide SQLite Database
 
 ## Metadata
 
-- **Name**: Engineering Standards
+- **Name**: Provide SQLite Database
 - **Type**: Capability
-- **System**: engineering
-- **Component**: standards
-- **ID**: CAP-733028
+- **System**: weather
+- **Component**: sqlite-database
+- **ID**: CAP-754548
 - **Approval**: Approved
 - **Owner**: Product Team
-- **Status**: Ready for Design
+- **Status**: In Draft
 - **Priority**: High
 - **Analysis Review**: Required
 
-## Technical Overview
-### Purpose
-Provides Engineering Standards for this drirver
+## Technical Overview 
+###  Purpose
+[Clear business value statement]
+
+
 
 ## Enablers
 
 | Enabler ID |
 |------------|
-| ENB-172819 |
-| ENB-930272 |
-| ENB-712847 |
+| ENB-XXXXXX |
 
 ## Dependencies
 
@@ -37,11 +37,6 @@ Provides Engineering Standards for this drirver
 
 | Capability ID | Description |
 |---------------|-------------|
-| CAP-396729 | Auto-generated reverse dependency |
-| CAP-597263 | Auto-generated reverse dependency |
-| CAP-955448 | Auto-generated reverse dependency |
-| CAP-418430 | Auto-generated reverse dependency |
-| CAP-172776 | Auto-generated reverse dependency |
 | CAP-597588 | Auto-generated reverse dependency |
 
 ### External Dependencies

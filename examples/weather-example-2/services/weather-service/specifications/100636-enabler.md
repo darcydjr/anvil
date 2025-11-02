@@ -15,7 +15,7 @@
 
 ## Technical Overview
 ### Purpose
-[What is the purpose?]
+Provides an SQLite Port adaptor to store values to an SQLite Database
 
 ## Functional Requirements
 

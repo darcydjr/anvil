@@ -23,6 +23,7 @@ Provides common coding standards across the system
 |----|------|-------------|----------|--------|----------|
 | FR-884033 | JavaScript Coding Standard | Javascript coding standards will adhere to the following guidelines: https://google.github.io/styleguide/jsguide.html | Must Have | Ready for Design | Approved |
 | FR-965013 | Python Coding Standard | Python coding will follow the python coding standard located here: https://peps.python.org/pep-0008/ | Must Have | Ready for Design | Approved |
+| FR-238320 | GO Coding Standard | GO coding standards will adhere to the following guidelines: https://google.github.io/styleguide/go/ | Must Have | Ready for Design | Approved |
 
 ## Non-Functional Requirements
 

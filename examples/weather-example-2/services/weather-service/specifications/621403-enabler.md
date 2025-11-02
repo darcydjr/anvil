@@ -15,19 +15,20 @@
 
 ## Technical Overview
 ### Purpose
-[What is the purpose?]
+Provide a port adaptor to the MQTT topic to subscribe to weather sensor readings
 
 ## Functional Requirements
 
 | ID | Name | Requirement | Priority | Status | Approval |
 |----|------|-------------|----------|--------|----------|
-| FR-XXXXXX | [Name] | [Requirement Description] | [Priority] | [Status] | [Approval] |
+| FR-454977 | Subscribe MQTT Weather Sensor readings MQTT Topic | Receive current temperature, wind speed, wind direction, precipitation rate, pressure and sky condition. | Must Have | Ready for Design | Approved |
+| FR-901535 | MQTT Broker Configuration | MQTT Broker connection settings must be in a configuration file settable by the user. Default Value is 1883 | Must Have | Ready for Design | Approved |
 
 ## Non-Functional Requirements
 
 | ID | Name | Type | Requirement | Priority | Status | Approval |
 |----|------|------|-------------|----------|--------|----------|
-| NFR-XXXXXX | [Name] | [Type] | [Requirement Description] | [Priority] | [Status] | [Approval] |
+| | | | | | | |
 
 ## Dependencies
 

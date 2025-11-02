@@ -5,7 +5,7 @@
 - **Name**: Requirements Traceability Manager
 - **Type**: Enabler
 - **ID**: ENB-435791
-- **Approval**: Not Approved
+- **Approval**: Approved
 - **Capability ID**: CAP-528050
 - **Owner**: Product Team
 - **Status**: Ready for Design
@@ -21,7 +21,8 @@ Provides a web application, reports that provide requirements traceability to de
 
 | ID | Name | Requirement | Priority | Status | Approval |
 |----|------|-------------|----------|--------|----------|
-| FR-XXXXXX | [Name] | [Requirement Description] | [Priority] | [Status] | [Approval] |
+| FR-097772 | Web Application | A small web application will provide traceability | Must Have | In Draft | Not Approved |
+| FR-217807 | Requirements Traceability Matrix Report | A requirements traceability matrix will map requirements to design, code and test | Must Have | In Draft | Not Approved |
 
 ## Non-Functional Requirements
 

@@ -15,19 +15,19 @@
 
 ## Technical Overview
 ### Purpose
-[What is the purpose?]
+Provides a REST API to provide weather conditions history
 
 ## Functional Requirements
 
 | ID | Name | Requirement | Priority | Status | Approval |
 |----|------|-------------|----------|--------|----------|
-| FR-XXXXXX | [Name] | [Requirement Description] | [Priority] | [Status] | [Approval] |
+| FR-999525 | Provide Weather Conditions History | Provide current temperature, wind speed, wind direction, precipitation rate, pressure and sky condition history | Must Have | Ready for Design | Approved |
 
 ## Non-Functional Requirements
 
 | ID | Name | Type | Requirement | Priority | Status | Approval |
 |----|------|------|-------------|----------|--------|----------|
-| NFR-XXXXXX | [Name] | [Type] | [Requirement Description] | [Priority] | [Status] | [Approval] |
+| | | | | | | |
 
 ## Dependencies
 

@@ -29,6 +29,43 @@
         }
       ],
       "createdDate": "2025-11-02T17:00:00.000Z"
+    },
+    {
+      "id": "ws-weather-example-2",
+      "name": "Advanced Weather Architecture",
+      "description": "Complex weather system with engineering standards, drivers, services, and applications",
+      "isActive": false,
+      "projectPaths": [
+        {
+          "path": "./examples/weather-example-2/specifications",
+          "icon": "CloudRain"
+        },
+        {
+          "path": "./examples/weather-example-2/standards/specifications",
+          "icon": "Shield"
+        },
+        {
+          "path": "./examples/weather-example-2/drivers/weather-sensor-driver/specifications",
+          "icon": "Cpu"
+        },
+        {
+          "path": "./examples/weather-example-2/services/weather-service/specifications",
+          "icon": "Server"
+        },
+        {
+          "path": "./examples/weather-example-2/services/mqtt-broker/specifications",
+          "icon": "Network"
+        },
+        {
+          "path": "./examples/weather-example-2/services/sqlite-database/specifications",
+          "icon": "Database"
+        },
+        {
+          "path": "./examples/weather-example-2/apps/weather-app/specifications",
+          "icon": "Smartphone"
+        }
+      ],
+      "createdDate": "2025-11-02T18:00:00.000Z"
     }
   ],
   "activeWorkspaceId": "ws-default",

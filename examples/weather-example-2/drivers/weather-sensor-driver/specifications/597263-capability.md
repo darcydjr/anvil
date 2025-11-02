@@ -32,6 +32,7 @@ Simulate weather sensor readings.
 | CAP-338573 | Auto-generated reverse dependency |
 | CAP-733028 |  |
 | CAP-164714 |  |
+| CAP-280437 | Auto-generated reverse dependency |
 
 ### Internal Downstream Impact
 
