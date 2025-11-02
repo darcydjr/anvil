@@ -1,8 +1,0 @@
-# Generated documents - these are created by Anvil and should not be committed
-*.md
-!README.md
-!.gitignore
-
-# Keep the specifications folder structure
-!specifications/
-!specifications/.gitkeep
