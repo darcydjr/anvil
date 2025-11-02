@@ -39,3 +39,7 @@ anvil-test-projects/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Hello World example - ignore all except specifications
+examples/hello-world/*
+!examples/hello-world/specifications/
