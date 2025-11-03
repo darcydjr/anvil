@@ -1,4 +1,4 @@
-# Anvil
+# QAnvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Version](https://img.shields.io/badge/version-3.4.13-green.svg)]()
@@ -7,7 +7,7 @@
 
 **An AI-Powered No-Code Development Framework** that takes you from **Idea → Requirements → Design → Code → Test** without writing a single line of code or vice-versa from **Code -> Design -> Requirements -> Capability**
 
-Anvil provides a clean, organized interface for defining product specifications that automatically transform into working software through AI-powered development workflows.
+Qamera's Anvil (Qanvil) provides a clean, organized interface for defining product specifications that automatically transform into working software through AI-powered development workflows.
 
 Anvil is not just a PRD management tool - it's a complete product development pipeline that transforms ideas into working software. Define your product requirements using structured capabilities and enablers, then watch as AI automatically generates your entire application with comprehensive testing through seamless integration with Claude Code and other AI development tools.
 
