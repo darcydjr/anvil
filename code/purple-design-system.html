@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purple Design System - Material Based</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: #fafafa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #6a1b9a 0%, #8e24aa 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 3rem;
+            font-weight: 400;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* Navigation */
+        nav {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 0;
+        }
+
+        nav li {
+            margin: 0;
+        }
+
+        nav a {
+            display: block;
+            padding: 16px 24px;
+            color: #5e35b1;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        nav a:hover {
+            background: #f3e5f5;
+            color: #6a1b9a;
+        }
+
+        /* Section Styling */
+        section {
+            background: white;
+            margin: 30px 0;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        }
+
+        h2 {
+            color: #6a1b9a;
+            font-size: 2rem;
+            font-weight: 400;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e1bee7;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: #7b1fa2;
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin: 30px 0 15px 0;
+        }
+
+        /* Color Palette */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .color-swatch {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .color-display {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+
+        .color-info {
+            padding: 15px;
+            background: #f5f5f5;
+        }
+
+        .color-info h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .color-info p {
+            font-size: 0.9rem;
+            color: #666;
+            margin: 2px 0;
+        }
+
+        /* Typography */
+        .type-sample {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-left: 4px solid #9c27b0;
+            border-radius: 4px;
+        }
+
+        .display-1 { font-size: 6rem; font-weight: 300; line-height: 1; }
+        .display-2 { font-size: 3.75rem; font-weight: 300; line-height: 1; }
+        .headline { font-size: 3rem; font-weight: 400; line-height: 1.2; }
+        .title { font-size: 2.125rem; font-weight: 500; line-height: 1.3; }
+        .subheading { font-size: 1.5rem; font-weight: 400; line-height: 1.5; }
+        .body-1 { font-size: 1rem; font-weight: 400; line-height: 1.6; }
+        .body-2 { font-size: 0.875rem; font-weight: 400; line-height: 1.5; }
+        .caption { font-size: 0.75rem; font-weight: 400; line-height: 1.4; }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: #7b1fa2;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #6a1b9a;
+        }
+
+        .btn-secondary {
+            background: #9c27b0;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #8e24aa;
+        }
+
+        .btn-outlined {
+            background: transparent;
+            color: #7b1fa2;
+            border: 2px solid #7b1fa2;
+            box-shadow: none;
+        }
+
+        .btn-outlined:hover {
+            background: #f3e5f5;
+            box-shadow: none;
+        }
+
+        .btn-text {
+            background: transparent;
+            color: #7b1fa2;
+            box-shadow: none;
+        }
+
+        .btn-text:hover {
+            background: #f3e5f5;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin: 20px 0;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: box-shadow 0.3s;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .card-image {
+            height: 180px;
+            background: linear-gradient(135deg, #ce93d8 0%, #ba68c8 100%);
+        }
+
+        .card-content {
+            padding: 20px;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #6a1b9a;
+            margin-bottom: 10px;
+        }
+
+        .card-text {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin: 20px 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #5e35b1;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1c4e9;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #7b1fa2;
+            box-shadow: 0 0 0 2px rgba(123, 31, 162, 0.1);
+        }
+
+        /* Icons & Iconography Guide */
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .icon-item {
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+
+        .icon-circle {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 10px;
+            border-radius: 50%;
+            background: #e1bee7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        /* Elevation/Shadows */
+        .elevation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin: 20px 0;
+        }
+
+        .elevation-box {
+            height: 120px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            color: #7b1fa2;
+        }
+
+        .elevation-1 { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
+        .elevation-2 { box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23); }
+        .elevation-3 { box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23); }
+        .elevation-4 { box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22); }
+        .elevation-5 { box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22); }
+
+        /* Spacing System */
+        .spacing-demo {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .spacing-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .spacing-box {
+            background: #e1bee7;
+            border-radius: 4px;
+        }
+
+        /* Grid System */
+        .grid-demo {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .grid-item {
+            background: #e1bee7;
+            padding: 20px;
+            border-radius: 4px;
+            text-align: center;
+            color: #4a148c;
+            font-weight: 500;
+        }
+
+        .col-12 { grid-column: span 12; }
+        .col-6 { grid-column: span 6; }
+        .col-4 { grid-column: span 4; }
+        .col-3 { grid-column: span 3; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 { font-size: 2rem; }
+            .display-1 { font-size: 3rem; }
+            .display-2 { font-size: 2.5rem; }
+            nav ul { flex-direction: column; }
+            nav a { padding: 12px 16px; }
+            section { padding: 20px; }
+            .col-6, .col-4, .col-3 { grid-column: span 12; }
+        }
+
+        /* Code blocks */
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #7b1fa2;
+        }
+
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Purple Design System</h1>
+        <p>A Material Design-based system with purple color palette</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#colors">Colors</a></li>
+            <li><a href="#typography">Typography</a></li>
+            <li><a href="#buttons">Buttons</a></li>
+            <li><a href="#cards">Cards</a></li>
+            <li><a href="#forms">Forms</a></li>
+            <li><a href="#elevation">Elevation</a></li>
+            <li><a href="#spacing">Spacing</a></li>
+            <li><a href="#grid">Grid System</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <!-- Color Palette -->
+        <section id="colors">
+            <h2>Color Palette</h2>
+            <p>Our purple-based color system maintains Material Design principles while providing a unique brand identity.</p>
+
+            <h3>Primary Colors</h3>
+            <div class="color-grid">
+                <div class="color-swatch">
+                    <div class="color-display" style="background: #4a148c;">Purple 900</div>
+                    <div class="color-info">
+                        <h4>Deep Purple</h4>
+                        <p><code>#4a148c</code></p>
+                        <p>Use: Dark backgrounds, high contrast</p>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-display" style="background: #6a1b9a;">Purple 800</div>
+                    <div class="color-info">
+                        <h4>Primary Dark</h4>
+                        <p><code>#6a1b9a</code></p>
+                        <p>Use: Headers, key elements</p>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-display" style="background: #7b1fa2;">Purple 700</div>
+                    <div class="color-info">
+                        <h4>Primary</h4>
+                        <p><code>#7b1fa2</code></p>
+                        <p>Use: Main brand color, CTAs</p>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-display" style="background: #8e24aa;">Purple 600</div>
+                    <div class="color-info">
+                        <h4>Primary Light</h4>
+                        <p><code>#8e24aa</code></p>
+                        <p>Use: Hover states, highlights</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Secondary Colors</h3>
+            <div class="color-grid">
+                <div class="color-swatch">
+                    <div class="color-display" style="background: #9c27b0;">Purple 500</div>
+                    <div class="color-info">
+                        <h4>Secondary</h4>
+                        <p><code>#9c27b0</code></p>
+                        <p>Use: Secondary actions</p>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-display" style="background: #ab47bc;">Purple 400</div>
+                    <div class="color-info">
+                        <h4>Secondary Light</h4>
+                        <p><code>#ab47bc</code></p>
+                        <p>Use: Accents, badges</p>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-display" style="background: #ba68c8;">Purple 300</div>
+                    <div class="color-info">
+                        <h4>Light Accent</h4>
+                        <p><code>#ba68c8</code></p>
+                        <p>Use: Backgrounds, subtle accents</p>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-display" style="background: #ce93d8; color: #333;">Purple 200</div>
+                    <div class="color-info">
+                        <h4>Pale Purple</h4>
+                        <p><code>#ce93d8</code></p>
+                        <p>Use: Hover backgrounds</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Neutral & Supporting Colors</h3>
+            <div class="color-grid">
+                <div class="color-swatch">
+                    <div class="color-display" style="background: #e1bee7; color: #333;">Purple 100</div>
+                    <div class="color-info">
+                        <h4>Very Light Purple</h4>
+                        <p><code>#e1bee7</code></p>
+                        <p>Use: Light backgrounds, borders</p>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-display" style="background: #f3e5f5; color: #333;">Purple 50</div>
+                    <div class="color-info">
+                        <h4>Extra Light Purple</h4>
+                        <p><code>#f3e5f5</code></p>
+                        <p>Use: Page backgrounds, cards</p>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-display" style="background: #212121;">Grey 900</div>
+                    <div class="color-info">
+                        <h4>Text Primary</h4>
+                        <p><code>#212121</code></p>
+                        <p>Use: Primary text</p>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-display" style="background: #757575;">Grey 600</div>
+                    <div class="color-info">
+                        <h4>Text Secondary</h4>
+                        <p><code>#757575</code></p>
+                        <p>Use: Secondary text</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Semantic Colors</h3>
+            <div class="color-grid">
+                <div class="color-swatch">
+                    <div class="color-display" style="background: #4caf50;">Success</div>
+                    <div class="color-info">
+                        <h4>Success</h4>
+                        <p><code>#4caf50</code></p>
+                        <p>Use: Success messages, confirmations</p>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-display" style="background: #ff9800;">Warning</div>
+                    <div class="color-info">
+                        <h4>Warning</h4>
+                        <p><code>#ff9800</code></p>
+                        <p>Use: Warnings, alerts</p>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-display" style="background: #f44336;">Error</div>
+                    <div class="color-info">
+                        <h4>Error</h4>
+                        <p><code>#f44336</code></p>
+                        <p>Use: Errors, destructive actions</p>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-display" style="background: #2196f3;">Info</div>
+                    <div class="color-info">
+                        <h4>Info</h4>
+                        <p><code>#2196f3</code></p>
+                        <p>Use: Information, help text</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Typography -->
+        <section id="typography">
+            <h2>Typography</h2>
+            <p>We use the Roboto font family, consistent with Material Design principles.</p>
+
+            <h3>Type Scale</h3>
+            <div class="type-sample">
+                <p class="display-1" style="font-size: 3rem;">Display 1</p>
+                <code>font-size: 6rem; font-weight: 300;</code>
+            </div>
+
+            <div class="type-sample">
+                <p class="headline">Headline</p>
+                <code>font-size: 3rem; font-weight: 400;</code>
+            </div>
+
+            <div class="type-sample">
+                <p class="title">Title</p>
+                <code>font-size: 2.125rem; font-weight: 500;</code>
+            </div>
+
+            <div class="type-sample">
+                <p class="subheading">Subheading</p>
+                <code>font-size: 1.5rem; font-weight: 400;</code>
+            </div>
+
+            <div class="type-sample">
+                <p class="body-1">Body 1 - This is the default body text. It's highly readable and suitable for longer passages of text. Font size is 1rem (16px) with a line-height of 1.6 for optimal readability.</p>
+                <code>font-size: 1rem; font-weight: 400; line-height: 1.6;</code>
+            </div>
+
+            <div class="type-sample">
+                <p class="body-2">Body 2 - A slightly smaller body text option for dense information.</p>
+                <code>font-size: 0.875rem; font-weight: 400;</code>
+            </div>
+
+            <div class="type-sample">
+                <p class="caption">Caption - Small text for captions and supplementary information</p>
+                <code>font-size: 0.75rem; font-weight: 400;</code>
+            </div>
+
+            <h3>Font Weights</h3>
+            <p style="font-weight: 300; font-size: 1.2rem; margin: 10px 0;">Light (300) - For display text</p>
+            <p style="font-weight: 400; font-size: 1.2rem; margin: 10px 0;">Regular (400) - For body text</p>
+            <p style="font-weight: 500; font-size: 1.2rem; margin: 10px 0;">Medium (500) - For emphasis</p>
+            <p style="font-weight: 700; font-size: 1.2rem; margin: 10px 0;">Bold (700) - For strong emphasis</p>
+        </section>
+
+        <!-- Buttons -->
+        <section id="buttons">
+            <h2>Buttons</h2>
+            <p>Material Design-inspired buttons with our purple color scheme.</p>
+
+            <h3>Contained Buttons</h3>
+            <div class="button-group">
+                <button class="btn btn-primary">Primary Button</button>
+                <button class="btn btn-secondary">Secondary Button</button>
+                <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;">Disabled</button>
+            </div>
+
+            <h3>Outlined Buttons</h3>
+            <div class="button-group">
+                <button class="btn btn-outlined">Outlined Button</button>
+                <button class="btn btn-outlined" disabled style="opacity: 0.5; cursor: not-allowed;">Disabled</button>
+            </div>
+
+            <h3>Text Buttons</h3>
+            <div class="button-group">
+                <button class="btn btn-text">Text Button</button>
+                <button class="btn btn-text" disabled style="opacity: 0.5; cursor: not-allowed;">Disabled</button>
+            </div>
+
+            <h3>Usage Guidelines</h3>
+            <ul style="margin: 20px 0; padding-left: 20px;">
+                <li><strong>Primary buttons:</strong> Main actions, CTAs (Call-to-Actions)</li>
+                <li><strong>Secondary buttons:</strong> Secondary actions on a page</li>
+                <li><strong>Outlined buttons:</strong> Medium-emphasis actions</li>
+                <li><strong>Text buttons:</strong> Low-emphasis actions, inline actions</li>
+            </ul>
+
+            <h3>Code Example</h3>
+            <pre><code>&lt;button class="btn btn-primary"&gt;Primary Button&lt;/button&gt;
+&lt;button class="btn btn-outlined"&gt;Outlined Button&lt;/button&gt;
+&lt;button class="btn btn-text"&gt;Text Button&lt;/button&gt;</code></pre>
+        </section>
+
+        <!-- Cards -->
+        <section id="cards">
+            <h2>Cards</h2>
+            <p>Cards contain content and actions about a single subject.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-image"></div>
+                    <div class="card-content">
+                        <h3 class="card-title">Card Title</h3>
+                        <p class="card-text">This is a sample card with an image header, title, descriptive text, and actions.</p>
+                        <button class="btn btn-text">Learn More</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-content">
+                        <h3 class="card-title">Simple Card</h3>
+                        <p class="card-text">Cards can also be used without images. This provides a clean, content-focused design.</p>
+                        <button class="btn btn-outlined">Action</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-image"></div>
+                    <div class="card-content">
+                        <h3 class="card-title">Another Example</h3>
+                        <p class="card-text">Cards are versatile components that can adapt to various content types and layouts.</p>
+                        <button class="btn btn-primary">Get Started</button>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Code Example</h3>
+            <pre><code>&lt;div class="card"&gt;
+    &lt;div class="card-image"&gt;&lt;/div&gt;
+    &lt;div class="card-content"&gt;
+        &lt;h3 class="card-title"&gt;Card Title&lt;/h3&gt;
+        &lt;p class="card-text"&gt;Card description text&lt;/p&gt;
+        &lt;button class="btn btn-text"&gt;Action&lt;/button&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+        </section>
+
+        <!-- Forms -->
+        <section id="forms">
+            <h2>Form Elements</h2>
+            <p>Consistent, accessible form components.</p>
+
+            <div class="form-group">
+                <label for="text-input">Text Input</label>
+                <input type="text" id="text-input" placeholder="Enter text here">
+            </div>
+
+            <div class="form-group">
+                <label for="email-input">Email Input</label>
+                <input type="email" id="email-input" placeholder="your@email.com">
+            </div>
+
+            <div class="form-group">
+                <label for="select-input">Select Dropdown</label>
+                <select id="select-input">
+                    <option>Option 1</option>
+                    <option>Option 2</option>
+                    <option>Option 3</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="textarea-input">Textarea</label>
+                <textarea id="textarea-input" rows="4" placeholder="Enter longer text here"></textarea>
+            </div>
+
+            <button class="btn btn-primary">Submit</button>
+
+            <h3>Code Example</h3>
+            <pre><code>&lt;div class="form-group"&gt;
+    &lt;label for="input-id"&gt;Label&lt;/label&gt;
+    &lt;input type="text" id="input-id" placeholder="Placeholder"&gt;
+&lt;/div&gt;</code></pre>
+        </section>
+
+        <!-- Elevation -->
+        <section id="elevation">
+            <h2>Elevation & Shadows</h2>
+            <p>Material Design uses shadows to indicate elevation and hierarchy.</p>
+
+            <div class="elevation-grid">
+                <div class="elevation-box elevation-1">Level 1</div>
+                <div class="elevation-box elevation-2">Level 2</div>
+                <div class="elevation-box elevation-3">Level 3</div>
+                <div class="elevation-box elevation-4">Level 4</div>
+                <div class="elevation-box elevation-5">Level 5</div>
+            </div>
+
+            <h3>Usage Guidelines</h3>
+            <ul style="margin: 20px 0; padding-left: 20px;">
+                <li><strong>Level 1:</strong> Cards, chips, text fields</li>
+                <li><strong>Level 2:</strong> Raised buttons, app bars</li>
+                <li><strong>Level 3:</strong> Floating action buttons, refresh indicators</li>
+                <li><strong>Level 4:</strong> Navigation drawer</li>
+                <li><strong>Level 5:</strong> Modal dialogs</li>
+            </ul>
+
+            <h3>CSS Classes</h3>
+            <pre><code>.elevation-1 { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
+.elevation-2 { box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23); }
+.elevation-3 { box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23); }</code></pre>
+        </section>
+
+        <!-- Spacing -->
+        <section id="spacing">
+            <h2>Spacing System</h2>
+            <p>Consistent spacing creates visual rhythm and hierarchy. Our system uses an 8px base unit.</p>
+
+            <h3>Spacing Scale</h3>
+            <div class="spacing-demo">
+                <div class="spacing-item">
+                    <div class="spacing-box" style="width: 8px; height: 40px;"></div>
+                    <span><strong>xs (8px)</strong> - Minimal spacing, tight layouts</span>
+                </div>
+                <div class="spacing-item">
+                    <div class="spacing-box" style="width: 16px; height: 40px;"></div>
+                    <span><strong>sm (16px)</strong> - Small spacing, compact elements</span>
+                </div>
+                <div class="spacing-item">
+                    <div class="spacing-box" style="width: 24px; height: 40px;"></div>
+                    <span><strong>md (24px)</strong> - Medium spacing, standard layouts</span>
+                </div>
+                <div class="spacing-item">
+                    <div class="spacing-box" style="width: 32px; height: 40px;"></div>
+                    <span><strong>lg (32px)</strong> - Large spacing, sections</span>
+                </div>
+                <div class="spacing-item">
+                    <div class="spacing-box" style="width: 48px; height: 40px;"></div>
+                    <span><strong>xl (48px)</strong> - Extra large spacing, major sections</span>
+                </div>
+                <div class="spacing-item">
+                    <div class="spacing-box" style="width: 64px; height: 40px;"></div>
+                    <span><strong>2xl (64px)</strong> - Maximum spacing, page sections</span>
+                </div>
+            </div>
+
+            <h3>CSS Variables</h3>
+            <pre><code>--spacing-xs: 8px;
+--spacing-sm: 16px;
+--spacing-md: 24px;
+--spacing-lg: 32px;
+--spacing-xl: 48px;
+--spacing-2xl: 64px;</code></pre>
+        </section>
+
+        <!-- Grid System -->
+        <section id="grid">
+            <h2>Grid System</h2>
+            <p>12-column responsive grid system with 16px gutters.</p>
+
+            <h3>12 Columns</h3>
+            <div class="grid-demo">
+                <div class="grid-item col-12">12 Columns</div>
+            </div>
+
+            <h3>6 + 6 Columns</h3>
+            <div class="grid-demo">
+                <div class="grid-item col-6">6 Columns</div>
+                <div class="grid-item col-6">6 Columns</div>
+            </div>
+
+            <h3>4 + 4 + 4 Columns</h3>
+            <div class="grid-demo">
+                <div class="grid-item col-4">4 Columns</div>
+                <div class="grid-item col-4">4 Columns</div>
+                <div class="grid-item col-4">4 Columns</div>
+            </div>
+
+            <h3>3 + 3 + 3 + 3 Columns</h3>
+            <div class="grid-demo">
+                <div class="grid-item col-3">3 Columns</div>
+                <div class="grid-item col-3">3 Columns</div>
+                <div class="grid-item col-3">3 Columns</div>
+                <div class="grid-item col-3">3 Columns</div>
+            </div>
+
+            <h3>Code Example</h3>
+            <pre><code>&lt;div class="grid-demo"&gt;
+    &lt;div class="grid-item col-6"&gt;6 Columns&lt;/div&gt;
+    &lt;div class="grid-item col-6"&gt;6 Columns&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+            <p style="margin-top: 20px;"><strong>Note:</strong> The grid automatically collapses to full-width columns on mobile devices (screens narrower than 768px).</p>
+        </section>
+
+        <!-- Design Principles -->
+        <section>
+            <h2>Design Principles</h2>
+            
+            <h3>1. Material Design Foundation</h3>
+            <p>This system is built on Material Design principles, emphasizing:</p>
+            <ul style="margin: 15px 0; padding-left: 20px;">
+                <li>Clear hierarchy through elevation and shadows</li>
+                <li>Meaningful motion and transitions</li>
+                <li>Consistent spacing and proportions</li>
+                <li>Bold, intentional use of color</li>
+            </ul>
+
+            <h3>2. Accessibility First</h3>
+            <ul style="margin: 15px 0; padding-left: 20px;">
+                <li>All color combinations meet WCAG AA contrast requirements</li>
+                <li>Focus states are clearly visible</li>
+                <li>Touch targets are minimum 44x44px</li>
+                <li>Semantic HTML is used throughout</li>
+            </ul>
+
+            <h3>3. Purple Identity</h3>
+            <p>The purple color palette differentiates this system while maintaining Material Design's clarity:</p>
+            <ul style="margin: 15px 0; padding-left: 20px;">
+                <li>Primary purple (#7b1fa2) for key actions and branding</li>
+                <li>Lighter purples for backgrounds and subtle accents</li>
+                <li>Semantic colors for feedback (success, warning, error)</li>
+                <li>Neutral grays for text and supporting elements</li>
+            </ul>
+
+            <h3>4. Responsive & Flexible</h3>
+            <ul style="margin: 15px 0; padding-left: 20px;">
+                <li>Mobile-first approach</li>
+                <li>Flexible grid system</li>
+                <li>Scalable typography</li>
+                <li>Adaptive components</li>
+            </ul>
+        </section>
+
+        <!-- Implementation Guide -->
+        <section>
+            <h2>Implementation Guide</h2>
+
+            <h3>Getting Started</h3>
+            <p>To use this design system in your project:</p>
+
+            <ol style="margin: 15px 0; padding-left: 20px;">
+                <li>Include the Roboto font from Google Fonts:
+                    <pre><code>&lt;link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet"&gt;</code></pre>
+                </li>
+                <li>Copy the CSS from this document into your stylesheet</li>
+                <li>Use the provided HTML structure and classes</li>
+                <li>Customize colors using CSS variables if needed</li>
+            </ol>
+
+            <h3>Best Practices</h3>
+            <ul style="margin: 15px 0; padding-left: 20px;">
+                <li>Use the elevation system to show hierarchy</li>
+                <li>Maintain consistent spacing using the spacing scale</li>
+                <li>Follow the typography scale for text sizing</li>
+                <li>Test color contrast for accessibility</li>
+                <li>Use semantic HTML elements</li>
+                <li>Ensure keyboard navigation works properly</li>
+            </ul>
+
+            <h3>Customization</h3>
+            <p>To customize colors, update these key values:</p>
+            <pre><code>/* Primary Colors */
+--primary: #7b1fa2;
+--primary-dark: #6a1b9a;
+--primary-light: #8e24aa;
+
+/* Secondary Colors */
+--secondary: #9c27b0;
+--secondary-light: #ab47bc;</code></pre>
+        </section>
+    </div>
+
+    <footer style="background: #6a1b9a; color: white; padding: 40px 20px; text-align: center; margin-top: 60px;">
+        <p style="margin-bottom: 10px; font-size: 1.1rem;">Purple Design System</p>
+        <p style="opacity: 0.8;">Based on Material Design principles with a purple color palette</p>
+    </footer>
+</body>
+</html>

@@ -33,8 +33,8 @@ class WebSocketService {
   connect(): void {
     try {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      // Connect to the backend server port (3000), not the client port
-      const wsUrl = `${protocol}//${window.location.hostname}:3000`
+      // Connect to the backend server port (3005), not the client port
+      const wsUrl = `${protocol}//${window.location.hostname}:3005`
 
       console.log('Connecting to WebSocket:', wsUrl)
       this.ws = new WebSocket(wsUrl)

@@ -151,6 +151,20 @@ const api: AxiosInstance = axios.create({
   timeout: 30000
 })
 
+// Add request interceptor to inject authentication token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
+
 // Add response interceptor for consistent error handling
 api.interceptors.response.use(
   (response) => response,

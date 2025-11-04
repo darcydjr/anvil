@@ -1,0 +1,89 @@
+{
+  "workspaces": [
+    {
+      "id": "ws-default",
+      "name": "Default Workspace",
+      "description": "Default workspace for getting started with Quade",
+      "isActive": true,
+      "projectPaths": [
+        {
+          "path": "specifications",
+          "icon": "FileText"
+        },
+        {
+          "path": "examples/hello-world/specifications",
+          "icon": "Box"
+        }
+      ],
+      "createdDate": "2025-09-17T22:30:00.000Z"
+    },
+    {
+      "id": "ws-weather-example",
+      "name": "Simple Weather Example",
+      "description": "Weather application demonstrating verb-to-noun capability architecture",
+      "isActive": false,
+      "projectPaths": [
+        {
+          "path": "./examples/weather-example-1/specifications",
+          "icon": "Cloud"
+        }
+      ],
+      "createdDate": "2025-11-02T17:00:00.000Z"
+    },
+    {
+      "id": "ws-weather-example-2",
+      "name": "Advanced Weather Architecture",
+      "description": "Complex weather system with engineering standards, drivers, services, and applications",
+      "isActive": false,
+      "projectPaths": [
+        {
+          "path": "./examples/weather-example-2/specifications",
+          "icon": "CloudRain"
+        },
+        {
+          "path": "./examples/weather-example-2/standards/specifications",
+          "icon": "Shield"
+        },
+        {
+          "path": "./examples/weather-example-2/drivers/weather-sensor-driver/specifications",
+          "icon": "Cpu"
+        },
+        {
+          "path": "./examples/weather-example-2/services/weather-service/specifications",
+          "icon": "Server"
+        },
+        {
+          "path": "./examples/weather-example-2/services/mqtt-broker/specifications",
+          "icon": "Network"
+        },
+        {
+          "path": "./examples/weather-example-2/services/sqlite-database/specifications",
+          "icon": "Database"
+        },
+        {
+          "path": "./examples/weather-example-2/apps/weather-app/specifications",
+          "icon": "Smartphone"
+        }
+      ],
+      "createdDate": "2025-11-02T18:00:00.000Z"
+    }
+  ],
+  "activeWorkspaceId": "ws-default",
+  "templates": "./templates",
+  "server": {
+    "port": 3005
+  },
+  "logging": {
+    "level": "DEBUG"
+  },
+  "ui": {
+    "title": "Quade",
+    "description": "AI Powered Product Development"
+  },
+  "defaults": {
+    "owner": "Product Team",
+    "analysisReview": "Required",
+    "designReview": "Required",
+    "codeReview": "Not Required"
+  }
+}

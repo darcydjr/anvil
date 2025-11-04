@@ -47,3 +47,4 @@ examples/hello-world/*
 # Weather Example 1 - ignore all except specifications
 examples/weather-example-1/*
 !examples/weather-example-1/specifications/
+data/

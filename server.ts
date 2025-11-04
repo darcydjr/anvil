@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+// Load environment variables from .env file
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, { Request, Response } from 'express';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -28,6 +32,10 @@ import type {
   Config, ConfigPaths, DocumentItem, DocumentMetadata, Enabler, EnablerData,
   Capability, FileLocation, VersionInfo, Dependency
 } from './types/server-types';
+import rateLimit from 'express-rate-limit';
+import { initializeDatabase, getUserByUsername, updateLastLogin } from './utils/database';
+import { generateToken, validateToken, extractToken } from './utils/auth';
+import { verifyPassword } from './utils/password';
 
 // File watcher variable for graceful shutdown
 let fileWatcher: FSWatcher | null = null;
@@ -1244,7 +1252,121 @@ function extractComponent(content) {
 }
 
 // API Routes
-// Unified enabler template endpoint 
+// ============================================
+// AUTHENTICATION ENDPOINTS
+// ============================================
+
+// Rate limiter for login attempts
+const loginLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5, // 5 attempts per minute
+  message: 'Too many login attempts, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Login endpoint
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username and password required'
+      });
+    }
+
+    console.log('[AUTH] Login attempt for user:', username);
+
+    const user = getUserByUsername(username);
+
+    if (!user) {
+      console.log('[AUTH] User not found:', username);
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
+
+    const isValid = await verifyPassword(password, user.password_hash);
+
+    if (!isValid) {
+      console.log('[AUTH] Invalid password for user:', username);
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
+
+    // Update last login timestamp
+    updateLastLogin(user.id);
+
+    // Generate JWT token
+    const token = generateToken(user.id, user.username);
+
+    console.log('[AUTH] Login successful for user:', username);
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        username: user.username
+      }
+    });
+  } catch (error) {
+    console.error('[AUTH] Login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// Logout endpoint
+app.post('/api/auth/logout', (req, res) => {
+  // Client-side will remove token from localStorage
+  res.json({
+    success: true,
+    message: 'Logged out successfully'
+  });
+});
+
+// Verify token endpoint
+app.get('/api/auth/verify', (req, res) => {
+  const token = extractToken(req);
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: 'No token provided'
+    });
+  }
+
+  const payload = validateToken(token);
+
+  if (!payload) {
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid or expired token'
+    });
+  }
+
+  res.json({
+    success: true,
+    user: {
+      id: payload.userId,
+      username: payload.username
+    }
+  });
+});
+
+// ============================================
+// END AUTHENTICATION ENDPOINTS
+// ============================================
+
+// Unified enabler template endpoint
 app.get('/api/enabler-template/:capabilityId?', async (req, res) => {
   try {
     const { capabilityId } = req.params;
@@ -4877,6 +4999,11 @@ function gracefulShutdown() {
 
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
+
+// Initialize authentication database
+console.log('[AUTH] Initializing authentication database...');
+initializeDatabase();
+console.log('[AUTH] Authentication database initialized');
 
 server.listen(PORT, () => {
   logger.info(`Anvil server running`, {
