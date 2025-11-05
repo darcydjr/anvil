@@ -493,7 +493,8 @@ export default function DocumentEditor(): JSX.Element {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-6">
+      {/* REVERT MARKER: Changed from max-w-7xl to max-w-screen-2xl for 20% wider EnablerForm - v3.4.17 */}
+      <div className="max-w-screen-2xl mx-auto p-6">
         {editMode === 'form' ? (
           <div className="bg-card rounded-lg shadow-sm border border-border p-6">
             {type === 'capability' && (

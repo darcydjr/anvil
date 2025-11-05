@@ -26,6 +26,7 @@
 |------------|
 | ENB-XXXXXX |
 | ENB-898783 | Left Panel Display |
+| ENB-267480 | Right Panel Display |
 
 ## Dependencies
 

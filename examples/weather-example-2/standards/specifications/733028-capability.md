@@ -24,6 +24,7 @@ Provides Engineering Standards for this drirver
 | ENB-172819 |
 | ENB-930272 |
 | ENB-712847 |
+| ENB-763848 | Architecture Standards |
 
 ## Dependencies
 

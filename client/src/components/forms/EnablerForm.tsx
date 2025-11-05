@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Plus, Trash2, RefreshCcw, GripVertical, Maximize2, Minimize2, Edit3 } from 'lucide-react'
+import { Plus, Trash2, RefreshCcw, GripVertical, Maximize2, Minimize2, Edit3, ChevronUp, ChevronDown } from 'lucide-react'
 import { apiService } from '../../services/apiService'
 import { generateFunctionalRequirementId, generateNonFunctionalRequirementId } from '../../utils/idGenerator'
 import { stateListenerManager } from '../../utils/stateListeners'
@@ -751,6 +751,72 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
     })
   }, [])
 
+  // Move requirement to top or bottom
+  const moveRequirement = useCallback((type: 'functional' | 'nonFunctional', index: number, direction: 'top' | 'bottom') => {
+    const field = type === 'functional' ? 'functionalRequirements' : 'nonFunctionalRequirements'
+    const requirements = [...(data[field] || [])]
+
+    if (requirements.length <= 1) return
+
+    // Remove the item from current position
+    const [item] = requirements.splice(index, 1)
+
+    // Insert at new position
+    if (direction === 'top') {
+      requirements.unshift(item)
+    } else {
+      requirements.push(item)
+    }
+
+    onChange({ [field]: requirements })
+
+    // Update selections to maintain consistency
+    if (type === 'functional') {
+      const newSelected = new Set<number>()
+      selectedFunctionalRequirements.forEach(selectedIndex => {
+        if (selectedIndex === index) {
+          // The moved item goes to new position
+          newSelected.add(direction === 'top' ? 0 : requirements.length - 1)
+        } else if (direction === 'top') {
+          // Items shift down when something moves to top
+          if (selectedIndex < index) {
+            newSelected.add(selectedIndex + 1)
+          } else {
+            newSelected.add(selectedIndex)
+          }
+        } else {
+          // Items shift up when something moves to bottom
+          if (selectedIndex > index) {
+            newSelected.add(selectedIndex - 1)
+          } else {
+            newSelected.add(selectedIndex)
+          }
+        }
+      })
+      setSelectedFunctionalRequirements(newSelected)
+    } else {
+      const newSelected = new Set<number>()
+      selectedNonFunctionalRequirements.forEach(selectedIndex => {
+        if (selectedIndex === index) {
+          newSelected.add(direction === 'top' ? 0 : requirements.length - 1)
+        } else if (direction === 'top') {
+          if (selectedIndex < index) {
+            newSelected.add(selectedIndex + 1)
+          } else {
+            newSelected.add(selectedIndex)
+          }
+        } else {
+          if (selectedIndex > index) {
+            newSelected.add(selectedIndex - 1)
+          } else {
+            newSelected.add(selectedIndex)
+          }
+        }
+      })
+      setSelectedNonFunctionalRequirements(newSelected)
+    }
+  }, [data, onChange, selectedFunctionalRequirements, selectedNonFunctionalRequirements])
+
 
   return (
     <div className="space-y-6">
@@ -971,8 +1037,30 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
                       className="rounded"
                     />
                   </td>
-                  <td className="p-2 cursor-move">
-                    <GripVertical className="w-4 h-4 text-muted-foreground" />
+                  <td className="p-2">
+                    <div className="flex items-center gap-1">
+                      <GripVertical className="w-4 h-4 text-muted-foreground cursor-move" />
+                      <div className="flex flex-col">
+                        <button
+                          type="button"
+                          onClick={() => moveRequirement('functional', index, 'top')}
+                          className="p-0.5 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
+                          title="Move to top"
+                          disabled={index === 0}
+                        >
+                          <ChevronUp className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveRequirement('functional', index, 'bottom')}
+                          className="p-0.5 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
+                          title="Move to bottom"
+                          disabled={index === (data.functionalRequirements || []).length - 1}
+                        >
+                          <ChevronDown className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
                   </td>
                   <td className="p-2">
                     <input
@@ -995,12 +1083,32 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
                   <td className="p-2">
                     <textarea
                       className={`w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-y ${
-                        expandedRequirements.has(`functional_${index}`) ? 'min-h-32' : ''
+                        expandedRequirements.has(`functional_${index}`) ? 'min-h-32' : 'min-h-[60px]'
                       }`}
                       value={req.requirement || ''}
                       onChange={(e) => handleArrayChange('functionalRequirements', index, 'requirement', e.target.value)}
-                      placeholder="Describe the functional requirement"
-                      rows={expandedRequirements.has(`functional_${index}`) ? 8 : 2}
+                      onPaste={(e) => {
+                        // Get the pasted text from clipboard
+                        const pastedText = e.clipboardData?.getData('text/plain') || ''
+                        // Auto-expand if pasted content has multiple lines
+                        if (pastedText.includes('\n') && !expandedRequirements.has(`functional_${index}`)) {
+                          // Small delay to ensure paste completes
+                          setTimeout(() => {
+                            toggleRequirementExpansion('functional', index)
+                          }, 100)
+                        }
+                      }}
+                      placeholder="Describe the functional requirement (supports multiple lines)"
+                      rows={expandedRequirements.has(`functional_${index}`) ? 8 : 3}
+                      style={{
+                        minHeight: expandedRequirements.has(`functional_${index}`) ? '128px' : '60px'
+                      }}
+                      onInput={(e) => {
+                        // Auto-resize textarea to fit content
+                        const target = e.target as HTMLTextAreaElement
+                        target.style.height = 'auto'
+                        target.style.height = `${Math.max(target.scrollHeight, expandedRequirements.has(`functional_${index}`) ? 128 : 60)}px`
+                      }}
                     />
                   </td>
                   <td className="p-2">
@@ -1158,8 +1266,30 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
                       className="rounded"
                     />
                   </td>
-                  <td className="p-2 cursor-move">
-                    <GripVertical className="w-4 h-4 text-muted-foreground" />
+                  <td className="p-2">
+                    <div className="flex items-center gap-1">
+                      <GripVertical className="w-4 h-4 text-muted-foreground cursor-move" />
+                      <div className="flex flex-col">
+                        <button
+                          type="button"
+                          onClick={() => moveRequirement('nonFunctional', index, 'top')}
+                          className="p-0.5 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
+                          title="Move to top"
+                          disabled={index === 0}
+                        >
+                          <ChevronUp className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveRequirement('nonFunctional', index, 'bottom')}
+                          className="p-0.5 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
+                          title="Move to bottom"
+                          disabled={index === (data.nonFunctionalRequirements || []).length - 1}
+                        >
+                          <ChevronDown className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
                   </td>
                   <td className="p-2">
                     <input
@@ -1194,12 +1324,32 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
                   <td className="p-2">
                     <textarea
                       className={`w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-y ${
-                        expandedRequirements.has(`nonFunctional_${index}`) ? 'min-h-32' : ''
+                        expandedRequirements.has(`nonFunctional_${index}`) ? 'min-h-32' : 'min-h-[60px]'
                       }`}
                       value={req.requirement || ''}
                       onChange={(e) => handleArrayChange('nonFunctionalRequirements', index, 'requirement', e.target.value)}
-                      placeholder="Describe the non-functional requirement"
-                      rows={expandedRequirements.has(`nonFunctional_${index}`) ? 8 : 2}
+                      onPaste={(e) => {
+                        // Get the pasted text from clipboard
+                        const pastedText = e.clipboardData?.getData('text/plain') || ''
+                        // Auto-expand if pasted content has multiple lines
+                        if (pastedText.includes('\n') && !expandedRequirements.has(`nonFunctional_${index}`)) {
+                          // Small delay to ensure paste completes
+                          setTimeout(() => {
+                            toggleRequirementExpansion('nonFunctional', index)
+                          }, 100)
+                        }
+                      }}
+                      placeholder="Describe the non-functional requirement (supports multiple lines)"
+                      rows={expandedRequirements.has(`nonFunctional_${index}`) ? 8 : 3}
+                      style={{
+                        minHeight: expandedRequirements.has(`nonFunctional_${index}`) ? '128px' : '60px'
+                      }}
+                      onInput={(e) => {
+                        // Auto-resize textarea to fit content
+                        const target = e.target as HTMLTextAreaElement
+                        target.style.height = 'auto'
+                        target.style.height = `${Math.max(target.scrollHeight, expandedRequirements.has(`nonFunctional_${index}`) ? 128 : 60)}px`
+                      }}
                     />
                   </td>
                   <td className="p-2">

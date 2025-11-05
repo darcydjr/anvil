@@ -694,17 +694,6 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-foreground">Owner</label>
-            <input
-              type="text"
-              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-              value={data.owner || ''}
-              onChange={(e) => handleBasicChange('owner', e.target.value)}
-              placeholder="Product Team"
-            />
-          </div>
-
-          <div className="space-y-2">
             <label className="block text-sm font-medium text-foreground">Status</label>
             <select
               className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
@@ -720,6 +709,17 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">Owner</label>
+            <input
+              type="text"
+              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+              value={data.owner || ''}
+              onChange={(e) => handleBasicChange('owner', e.target.value)}
+              placeholder="Product Team"
+            />
           </div>
 
           <div className="space-y-2">

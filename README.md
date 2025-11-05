@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-3.4.13-green.svg)]()
+[![Version](https://img.shields.io/badge/version-3.4.18-green.svg)]()
 
 ## Overview
 
@@ -389,6 +389,11 @@ Anvil supports **workspace-based configuration** for managing multiple document 
 
 ### 📋 **Recent Major Features Summary**
 
+- **v3.4.18**: Swapped Owner and Status field positions in CapabilityForm Basic Information section
+- **v3.4.17**: Increased EnablerForm editor width by 20% for better workspace (marked for easy revert)
+- **v3.4.16**: Added move to top/bottom arrows in requirements tables for quick reordering
+- **v3.4.15**: Fixed multiline text support in requirements with proper markdown encoding/decoding
+- **v3.4.14**: Enhanced requirement fields to support multiline text input with auto-expansion
 - **v3.4.12**: Removed unused Imported Components functionality from Settings
 - **v3.4.11**: Improved DocumentEditor header positioning within layout boundaries
 - **v3.4.7**: Added pan functionality to System Architecture diagram

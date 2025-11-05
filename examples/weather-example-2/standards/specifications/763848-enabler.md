@@ -1,33 +1,33 @@
-# Controller
+# Architecture Standards
 
 ## Metadata
 
-- **Name**: Controller
+- **Name**: Architecture Standards
 - **Type**: Enabler
-- **ID**: ENB-601511
+- **ID**: ENB-763848
 - **Approval**: Approved
-- **Capability ID**: CAP-955448
+- **Capability ID**: CAP-733028
 - **Owner**: Product Team
-- **Status**: Ready for Design
+- **Status**: In Draft
 - **Priority**: High
 - **Analysis Review**: Required
 - **Code Review**: Required
 
 ## Technical Overview
 ### Purpose
-Provides a controller orchestrator
+Provides Architectural Standards
 
 ## Functional Requirements
 
 | ID | Name | Requirement | Priority | Status | Approval |
 |----|------|-------------|----------|--------|----------|
-| FR-930133 | Collect Weather Sensor Readings | Utilize the Weather Sensor Driver Port and receive Weather Sensor Readings | Must Have | Ready for Design | Approved |
+| FR-144511 | Hexagonal Port and Adaptor Architecture | The Hexagonal Architecture will be used for all microservices | Must Have | Ready for Design | Approved |
 
 ## Non-Functional Requirements
 
 | ID | Name | Type | Requirement | Priority | Status | Approval |
 |----|------|------|-------------|----------|--------|----------|
-| | | | | | | |
+| NFR-XXXXXX | [Name] | [Type] | [Requirement Description] | [Priority] | [Status] | [Approval] |
 
 ## Dependencies
 
@@ -54,7 +54,7 @@ Provides a controller orchestrator
 ### Enabler Dependency Flow Diagram
 ```mermaid
 flowchart TD
-    ENB_XXXXXX["ENB-601511<br/>[Enabler Name]<br/>📡"]
+    ENB_XXXXXX["ENB-763848<br/>[Enabler Name]<br/>📡"]
 
     %% Add your dependency flows here
 

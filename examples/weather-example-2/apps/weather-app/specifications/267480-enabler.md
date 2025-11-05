@@ -1,33 +1,33 @@
-# Controller
+# Right Panel Display
 
 ## Metadata
 
-- **Name**: Controller
+- **Name**: Right Panel Display
 - **Type**: Enabler
-- **ID**: ENB-601511
+- **ID**: ENB-267480
 - **Approval**: Approved
-- **Capability ID**: CAP-955448
+- **Capability ID**: CAP-145524
 - **Owner**: Product Team
-- **Status**: Ready for Design
+- **Status**: In Draft
 - **Priority**: High
 - **Analysis Review**: Required
 - **Code Review**: Required
 
 ## Technical Overview
 ### Purpose
-Provides a controller orchestrator
+Provide a simple right Panel Display
 
 ## Functional Requirements
 
 | ID | Name | Requirement | Priority | Status | Approval |
 |----|------|-------------|----------|--------|----------|
-| FR-930133 | Collect Weather Sensor Readings | Utilize the Weather Sensor Driver Port and receive Weather Sensor Readings | Must Have | Ready for Design | Approved |
+| FR-XXXXXX | [Name] | [Requirement Description] | [Priority] | [Status] | [Approval] |
 
 ## Non-Functional Requirements
 
 | ID | Name | Type | Requirement | Priority | Status | Approval |
 |----|------|------|-------------|----------|--------|----------|
-| | | | | | | |
+| NFR-XXXXXX | [Name] | [Type] | [Requirement Description] | [Priority] | [Status] | [Approval] |
 
 ## Dependencies
 
@@ -54,7 +54,7 @@ Provides a controller orchestrator
 ### Enabler Dependency Flow Diagram
 ```mermaid
 flowchart TD
-    ENB_XXXXXX["ENB-601511<br/>[Enabler Name]<br/>📡"]
+    ENB_XXXXXX["ENB-267480<br/>[Enabler Name]<br/>📡"]
 
     %% Add your dependency flows here
 
