@@ -3,15 +3,15 @@
     {
       "id": "ws-default",
       "name": "Default Workspace",
-      "description": "Default workspace for getting started with Anvil",
+      "description": "Default workspace for getting started with Ford Anvil",
       "isActive": true,
       "projectPaths": [
         {
-          "path": ".",
+          "path": "specifications",
           "icon": "FileText"
         },
         {
-          "path": "./examples/hello-world/specifications",
+          "path": "examples/hello-world/specifications",
           "icon": "Box"
         }
       ],
@@ -71,13 +71,13 @@
   "activeWorkspaceId": "ws-default",
   "templates": "./templates",
   "server": {
-    "port": 3000
+    "port": 3005
   },
   "logging": {
     "level": "DEBUG"
   },
   "ui": {
-    "title": "Anvil",
+    "title": "Ford Anvil",
     "description": "AI Powered Product Development"
   },
   "defaults": {
