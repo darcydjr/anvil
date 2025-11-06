@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings, HelpCircle, Lightbulb, Clipboard, Search, X } from 'lucide-react'
+import { Settings, HelpCircle, Lightbulb, Clipboard, Search, X, MessageSquare } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { version } from '../../../package.json'
 import WorkspaceSelector from './WorkspaceSelector'
@@ -118,6 +118,15 @@ export default function Header(): JSX.Element {
                 className="text-primary hover:bg-primary/10 hover:text-primary/80 transition-colors"
               >
                 <Lightbulb size={20} />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={(): void => navigate('/chat')}
+                title="AI Chat Assistant"
+                className="text-primary hover:bg-primary/10 hover:text-primary/80 transition-colors"
+              >
+                <MessageSquare size={20} />
               </Button>
               <Button
                 variant="outline"

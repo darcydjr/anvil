@@ -267,6 +267,30 @@ export const apiService = {
     }
   },
 
+  async uploadFiles(files: File[], targetPath: string = 'specifications'): Promise<ApiResponse> {
+    try {
+      if (!files || files.length === 0) {
+        throw new Error('At least one file is required')
+      }
+
+      const formData = new FormData()
+      files.forEach(file => {
+        formData.append('files', file)
+      })
+      formData.append('targetPath', targetPath)
+
+      const response = await api.post<ApiResponse>('/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      return response.data
+    } catch (error) {
+      console.error('Failed to upload files:', error)
+      throw new Error(`Failed to upload files: ${(error as Error).message}`)
+    }
+  },
+
   async getCapabilityLinks(): Promise<CapabilityLink[]> {
     try {
       const response = await api.get<CapabilityLink[]>('/links/capabilities')

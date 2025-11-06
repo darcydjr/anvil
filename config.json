@@ -85,5 +85,10 @@
     "analysisReview": "Required",
     "designReview": "Required",
     "codeReview": "Not Required"
+  },
+  "aiAssistant": {
+    "provider": "claude-code",
+    "claudeCodePath": "claude-code",
+    "copilotPath": "gh copilot"
   }
 }

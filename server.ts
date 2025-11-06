@@ -28,6 +28,7 @@ import * as chokidar from 'chokidar';
 import { FSWatcher } from 'chokidar';
 import * as http from 'http';
 import { exec } from 'child_process';
+import multer from 'multer';
 import type {
   Config, ConfigPaths, DocumentItem, DocumentMetadata, Enabler, EnablerData,
   Capability, FileLocation, VersionInfo, Dependency
@@ -251,6 +252,11 @@ try {
     activeWorkspace: config.activeWorkspaceId,
     logLevel: config.logging?.level || 'INFO'
   });
+
+  // Initialize chat service with AI assistant config
+  if (config.aiAssistant) {
+    chatService.setConfig(config.aiAssistant);
+  }
 } catch (error) {
   console.error('Error loading configuration, using defaults:', error.message);
   // Default workspace configuration
@@ -305,6 +311,11 @@ async function reloadConfig(): Promise<void> {
     config = mergedConfig;
     console.log('[CONFIG] Config reloaded successfully, activeWorkspaceId:', config.activeWorkspaceId);
 
+    // Re-initialize chat service with updated AI assistant config
+    if (config.aiAssistant) {
+      chatService.setConfig(config.aiAssistant);
+    }
+
   } catch (error) {
     console.error('[CONFIG] Error reloading configuration:', error.message);
     throw error;
@@ -316,6 +327,33 @@ const PORT = process.env.PORT || config.server.port;
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
+
+// Configure multer for file uploads (store in memory temporarily)
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept markdown, text, pdf, and word documents
+    const allowedMimes = [
+      'text/markdown',
+      'text/plain',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    const allowedExts = ['.md', '.txt', '.pdf', '.doc', '.docx'];
+    const ext = path.extname(file.originalname).toLowerCase();
+
+    if (allowedMimes.includes(file.mimetype) || allowedExts.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only markdown, text, PDF, and Word documents are allowed.'));
+    }
+  }
+});
 
 // Set up marked with options
 marked.setOptions({
@@ -2220,6 +2258,72 @@ app.put('/api/file/rename/*', async (req, res) => {
   }
 });
 
+// Upload files endpoint
+app.post('/api/upload', upload.array('files', 10), async (req, res) => {
+  try {
+    const files = req.files as Express.Multer.File[];
+    const targetPath = req.body.targetPath || 'specifications';
+
+    console.log('[UPLOAD] Received files:', files?.length || 0);
+    console.log('[UPLOAD] Target path:', targetPath);
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: 'No files provided' });
+    }
+
+    const configPaths = getConfigPaths(config);
+    const firstProjectPath = path.resolve(configPaths.projectPaths[0]);
+    const uploadResults = [];
+
+    for (const file of files) {
+      try {
+        // Sanitize filename
+        const sanitizedName = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, '_');
+        const cleanTargetPath = targetPath.replace(/^(specifications\/|examples\/)/, '');
+        const relativePath = path.join(cleanTargetPath, sanitizedName);
+
+        // Validate path
+        const fullPath = validateAndResolvePath(relativePath, firstProjectPath, 'upload path');
+
+        // Ensure directory exists
+        await fs.ensureDir(path.dirname(fullPath));
+
+        // Write file
+        await fs.writeFile(fullPath, file.buffer);
+
+        console.log('[UPLOAD] File saved:', fullPath);
+
+        uploadResults.push({
+          originalName: file.originalname,
+          savedName: sanitizedName,
+          path: relativePath,
+          size: file.size,
+          success: true
+        });
+      } catch (fileError) {
+        console.error('[UPLOAD] Error processing file:', file.originalname, fileError);
+        uploadResults.push({
+          originalName: file.originalname,
+          error: fileError.message,
+          success: false
+        });
+      }
+    }
+
+    const successCount = uploadResults.filter(r => r.success).length;
+    const failCount = uploadResults.filter(r => !r.success).length;
+
+    res.json({
+      success: successCount > 0,
+      message: `Uploaded ${successCount} file(s)${failCount > 0 ? `, ${failCount} failed` : ''}`,
+      results: uploadResults
+    });
+  } catch (error) {
+    console.error('[UPLOAD] Error:', error);
+    res.status(500).json({ error: 'Error uploading files: ' + error.message });
+  }
+});
+
 // Copy document (capability or enabler)
 app.post('/api/copy/:type/*', async (req, res) => {
   try {
@@ -3785,6 +3889,97 @@ app.post('/api/config/defaults', async (req, res) => {
   } catch (error) {
     console.error('[CONFIG] Error updating config:', error);
     res.status(500).json({ error: 'Error updating config: ' + error.message });
+  }
+});
+
+// Chat API Endpoints
+
+// Send a message to the AI assistant
+app.post('/api/chat/message', async (req, res) => {
+  try {
+    const { sessionId, message } = req.body;
+
+    if (!sessionId || typeof sessionId !== 'string') {
+      return res.status(400).json({ error: 'Session ID is required' });
+    }
+
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    logger.info('[CHAT] Received message', {
+      sessionId,
+      messageLength: message.length
+    });
+
+    const response = await chatService.sendMessage(sessionId, message);
+
+    res.json({
+      success: true,
+      response,
+      sessionId
+    });
+  } catch (error: any) {
+    logger.error('[CHAT] Error sending message', { error: error.message });
+    res.status(500).json({
+      error: 'Error sending message to AI assistant: ' + error.message
+    });
+  }
+});
+
+// Get chat history for a session
+app.get('/api/chat/history/:sessionId', (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Session ID is required' });
+    }
+
+    const history = chatService.getSessionHistory(sessionId);
+
+    res.json({
+      success: true,
+      sessionId,
+      messages: history
+    });
+  } catch (error: any) {
+    logger.error('[CHAT] Error getting chat history', { error: error.message });
+    res.status(500).json({ error: 'Error getting chat history: ' + error.message });
+  }
+});
+
+// Clear a chat session
+app.delete('/api/chat/session/:sessionId', (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Session ID is required' });
+    }
+
+    chatService.clearSession(sessionId);
+
+    res.json({
+      success: true,
+      message: 'Chat session cleared'
+    });
+  } catch (error: any) {
+    logger.error('[CHAT] Error clearing session', { error: error.message });
+    res.status(500).json({ error: 'Error clearing session: ' + error.message });
+  }
+});
+
+// Get current AI assistant configuration
+app.get('/api/chat/config', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      config: config.aiAssistant || null
+    });
+  } catch (error: any) {
+    logger.error('[CHAT] Error getting chat config', { error: error.message });
+    res.status(500).json({ error: 'Error getting chat configuration: ' + error.message });
   }
 });
 
