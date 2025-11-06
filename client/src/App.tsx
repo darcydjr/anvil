@@ -26,6 +26,7 @@ import Settings from './components/Settings'
 import Discovery from './components/Discovery'
 import Plan from './components/Plan'
 import ManageWorkspaces from './components/ManageWorkspaces'
+import Chat from './components/Chat'
 
 function App(): JSX.Element {
   return (
@@ -37,6 +38,7 @@ function App(): JSX.Element {
               <Route path="/" element={<Dashboard />} />
               <Route path="/discovery" element={<Discovery />} />
               <Route path="/plan" element={<Plan />} />
+              <Route path="/chat" element={<Chat />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/manage-workspaces" element={<ManageWorkspaces />} />
               <Route path="/view/:type/*" element={<DocumentView />} />
