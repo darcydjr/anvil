@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-3.4.18-green.svg)]()
+[![Version](https://img.shields.io/badge/version-3.4.20-green.svg)]()
 
 ## Overview
 
@@ -389,6 +389,8 @@ Anvil supports **workspace-based configuration** for managing multiple document 
 
 ### 📋 **Recent Major Features Summary**
 
+- **v3.4.20**: Fixed EnablerForm dependency selector data structure causing JavaScript errors when adding dependencies
+- **v3.4.19**: Standardized EnablerForm dependency selectors to match CapabilityForm format
 - **v3.4.18**: Swapped Owner and Status field positions in CapabilityForm Basic Information section
 - **v3.4.17**: Increased EnablerForm editor width by 20% for better workspace (marked for easy revert)
 - **v3.4.16**: Added move to top/bottom arrows in requirements tables for quick reordering

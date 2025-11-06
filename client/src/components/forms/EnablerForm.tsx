@@ -34,179 +34,6 @@ interface CapabilityLinksResponse {
   capabilities: CapabilityLink[]
 }
 
-interface SearchableEnablerSelectProps {
-  value: string
-  onChange: (value: string) => void
-  enablers: EnablerLink[]
-  groupedEnablers: any
-  placeholder: string
-}
-
-// Searchable Enabler Select Component
-function SearchableEnablerSelect({ value, onChange, enablers, groupedEnablers, placeholder }: SearchableEnablerSelectProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [searchText, setSearchText] = useState('')
-  const [filteredGroups, setFilteredGroups] = useState(groupedEnablers)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-
-  // Filter groups based on search text
-  useEffect(() => {
-    if (!searchText.trim()) {
-      setFilteredGroups(groupedEnablers)
-      return
-    }
-
-    const lowerFilter = searchText.toLowerCase().trim()
-    const filtered = {}
-
-    Object.keys(groupedEnablers).forEach(system => {
-      Object.keys(groupedEnablers[system]).forEach(component => {
-        Object.keys(groupedEnablers[system][component]).forEach(capabilityKey => {
-          const enablers = groupedEnablers[system][component][capabilityKey]
-          const filteredEnablers = enablers.filter(enabler =>
-            enabler.id.toLowerCase().includes(lowerFilter) ||
-            enabler.name.toLowerCase().includes(lowerFilter) ||
-            (enabler.capabilityName && enabler.capabilityName.toLowerCase().includes(lowerFilter)) ||
-            (enabler.capabilitySystem && enabler.capabilitySystem.toLowerCase().includes(lowerFilter)) ||
-            (enabler.capabilityComponent && enabler.capabilityComponent.toLowerCase().includes(lowerFilter))
-          )
-
-          if (filteredEnablers.length > 0) {
-            if (!filtered[system]) {
-              filtered[system] = {}
-            }
-            if (!filtered[system][component]) {
-              filtered[system][component] = {}
-            }
-            filtered[system][component][capabilityKey] = filteredEnablers
-          }
-        })
-      })
-    })
-
-    setFilteredGroups(filtered)
-  }, [searchText, groupedEnablers])
-
-  // Handle escape key to close dropdown
-  useEffect(() => {
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === 'Escape' && isOpen) {
-        setIsOpen(false)
-        setSearchText('')
-      }
-    }
-
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [isOpen])
-
-  // Handle ESC key to close dropdown and clear search
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      setSearchText('')
-      setIsOpen(false)
-    }
-  }
-
-  // Get display text for selected value
-  const getDisplayText = () => {
-    if (!value) return placeholder
-
-    // Find the selected enabler
-    for (const system of Object.keys(groupedEnablers)) {
-      for (const component of Object.keys(groupedEnablers[system])) {
-        for (const capabilityKey of Object.keys(groupedEnablers[system][component])) {
-          const enabler = groupedEnablers[system][component][capabilityKey].find(e => e.id === value)
-          if (enabler) {
-            return `${enabler.id} - ${enabler.name}`
-          }
-        }
-      }
-    }
-    return value // Fallback if not found
-  }
-
-  const handleSelect = (enablerId: string) => {
-    onChange(enablerId)
-    setIsOpen(false)
-    setSearchText('')
-  }
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <button
-        type="button"
-        className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring text-left"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <span className={value ? '' : 'text-muted-foreground'}>
-          {getDisplayText()}
-        </span>
-      </button>
-
-      {isOpen && (
-        <div className="fixed inset-0 z-[9999]" onClick={() => setIsOpen(false)}>
-          <div
-            className="absolute bg-background border border-border rounded-md shadow-xl max-h-72 overflow-hidden"
-            style={{
-              top: dropdownRef.current?.getBoundingClientRect().bottom || 0,
-              left: dropdownRef.current?.getBoundingClientRect().left || 0,
-              width: dropdownRef.current?.getBoundingClientRect().width || 'auto',
-              minWidth: '300px'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-2 border-b border-border">
-              <input
-                type="text"
-                className="w-full px-2 py-1 bg-background border border-border rounded text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                placeholder="Type to filter enablers... (ESC to clear)"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                autoFocus
-              />
-            </div>
-            <div className="max-h-56 overflow-y-auto">
-              <div
-                className="px-3 py-2 text-sm cursor-pointer hover:bg-accent"
-                onClick={() => handleSelect('')}
-              >
-                <span className="text-muted-foreground">Select enabler</span>
-              </div>
-              {Object.keys(filteredGroups).sort().map((system) =>
-                Object.keys(filteredGroups[system]).sort().map((component) =>
-                  Object.keys(filteredGroups[system][component]).sort().map((capabilityKey) => (
-                    <div key={`${system}-${component}-${capabilityKey}`}>
-                      <div className="px-3 py-1 text-xs font-medium text-muted-foreground bg-accent/50">
-                        {system} → {component} → {capabilityKey}
-                      </div>
-                      {filteredGroups[system][component][capabilityKey].map((enabler) => (
-                        <div
-                          key={enabler.id}
-                          className="px-3 py-2 text-sm cursor-pointer hover:bg-accent"
-                          onClick={() => handleSelect(enabler.id)}
-                        >
-                          {enabler.id} - {enabler.name}
-                        </div>
-                      ))}
-                    </div>
-                  ))
-                )
-              )}
-              {Object.keys(filteredGroups).length === 0 && (
-                <div className="px-3 py-2 text-sm text-muted-foreground">
-                  No enablers found matching "{searchText}"
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
 
 // Bulk Edit Panel Component
 interface BulkEditPanelProps {
@@ -657,28 +484,23 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
     return groups
   }, [availableCapabilities])
 
-  // Group enablers by system, component, and capability
+  // Group enablers by system and component (flattened for use in selects)
   const groupedEnablers = useMemo(() => {
     const groups = {}
 
     availableEnablers.forEach(enabler => {
       const system = enabler.capabilitySystem || 'Unknown System'
       const component = enabler.capabilityComponent || 'Unknown Component'
-      const capabilityKey = enabler.capabilityName || 'Unknown Capability'
 
       if (!groups[system]) {
         groups[system] = {}
       }
 
       if (!groups[system][component]) {
-        groups[system][component] = {}
+        groups[system][component] = []
       }
 
-      if (!groups[system][component][capabilityKey]) {
-        groups[system][component][capabilityKey] = []
-      }
-
-      groups[system][component][capabilityKey].push(enabler)
+      groups[system][component].push(enabler)
     })
 
     return groups
@@ -1474,13 +1296,24 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
                 {(data.internalUpstream || []).map((dep, index) => (
                   <tr key={index} className="border-b border-border hover:bg-accent">
                     <td className="p-2">
-                      <SearchableEnablerSelect
+                      <select
+                        className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                         value={dep.id || ''}
-                        onChange={(value) => handleArrayChange('internalUpstream', index, 'id', value)}
-                        enablers={availableEnablers}
-                        groupedEnablers={groupedEnablers}
-                        placeholder="Select enabler"
-                      />
+                        onChange={(e) => handleArrayChange('internalUpstream', index, 'id', e.target.value)}
+                      >
+                        <option value="">Select enabler</option>
+                        {Object.keys(groupedEnablers).sort().map((system) =>
+                          Object.keys(groupedEnablers[system]).sort().map((component) => (
+                            <optgroup key={`${system}-${component}`} label={`${system} → ${component}`}>
+                              {groupedEnablers[system][component].map((enabler) => (
+                                <option key={enabler.id} value={enabler.id}>
+                                  {enabler.id} - {enabler.name}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ))
+                        )}
+                      </select>
                     </td>
                     <td className="p-2">
                       <textarea
@@ -1532,13 +1365,24 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
                 {(data.internalDownstream || []).map((impact, index) => (
                   <tr key={index} className="border-b border-border hover:bg-accent">
                     <td className="p-2">
-                      <SearchableEnablerSelect
+                      <select
+                        className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                         value={impact.id || ''}
-                        onChange={(value) => handleArrayChange('internalDownstream', index, 'id', value)}
-                        enablers={availableEnablers}
-                        groupedEnablers={groupedEnablers}
-                        placeholder="Select enabler"
-                      />
+                        onChange={(e) => handleArrayChange('internalDownstream', index, 'id', e.target.value)}
+                      >
+                        <option value="">Select enabler</option>
+                        {Object.keys(groupedEnablers).sort().map((system) =>
+                          Object.keys(groupedEnablers[system]).sort().map((component) => (
+                            <optgroup key={`${system}-${component}`} label={`${system} → ${component}`}>
+                              {groupedEnablers[system][component].map((enabler) => (
+                                <option key={enabler.id} value={enabler.id}>
+                                  {enabler.id} - {enabler.name}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ))
+                        )}
+                      </select>
                     </td>
                     <td className="p-2">
                       <textarea
