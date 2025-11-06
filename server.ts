@@ -28,6 +28,7 @@ import type {
   Config, ConfigPaths, DocumentItem, DocumentMetadata, Enabler, EnablerData,
   Capability, FileLocation, VersionInfo, Dependency
 } from './types/server-types';
+import { chatService } from './services/chatService';
 
 // File watcher variable for graceful shutdown
 let fileWatcher: FSWatcher | null = null;
@@ -243,6 +244,11 @@ try {
     activeWorkspace: config.activeWorkspaceId,
     logLevel: config.logging?.level || 'INFO'
   });
+
+  // Initialize chat service with AI assistant config
+  if (config.aiAssistant) {
+    chatService.setConfig(config.aiAssistant);
+  }
 } catch (error) {
   console.error('Error loading configuration, using defaults:', error.message);
   // Default workspace configuration
@@ -296,6 +302,11 @@ async function reloadConfig(): Promise<void> {
     // Update global config
     config = mergedConfig;
     console.log('[CONFIG] Config reloaded successfully, activeWorkspaceId:', config.activeWorkspaceId);
+
+    // Re-initialize chat service with updated AI assistant config
+    if (config.aiAssistant) {
+      chatService.setConfig(config.aiAssistant);
+    }
 
   } catch (error) {
     console.error('[CONFIG] Error reloading configuration:', error.message);
@@ -3663,6 +3674,97 @@ app.post('/api/config/defaults', async (req, res) => {
   } catch (error) {
     console.error('[CONFIG] Error updating config:', error);
     res.status(500).json({ error: 'Error updating config: ' + error.message });
+  }
+});
+
+// Chat API Endpoints
+
+// Send a message to the AI assistant
+app.post('/api/chat/message', async (req, res) => {
+  try {
+    const { sessionId, message } = req.body;
+
+    if (!sessionId || typeof sessionId !== 'string') {
+      return res.status(400).json({ error: 'Session ID is required' });
+    }
+
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    logger.info('[CHAT] Received message', {
+      sessionId,
+      messageLength: message.length
+    });
+
+    const response = await chatService.sendMessage(sessionId, message);
+
+    res.json({
+      success: true,
+      response,
+      sessionId
+    });
+  } catch (error: any) {
+    logger.error('[CHAT] Error sending message', { error: error.message });
+    res.status(500).json({
+      error: 'Error sending message to AI assistant: ' + error.message
+    });
+  }
+});
+
+// Get chat history for a session
+app.get('/api/chat/history/:sessionId', (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Session ID is required' });
+    }
+
+    const history = chatService.getSessionHistory(sessionId);
+
+    res.json({
+      success: true,
+      sessionId,
+      messages: history
+    });
+  } catch (error: any) {
+    logger.error('[CHAT] Error getting chat history', { error: error.message });
+    res.status(500).json({ error: 'Error getting chat history: ' + error.message });
+  }
+});
+
+// Clear a chat session
+app.delete('/api/chat/session/:sessionId', (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Session ID is required' });
+    }
+
+    chatService.clearSession(sessionId);
+
+    res.json({
+      success: true,
+      message: 'Chat session cleared'
+    });
+  } catch (error: any) {
+    logger.error('[CHAT] Error clearing session', { error: error.message });
+    res.status(500).json({ error: 'Error clearing session: ' + error.message });
+  }
+});
+
+// Get current AI assistant configuration
+app.get('/api/chat/config', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      config: config.aiAssistant || null
+    });
+  } catch (error: any) {
+    logger.error('[CHAT] Error getting chat config', { error: error.message });
+    res.status(500).json({ error: 'Error getting chat configuration: ' + error.message });
   }
 });
 

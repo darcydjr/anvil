@@ -42,6 +42,12 @@ export interface LoggingConfig {
   level: 'ERROR' | 'WARN' | 'INFO' | 'DEBUG';
 }
 
+export interface AIAssistantConfig {
+  provider: 'claude-code' | 'copilot';
+  claudeCodePath?: string;
+  copilotPath?: string;
+}
+
 export interface Config {
   workspaces: Workspace[];
   activeWorkspaceId: string;
@@ -50,6 +56,7 @@ export interface Config {
   ui: UIConfig;
   defaults?: DefaultsConfig;
   logging?: LoggingConfig;
+  aiAssistant?: AIAssistantConfig;
   importedComponents?: any[];
 }
 
