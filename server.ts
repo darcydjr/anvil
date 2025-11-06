@@ -24,6 +24,7 @@ import * as chokidar from 'chokidar';
 import { FSWatcher } from 'chokidar';
 import * as http from 'http';
 import { exec } from 'child_process';
+import multer from 'multer';
 import type {
   Config, ConfigPaths, DocumentItem, DocumentMetadata, Enabler, EnablerData,
   Capability, FileLocation, VersionInfo, Dependency
@@ -308,6 +309,33 @@ const PORT = process.env.PORT || config.server.port;
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
+
+// Configure multer for file uploads (store in memory temporarily)
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept markdown, text, pdf, and word documents
+    const allowedMimes = [
+      'text/markdown',
+      'text/plain',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    const allowedExts = ['.md', '.txt', '.pdf', '.doc', '.docx'];
+    const ext = path.extname(file.originalname).toLowerCase();
+
+    if (allowedMimes.includes(file.mimetype) || allowedExts.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only markdown, text, PDF, and Word documents are allowed.'));
+    }
+  }
+});
 
 // Set up marked with options
 marked.setOptions({
@@ -2095,6 +2123,72 @@ app.put('/api/file/rename/*', async (req, res) => {
   } catch (error) {
     console.error('Error renaming file:', error);
     res.status(500).json({ error: 'Error renaming file: ' + error.message });
+  }
+});
+
+// Upload files endpoint
+app.post('/api/upload', upload.array('files', 10), async (req, res) => {
+  try {
+    const files = req.files as Express.Multer.File[];
+    const targetPath = req.body.targetPath || 'specifications';
+
+    console.log('[UPLOAD] Received files:', files?.length || 0);
+    console.log('[UPLOAD] Target path:', targetPath);
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: 'No files provided' });
+    }
+
+    const configPaths = getConfigPaths(config);
+    const firstProjectPath = path.resolve(configPaths.projectPaths[0]);
+    const uploadResults = [];
+
+    for (const file of files) {
+      try {
+        // Sanitize filename
+        const sanitizedName = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, '_');
+        const cleanTargetPath = targetPath.replace(/^(specifications\/|examples\/)/, '');
+        const relativePath = path.join(cleanTargetPath, sanitizedName);
+
+        // Validate path
+        const fullPath = validateAndResolvePath(relativePath, firstProjectPath, 'upload path');
+
+        // Ensure directory exists
+        await fs.ensureDir(path.dirname(fullPath));
+
+        // Write file
+        await fs.writeFile(fullPath, file.buffer);
+
+        console.log('[UPLOAD] File saved:', fullPath);
+
+        uploadResults.push({
+          originalName: file.originalname,
+          savedName: sanitizedName,
+          path: relativePath,
+          size: file.size,
+          success: true
+        });
+      } catch (fileError) {
+        console.error('[UPLOAD] Error processing file:', file.originalname, fileError);
+        uploadResults.push({
+          originalName: file.originalname,
+          error: fileError.message,
+          success: false
+        });
+      }
+    }
+
+    const successCount = uploadResults.filter(r => r.success).length;
+    const failCount = uploadResults.filter(r => !r.success).length;
+
+    res.json({
+      success: successCount > 0,
+      message: `Uploaded ${successCount} file(s)${failCount > 0 ? `, ${failCount} failed` : ''}`,
+      results: uploadResults
+    });
+  } catch (error) {
+    console.error('[UPLOAD] Error:', error);
+    res.status(500).json({ error: 'Error uploading files: ' + error.message });
   }
 });
 
