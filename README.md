@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-3.4.21-green.svg)]()
+[![Version](https://img.shields.io/badge/version-3.4.28-green.svg)]()
 
 ## Overview
 
@@ -327,7 +327,7 @@ Claude Code will automatically:
 - **Form-based Editor**: User-friendly web forms with markdown editing toggle
 - **Auto-naming Convention**: Ensures proper file naming (-capability.md, -enabler.md)
 
-### Dependency Management (v3.2.1)
+### Dependency Management (v3.4.28)
 - **Enabler-to-Enabler Dependencies**: Complete dependency mapping between enablers with hierarchical selection
 - **Hierarchical Selection**: System → Component → Capability → Enabler structure for easy navigation
 - **Upstream Dependencies**: Define enablers that deliver inputs, services, or data required by the current enabler
@@ -336,8 +336,10 @@ Claude Code will automatically:
 - **Visual Guidance**: Informational message boxes explain upstream and downstream relationships
 - **Consistent UX**: Matches capability dependency structure for familiar user experience
 - **Proper Positioning**: Dependencies section appears after Non-Functional Requirements in both form and view modes
+- **Enhanced Dependency Display**: Enabler dependencies now show formatted "ENB-XXXXX - Enabler Name" similar to capability dependencies
 - **Clean Table Display**: Fixed enabler dependency viewer to show only Enabler ID and Description columns, filtering out status metadata
 - **Smart Data Extraction**: Intelligently extracts enabler IDs and descriptions while removing extraneous data from legacy table formats
+- **Dual Enhancement System**: Separate enhancement functions for capability enabler tables vs dependency tables to prevent formatting conflicts
 
 ## Architecture
 

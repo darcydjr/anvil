@@ -476,14 +476,43 @@ async function enhanceDependencyTablesWithNames(html) {
         }
       }
     }
-    
+
+    // Create a map of enabler ID to name for quick lookup
+    const enablerMap = new Map();
+
+    // Read all enabler files from all project paths to build the map
+    for (const projectPath of configPaths.projectPaths) {
+      const resolvedPath = path.resolve(projectPath);
+      if (!await fs.pathExists(resolvedPath)) {
+        continue;
+      }
+
+      const files = await fs.readdir(resolvedPath);
+      const enablerFiles = files.filter(file => file.endsWith('-enabler.md'));
+
+      for (const file of enablerFiles) {
+        try {
+          const filePath = path.join(resolvedPath, file);
+          const content = await fs.readFile(filePath, 'utf8');
+          const id = extractId(content);
+          const name = extractName(content);
+
+          if (id && name) {
+            enablerMap.set(id, name);
+          }
+        } catch (error) {
+          console.warn(`Could not process enabler file ${file}:`, error.message);
+        }
+      }
+    }
+
     // Enhanced regex to find dependency table rows with capability IDs
     const dependencyTableRegex = /<tr>\s*<td>([A-Z]+-\d+)<\/td>\s*<td>([^<]*)<\/td>\s*<\/tr>/g;
-    
+
     // Replace each table row with enhanced version that includes capability name
-    const enhancedHtml = html.replace(dependencyTableRegex, (match, capabilityId, description) => {
+    let enhancedHtml = html.replace(dependencyTableRegex, (match, capabilityId, description) => {
       const capabilityName = capabilityMap.get(capabilityId);
-      
+
       if (capabilityName) {
         // Add the name after the ID in the same cell
         return match.replace(
@@ -491,7 +520,25 @@ async function enhanceDependencyTablesWithNames(html) {
           `<td><strong>${capabilityId}</strong><br/><span style="font-size: 0.9em; opacity: 0.8;">${capabilityName}</span></td>`
         );
       }
-      
+
+      return match; // Return unchanged if no name found
+    });
+
+    // Enhanced regex to find dependency table rows with enabler IDs
+    const enablerTableRegex = /<tr>\s*<td>(ENB-\d+)<\/td>\s*<td>([^<]*)<\/td>\s*<\/tr>/g;
+
+    // Replace each table row with enhanced version that includes enabler name
+    enhancedHtml = enhancedHtml.replace(enablerTableRegex, (match, enablerId, description) => {
+      const enablerName = enablerMap.get(enablerId);
+
+      if (enablerName) {
+        // Add the name after the ID in the same cell, similar to capability format
+        return match.replace(
+          `<td>${enablerId}</td>`,
+          `<td><strong>${enablerId}</strong><br/><span style="font-size: 0.9em; opacity: 0.8;">${enablerName}</span></td>`
+        );
+      }
+
       return match; // Return unchanged if no name found
     });
     
@@ -592,28 +639,9 @@ async function enhanceEnablerTablesWithDynamicData(html) {
                       <td><span class="priority-${enablerData.priority.toLowerCase()}">${enablerData.priority}</span></td>
                     </tr>`;
                   } else if (cellCount === 2) {
-                    // Two column format: ID and Description
-                    // Transform to full format with dynamic data
-                    const descriptionMatch = rowMatch.match(/<td[^>]*>(?:ENB-\d+)<\/td>\s*<td[^>]*>(.*?)<\/td>/);
-                    const description = descriptionMatch ? descriptionMatch[1] : '';
-
-                    return `<tr>
-                      <td>${enablerData.id}</td>
-                      <td>${enablerData.name}</td>
-                      <td><span class="status-${enablerData.status.toLowerCase().replace(/\s+/g, '-')}">${enablerData.status}</span></td>
-                      <td><span class="approval-${enablerData.approval.toLowerCase().replace(/\s+/g, '-')}">${enablerData.approval}</span></td>
-                      <td><span class="priority-${enablerData.priority.toLowerCase()}">${enablerData.priority}</span></td>
-                    </tr>`;
-                  } else {
-                    // Legacy format: Update with fresh data
-                    // Transform old format to new format without description column
-                    return `<tr>
-                      <td>${enablerData.id}</td>
-                      <td>${enablerData.name}</td>
-                      <td><span class="status-${enablerData.status.toLowerCase().replace(/\s+/g, '-')}">${enablerData.status}</span></td>
-                      <td><span class="approval-${enablerData.approval.toLowerCase().replace(/\s+/g, '-')}">${enablerData.approval}</span></td>
-                      <td><span class="priority-${enablerData.priority.toLowerCase()}">${enablerData.priority}</span></td>
-                    </tr>`;
+                    // Two column format: ID and Description (likely dependency tables)
+                    // Leave dependency tables alone - they're handled by enhanceDependencyTablesWithNames
+                    return rowMatch;
                   }
                 } else {
                   // Enabler not found - show warning
@@ -632,9 +660,9 @@ async function enhanceEnablerTablesWithDynamicData(html) {
       }
     );
 
-    // Also update the table header if it's the new format (single column or old format)
+    // Update table header only for single column tables (not dependency tables)
     enhancedHtml = enhancedHtml.replace(
-      /<tr[^>]*>\s*<th[^>]*>Enabler ID<\/th>\s*(<th[^>]*>Description<\/th>\s*)?<\/tr>/,
+      /<tr[^>]*>\s*<th[^>]*>Enabler ID<\/th>\s*<\/tr>/,
       `<tr>
         <th>Enabler ID</th>
         <th>Name</th>
