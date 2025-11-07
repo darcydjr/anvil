@@ -4,6 +4,7 @@ import { apiService } from '../../services/apiService'
 import { generateFunctionalRequirementId, generateNonFunctionalRequirementId } from '../../utils/idGenerator'
 import { stateListenerManager } from '../../utils/stateListeners'
 import { STATUS_VALUES, APPROVAL_VALUES, PRIORITY_VALUES, REVIEW_VALUES } from '../../utils/constants'
+import { SearchableSelect } from '../ui/SearchableSelect'
 import toast from 'react-hot-toast'
 
 import { EnablerFormData, FunctionalRequirement, NonFunctionalRequirement, Dependency, generateEnablerTechnicalSpecificationsTemplate } from '../../utils/markdownUtils'
@@ -506,6 +507,26 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
     return groups
   }, [availableEnablers])
 
+  // Convert enablers to SearchableSelect options
+  const enablerOptions = useMemo(() => {
+    return availableEnablers.map(enabler => ({
+      id: enabler.id,
+      label: `${enabler.id} - ${enabler.name}`,
+      system: enabler.capabilitySystem,
+      component: enabler.capabilityComponent
+    }))
+  }, [availableEnablers])
+
+  // Convert capabilities to SearchableSelect options
+  const capabilityOptions = useMemo(() => {
+    return availableCapabilities.map(cap => ({
+      id: cap.id,
+      label: `${cap.id} - ${cap.title}`,
+      system: cap.system,
+      component: cap.component
+    }))
+  }, [availableCapabilities])
+
   const nfrTypes = [
     'Performance', 'Scalability', 'Security', 'Reliability', 'Availability',
     'Usability', 'Maintainability', 'Portability', 'Compliance', 'Technical Constraint', 'Other'
@@ -680,24 +701,13 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-foreground">Capability ID</label>
-            <select
-              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+            <SearchableSelect
               value={data.capabilityId || ''}
-              onChange={(e) => handleBasicChange('capabilityId', e.target.value)}
-            >
-              <option value="">Select a capability...</option>
-              {Object.keys(groupedCapabilities).sort().map((system) =>
-                Object.keys(groupedCapabilities[system]).sort().map((component) => (
-                  <optgroup key={`${system}-${component}`} label={`${system} → ${component}`}>
-                    {groupedCapabilities[system][component].map((cap) => (
-                      <option key={cap.id} value={cap.id}>
-                        {cap.id} - {cap.title}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))
-              )}
-            </select>
+              onChange={(value) => handleBasicChange('capabilityId', value)}
+              options={capabilityOptions}
+              placeholder="Select a capability..."
+              className="px-3 py-2 focus:ring-2 focus:ring-ring focus:border-transparent"
+            />
             {validationErrors.capabilityId && (
               <span className="text-xs text-destructive">{validationErrors.capabilityId}</span>
             )}
@@ -1296,24 +1306,12 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
                 {(data.internalUpstream || []).map((dep, index) => (
                   <tr key={index} className="border-b border-border hover:bg-accent">
                     <td className="p-2">
-                      <select
-                        className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      <SearchableSelect
                         value={dep.id || ''}
-                        onChange={(e) => handleArrayChange('internalUpstream', index, 'id', e.target.value)}
-                      >
-                        <option value="">Select enabler</option>
-                        {Object.keys(groupedEnablers).sort().map((system) =>
-                          Object.keys(groupedEnablers[system]).sort().map((component) => (
-                            <optgroup key={`${system}-${component}`} label={`${system} → ${component}`}>
-                              {groupedEnablers[system][component].map((enabler) => (
-                                <option key={enabler.id} value={enabler.id}>
-                                  {enabler.id} - {enabler.name}
-                                </option>
-                              ))}
-                            </optgroup>
-                          ))
-                        )}
-                      </select>
+                        onChange={(value) => handleArrayChange('internalUpstream', index, 'id', value)}
+                        options={enablerOptions}
+                        placeholder="Select enabler"
+                      />
                     </td>
                     <td className="p-2">
                       <textarea
@@ -1365,24 +1363,12 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
                 {(data.internalDownstream || []).map((impact, index) => (
                   <tr key={index} className="border-b border-border hover:bg-accent">
                     <td className="p-2">
-                      <select
-                        className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      <SearchableSelect
                         value={impact.id || ''}
-                        onChange={(e) => handleArrayChange('internalDownstream', index, 'id', e.target.value)}
-                      >
-                        <option value="">Select enabler</option>
-                        {Object.keys(groupedEnablers).sort().map((system) =>
-                          Object.keys(groupedEnablers[system]).sort().map((component) => (
-                            <optgroup key={`${system}-${component}`} label={`${system} → ${component}`}>
-                              {groupedEnablers[system][component].map((enabler) => (
-                                <option key={enabler.id} value={enabler.id}>
-                                  {enabler.id} - {enabler.name}
-                                </option>
-                              ))}
-                            </optgroup>
-                          ))
-                        )}
-                      </select>
+                        onChange={(value) => handleArrayChange('internalDownstream', index, 'id', value)}
+                        options={enablerOptions}
+                        placeholder="Select enabler"
+                      />
                     </td>
                     <td className="p-2">
                       <textarea
