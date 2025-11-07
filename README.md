@@ -130,14 +130,9 @@ Once you have your specifications ready in Anvil:
 
 3. **Implementation Commands**:
 
-   **For Discovery (Documentation Only):**
+   **For Reverse Engineering (Discovery) (Documentation Only):**
    ```
-   Claude, please read the SOFTWARE_DEVELOPMENT_PLAN.md in the specifications folder and perform DISCOVERY ONLY on this project. Create specifications documentation but DO NOT implement anything.
-   ```
-
-   **For Reverse Engineering Existing Applications:**
-   ```
-   Claude, I have an existing application that I want to reverse engineer and add new capabilities to. Please analyze the codebase, create capability and enabler specifications, and then suggest new capabilities I can add.
+   Claude, please read the SOFTWARE_DEVELOPMENT_PLAN.md in the specifications folder and perform DISCOVERY ONLY on this project. Create specifications documentation but DO NOT implement anything. Then suggest new capabilites I can add.
    ```
 
    **For Implementation (After Discovery Complete):**
