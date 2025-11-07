@@ -55,6 +55,38 @@ Anvil focuses exclusively on the right side, helping engineering teams define, o
   <em>Anvil's clean interface showing capability management with structured metadata, enabler relationships, and comprehensive status tracking</em>
 </div>
 
+## System Requirements
+
+### Prerequisites
+
+Before running Anvil, ensure you have the following software installed:
+
+- **Node.js**: Version 18.0 or higher
+  - Download from [nodejs.org](https://nodejs.org/)
+  - Includes npm (Node Package Manager)
+- **Git**: For version control and cloning the repository
+  - Download from [git-scm.com](https://git-scm.com/)
+
+### Supported Platforms
+
+- **Windows**: Windows 10/11 (x64)
+- **macOS**: macOS 10.15+ (Intel and Apple Silicon)
+- **Linux**: Ubuntu 18.04+, CentOS 7+, or equivalent distributions
+
+### Minimum Hardware Requirements
+
+- **RAM**: 4 GB minimum, 8 GB recommended
+- **Storage**: 500 MB available disk space
+- **CPU**: Modern multi-core processor (Intel i5 or equivalent)
+
+### Verify Installation
+
+Check your Node.js and npm versions:
+```bash
+node --version    # Should show v18.0.0 or higher
+npm --version     # Should show 8.0.0 or higher
+```
+
 ## Quick Start
 
 ### Launch Anvil
