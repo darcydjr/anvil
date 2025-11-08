@@ -615,9 +615,12 @@ Before proceeding to next step, verify enabler contains ALL these metadata field
 - **Documentation Note**: Include a note in the diagram explaining that grey capabilities are placeholders for future implementation
 
 ### Post-Condition Transition
-| Step | Action |
-|------|--------|
-| 1 | Set Capability Status "Ready for Implementation"
+| Step | Verification | Required State | Action if Failed |
+|------|-------------|----------------|------------------|
+| 0 | **Technical Specifications Completion Check** | All "(Template)" text must be replaced with actual design content | STOP - Complete design documentation first |
+| 1 | **Design Documentation Verification** | Technical Specifications section must contain real architecture, APIs, data models, diagrams | STOP - Fill in actual design details |
+| 2 | **Template Content Removal** | No placeholder text like "Add your dependency flows here" or "Add more entities here" | STOP - Replace all template placeholders |
+| 3 | **ONLY AFTER ALL VERIFICATIONS PASS** | Set Capability Status "Ready for Implementation" | Proceed to implementation phase |
 
 ### Absolute Prohibitions (ZERO TOLERANCE)
 - 🚫 Never bypass for any reason whatsoever
@@ -627,7 +630,9 @@ Before proceeding to next step, verify enabler contains ALL these metadata field
 ---
 
 ## Task 4: Develop the Enablers
-**Purpose**: Develop the Enabler by following the Enablers Development Plan very closely
+**Purpose**: Execute the complete Enabler Development Plan workflow for each approved enabler. 
+
+**CRITICAL**: This task orchestrates enabler development but does NOT directly implement code - each enabler must individually complete Tasks 1-4 of the Enabler Development Plan.
 
 ### Pre-Conditions Verification (ABSOLUTELY MANDATORY)
 | Condition | Required Value | Action if True | Action if False |
@@ -648,10 +653,15 @@ Before proceeding to next step, verify enabler contains ALL these metadata field
 |------|---------------------|----------------|---------|----------------------|
 | 1 | Enabler Approval | "Approved" | Develop Enabler following the Enabler's Development Plan | IMMEDIATE STOP - explain that enabler is not approved and cannot be developed |
 
+|Step | Condition | Required Value | Action if True | Action if False |
+|------|---------------------|----------------|---------|----------------------|
+| 1 | Enabler Approval | "Approved" | **MANDATORY**: Follow COMPLETE Enabler Development Plan (Task 1→2→3→4) for EACH enabler individually. **NO CODE IMPLEMENTATION** until enabler completes Task 3: Design | IMMEDIATE STOP - explain that enabler is not approved and cannot be developed |
+| 2 | **WORKFLOW ENFORCEMENT** | **Each enabler MUST complete: Approval Verification → Analysis → Design → Implementation** | **Process enablers sequentially through full workflow** | **STOP - Cannot skip enabler development phases** |
+
 ### Post-Condition Transition
-| Step | Action |
-|------|--------|
-| 1 | Set Enabler Status "Implemented" |
+| Step | Action | CRITICAL RULE |
+|------|--------|---------------|
+| 1 | Set Enabler Status "Implemented" | **ONLY after enabler completes its individual Task 4: Implementation following full Enabler Development Plan** |
 
 ### Exit Criteria Checklist
 - [ ] Implementation completed for all approved requirements
@@ -790,9 +800,16 @@ Before proceeding to next step, verify enabler contains ALL these metadata field
 | 13 | Document any other designs under Technical Specifications Section |  
 
 ### Post-Condition Transition  
-| Step | Action |  
-|------|--------|  
-| 1 | Set Enabler Status "Ready for Implementation" |  
+
+**🚨 ENABLER DESIGN COMPLETION GATE 🚨**
+
+| Step | Verification | Required State | Action if Failed |
+|------|-------------|----------------|------------------|
+| 0 | **Header Update Check** | "Technical Specifications (Template)" must be changed to "Technical Specifications" | STOP - Update section header first |
+| 1 | **Template Content Removal** | All template diagrams and placeholder content must be replaced | STOP - Complete actual design content |
+| 2 | **Approved Requirements Coverage** | Each approved requirement must have corresponding design documentation | STOP - Design all approved requirements |
+| 3 | **Design Artifacts Present** | Relevant sections (APIs, Data Models, Sequence Diagrams, etc.) must contain actual design | STOP - Fill in design specifications |
+| 4 | **ONLY AFTER ALL VERIFICATIONS PASS** | Set Enabler Status "Ready for Implementation" | Proceed to implementation |
 
 ### Exit Criteria Checklist  
 - [ ] Design documented under Technical Specifications  
@@ -820,7 +837,7 @@ Before proceeding to next step, verify enabler contains ALL these metadata field
 - **RESPONSE REQUIREMENT**: Must explicitly state "STOPPING due to failed pre-conditions" and explain which conditions failed  
 
 ### Perform Implementation
-| Step | Action |
+| Step | Ait seection |
 |------|--------|
 | 1 | Set Enabler Status to "In Implementation" |
 | 2 | For each Requirement, check if Requirement Approval = "Approved" AND Requirement Status = "Ready for Implementation" |

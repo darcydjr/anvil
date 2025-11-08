@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-3.4.37-green.svg)]()
+[![Version](https://img.shields.io/badge/version-3.4.38-green.svg)]()
 
 ## Overview
 
@@ -418,6 +418,7 @@ Anvil supports **workspace-based configuration** for managing multiple document 
 
 ### 📋 **Recent Major Features Summary**
 
+- **v3.4.38**: 📋 **Development Plan Enhancement** - Enhanced SOFTWARE_DEVELOPMENT_PLAN.md with stricter design completion gates, placeholder capability styling rules, and improved workflow verification steps
 - **v3.4.37**: 🗑️ **Legacy Template Cleanup** - Removed all legacy template folder infrastructure and UI (templates now sourced from SOFTWARE_DEVELOPMENT_PLAN.md)
 - **v3.4.36**: Removed obsolete templates configuration section from Settings page
 - **v3.4.35**: Added configurable Tip of the Day settings with enable/disable toggle and frequency control (15 min to 4 hours)
