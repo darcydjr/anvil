@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-3.4.28-green.svg)]()
+[![Version](https://img.shields.io/badge/version-3.4.33-green.svg)]()
 
 ## Overview
 
@@ -427,6 +427,8 @@ Anvil supports **workspace-based configuration** for managing multiple document 
 - **v3.4.15**: Fixed multiline text support in requirements with proper markdown encoding/decoding
 - **v3.4.14**: Enhanced requirement fields to support multiline text input with auto-expansion
 - **v3.4.12**: Removed unused Imported Components functionality from Settings
+- **v3.4.33**: Enhanced System Architecture diagram with zoom controls and editable zoom input
+- **v3.4.31**: Added professional zoom in/out controls with mouse wheel support to System Architecture diagram
 - **v3.4.11**: Improved DocumentEditor header positioning within layout boundaries
 - **v3.4.7**: Added pan functionality to System Architecture diagram
 - **v3.4.6**: Enhanced DocumentView sticky header within content area
@@ -532,13 +534,23 @@ This evolution provides a unified, consistent bulk editing experience across all
 - **SEAMLESS EDITING**: Edit controls remain accessible while respecting layout boundaries
 - **VISUAL POLISH**: Clean header positioning eliminates visual gaps and overlaps
 
-### v3.4.10 - v3.4.7 - Pan Functionality & Enhanced Navigation ✅
+### v3.4.33 - Professional Zoom & Navigation Controls ✅
 
-#### 🎯 **System Architecture Pan Controls**
-- **PAN MODE TOGGLE**: Added pan functionality to System Architecture diagram with toggle button
-- **MOUSE INTERACTION**: Drag to pan when pan mode enabled with visual cursor feedback
-- **RESET FUNCTIONALITY**: Reset button to restore diagram to original position
-- **DUAL VIEW SUPPORT**: Pan works in both normal and expanded diagram views
+#### 🔍 **Enhanced System Architecture Diagram Controls**
+- **ZOOM IN/OUT BUTTONS**: Professional ± controls with 20% increments (30% to 300% range)
+- **EDITABLE ZOOM INPUT**: Click percentage to type exact zoom levels with validation
+- **MOUSE WHEEL ZOOM**: Natural scroll-to-zoom functionality with smooth scaling
+- **PAN MODE TOGGLE**: Drag functionality with clear ON/OFF state indicator
+- **STABLE CONTROL BAR**: Fixed layout prevents UI shifting during interaction
+- **SMART RESET**: Always-visible reset button for instant return to default view
+- **DUAL VIEW SUPPORT**: All controls work in both normal and expanded diagram views
+
+#### 🎯 **Professional Navigation Experience**
+- **TRANSFORM ORIGIN**: Zoom centered for natural scaling behavior
+- **SYNCHRONIZED CONTROLS**: All zoom methods (buttons, wheel, input) stay in sync
+- **RANGE VALIDATION**: Automatic clamping of zoom values to valid range
+- **KEYBOARD SUPPORT**: Enter key to apply typed zoom levels
+- **VISUAL FEEDBACK**: Disabled states and hover effects for intuitive interaction
 
 #### 🔧 **Enhanced Navigation Experience**
 - **STICKY HEADERS**: Document headers stay at top of content area during scrolling
