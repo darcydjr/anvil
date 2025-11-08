@@ -837,7 +837,7 @@ Before proceeding to next step, verify enabler contains ALL these metadata field
 - **RESPONSE REQUIREMENT**: Must explicitly state "STOPPING due to failed pre-conditions" and explain which conditions failed  
 
 ### Perform Implementation
-| Step | Ait seection |
+| Step | Action |
 |------|--------|
 | 1 | Set Enabler Status to "In Implementation" |
 | 2 | For each Requirement, check if Requirement Approval = "Approved" AND Requirement Status = "Ready for Implementation" |
