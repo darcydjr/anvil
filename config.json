@@ -69,7 +69,6 @@
     }
   ],
   "activeWorkspaceId": "ws-default",
-  "templates": "./templates",
   "server": {
     "port": 3000
   },

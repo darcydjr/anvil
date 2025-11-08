@@ -45,7 +45,6 @@ export interface LoggingConfig {
 export interface Config {
   workspaces: Workspace[];
   activeWorkspaceId: string;
-  templates: string;
   server: ServerConfig;
   ui: UIConfig;
   defaults?: DefaultsConfig;
@@ -55,7 +54,6 @@ export interface Config {
 
 export interface ConfigPaths {
   projectPaths: string[];
-  templates: string;
 }
 
 // Document types

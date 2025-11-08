@@ -95,10 +95,6 @@ function validateConfig(config: Config): string[] {
     }
   }
 
-  // Validate templates path
-  if (!config.templates || typeof config.templates !== 'string') {
-    errors.push('Config must have a templates path')
-  }
   
   // Validate server config
   if (config.server) {
@@ -161,8 +157,7 @@ function getConfigPaths(config: Config): ConfigPaths {
       return pathItem.path // New format with icon
     })
     return {
-      projectPaths: fallbackPaths,
-      templates: config.templates
+      projectPaths: fallbackPaths
     }
   }
 
@@ -175,8 +170,7 @@ function getConfigPaths(config: Config): ConfigPaths {
   })
 
   return {
-    projectPaths: projectPaths,
-    templates: config.templates
+    projectPaths: projectPaths
   }
 }
 
@@ -257,7 +251,6 @@ try {
       }
     ],
     activeWorkspaceId: "ws-default",
-    templates: "./templates",
     server: {
       port: 3000
     },
@@ -359,9 +352,7 @@ async function scanDirectory(dirPath: string, baseUrl: string = ''): Promise<Doc
 
       // Determine type based on filename or explicit type field
       let itemType = 'document'
-      if (baseUrl.includes('/templates')) {
-        itemType = 'template'
-      } else if (file.includes('-capability.md')) {
+      if (file.includes('-capability.md')) {
         itemType = 'capability'
       } else if (file.includes('-enabler.md')) {
         itemType = 'enabler'
@@ -1335,7 +1326,6 @@ app.get('/api/capabilities', async (req, res) => {
   try {
     const configPaths = getConfigPaths(config);
     const allItems = await scanProjectPaths(configPaths.projectPaths);
-    const templates = await scanDirectory(configPaths.templates, 'templates');
 
     // Filter out non-document files and separate capabilities and enablers
     const excludedFiles = ['SOFTWARE_DEVELOPMENT_PLAN.md', 'README.md', 'CONTRIBUTING.md', 'LICENSE', 'NOTICE'];
@@ -1354,8 +1344,7 @@ app.get('/api/capabilities', async (req, res) => {
 
     res.json({
       capabilities,
-      enablers,
-      templates
+      enablers
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1369,7 +1358,6 @@ app.get('/api/capabilities-dynamic', async (req, res) => {
   try {
     const configPaths = getConfigPaths(config);
     const allItems = await scanProjectPaths(configPaths.projectPaths);
-    const templates = await scanDirectory(configPaths.templates, 'templates');
 
     // Filter out non-document files and separate capabilities and enablers
     const excludedFiles = ['SOFTWARE_DEVELOPMENT_PLAN.md', 'README.md', 'CONTRIBUTING.md', 'LICENSE', 'NOTICE'];
@@ -1474,8 +1462,7 @@ app.get('/api/capabilities-dynamic', async (req, res) => {
 
     res.json({
       capabilities: enhancedCapabilities,
-      enablers,
-      templates
+      enablers
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1573,7 +1560,6 @@ app.get('/api/capabilities-with-dependencies', async (req, res) => {
   try {
     const configPaths = getConfigPaths(config);
     const allItems = await scanProjectPaths(configPaths.projectPaths);
-    const templates = await scanDirectory(configPaths.templates, 'templates');
 
     // Filter out non-document files and separate capabilities and enablers
     const excludedFiles = ['SOFTWARE_DEVELOPMENT_PLAN.md', 'README.md', 'CONTRIBUTING.md', 'LICENSE', 'NOTICE'];
@@ -1643,8 +1629,7 @@ app.get('/api/capabilities-with-dependencies', async (req, res) => {
 
     res.json({
       capabilities: enhancedCapabilities,
-      enablers,
-      templates
+      enablers
     });
   } catch (error) {
     console.error('[CAPABILITIES-WITH-DEPS] Error loading capabilities with dependencies:', error);
@@ -1663,11 +1648,7 @@ app.get('/api/file/*', async (req, res) => {
     let cleanFilePath;
     let fileLocation = null;
 
-    if (filePath.startsWith('templates/')) {
-      cleanFilePath = filePath.replace('templates/', '');
-      fullPath = path.join(configPaths.templates, cleanFilePath);
-      projectRoot = path.resolve(configPaths.templates);
-    } else {
+    {
       // Try to find file in project paths
       cleanFilePath = filePath;
       // Remove common prefixes
@@ -1761,14 +1742,7 @@ app.post('/api/file/*', async (req, res) => {
     let cleanFilePath;
     let fileLocation = null;
 
-    if (filePath.startsWith('templates/')) {
-      const configPaths = getConfigPaths(config);
-      const templatePath = path.resolve(configPaths.templates);
-      cleanFilePath = filePath.replace('templates/', '');
-      fullPath = path.join(templatePath, cleanFilePath);
-      projectRoot = path.resolve(templatePath);
-      console.log('[SAVE] Using templates path:', templatePath);
-    } else {
+    {
       // Find file in project paths or use first project path for new files
       const configPaths = getConfigPaths(config);
       cleanFilePath = filePath;
@@ -1891,12 +1865,7 @@ app.delete('/api/file/*', async (req, res) => {
     let cleanFilePath;
     let fileLocation = null;
 
-    if (filePath.startsWith('templates/')) {
-      const configPaths = getConfigPaths(config);
-      cleanFilePath = filePath.replace('templates/', '');
-      fullPath = path.join(configPaths.templates, cleanFilePath);
-      projectRoot = path.resolve(configPaths.templates);
-    } else {
+    {
       // Find file in project paths
       const configPaths = getConfigPaths(config);
       cleanFilePath = filePath;
@@ -2002,14 +1971,7 @@ app.put('/api/file/rename/*', async (req, res) => {
     let oldProjectRoot, newProjectRoot;
     let oldCleanPath, newCleanPath;
     
-    if (oldFilePath.startsWith('templates/')) {
-      const configPaths = getConfigPaths(config);
-      oldCleanPath = oldFilePath.replace('templates/', '');
-      newCleanPath = newFilePath.replace('templates/', '');
-      projectRoot = path.resolve(configPaths.templates);
-      oldProjectRoot = projectRoot;
-      newProjectRoot = projectRoot;
-    } else {
+    {
       // For capabilities and enablers - search for existing file across all project paths
       const configPaths = getConfigPaths(config);
       oldCleanPath = oldFilePath;
@@ -2066,11 +2028,7 @@ app.put('/api/file/rename/*', async (req, res) => {
     }
     
     try {
-      if (oldFilePath.startsWith('templates/')) {
-        // Template files - use same project root for both
-        oldFullPath = validateAndResolvePath(oldCleanPath, projectRoot, 'old rename path');
-        newFullPath = validateAndResolvePath(newCleanPath, projectRoot, 'new rename path');
-      } else {
+      {
         // Capability/Enabler files - may be cross-project move
         oldFullPath = validateAndResolvePath(oldCleanPath, oldProjectRoot, 'old rename path');
         newFullPath = validateAndResolvePath(newCleanPath, newProjectRoot, 'new rename path');
@@ -2087,8 +2045,8 @@ app.put('/api/file/rename/*', async (req, res) => {
       return res.status(403).json({ error: 'Access denied: ' + securityError.message });
     }
     
-    // Note: We already verified the old file exists during path resolution for non-template files
-    if (oldFilePath.startsWith('templates/') && !await fs.pathExists(oldFullPath)) {
+    // Verify the old file exists
+    if (!await fs.pathExists(oldFullPath)) {
       return res.status(404).json({ error: 'Original file not found' });
     }
 

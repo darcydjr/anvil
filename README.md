@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-3.4.33-green.svg)]()
+[![Version](https://img.shields.io/badge/version-3.4.37-green.svg)]()
 
 ## Overview
 
@@ -418,6 +418,10 @@ Anvil supports **workspace-based configuration** for managing multiple document 
 
 ### 📋 **Recent Major Features Summary**
 
+- **v3.4.37**: 🗑️ **Legacy Template Cleanup** - Removed all legacy template folder infrastructure and UI (templates now sourced from SOFTWARE_DEVELOPMENT_PLAN.md)
+- **v3.4.36**: Removed obsolete templates configuration section from Settings page
+- **v3.4.35**: Added configurable Tip of the Day settings with enable/disable toggle and frequency control (15 min to 4 hours)
+- **v3.4.34**: Added animated Tip of the Day feature with helpful usage instructions that appears in the navigation area
 - **v3.4.21**: Added searchable/filterable dependency selectors with type-to-search functionality and improved visual hierarchy
 - **v3.4.20**: Fixed EnablerForm dependency selector data structure causing JavaScript errors when adding dependencies
 - **v3.4.19**: Standardized EnablerForm dependency selectors to match CapabilityForm format

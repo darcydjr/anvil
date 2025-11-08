@@ -100,8 +100,7 @@ export default function DocumentEditor(): JSX.Element {
           const response = await fetch('/api/capability-template')
           template = await response.json()
         } else {
-          const templatePath = `templates/${type}-template.md`
-          template = await apiService.getFile(templatePath)
+          throw new Error('Unsupported document type')
         }
         
         setMarkdownContent(template.content)
@@ -255,9 +254,7 @@ export default function DocumentEditor(): JSX.Element {
       if (isNew) {
         const filename = formData.id ? idToFilename(formData.id, type) : nameToFilename(formData.name || 'untitled', type)
 
-        if (type === 'template') {
-          savePath = `templates/${filename}`
-        } else if (type === 'capability' && capFormData.selectedPath) {
+        if (type === 'capability' && capFormData.selectedPath) {
           savePath = `${capFormData.selectedPath}/${filename}`
         } else {
           savePath = filename
@@ -268,12 +265,6 @@ export default function DocumentEditor(): JSX.Element {
         needsRename = true
         newPath = savePath
       } else if (!isNew && originalName && formData.name && formData.name !== originalName) {
-        // Only rename files for templates, NOT for capabilities or enablers
-        // Capabilities and enablers should keep their ID-based filenames
-        if (type === 'template' && namesGenerateDifferentFilenames(originalName, formData.name, type)) {
-          needsRename = true
-          newPath = `templates/${nameToFilename(formData.name, type)}`
-        }
         // For capabilities and enablers, the name change is handled by updating
         // the metadata within the file content only - no file rename needed
       }
@@ -511,28 +502,6 @@ export default function DocumentEditor(): JSX.Element {
                 onChange={handleFormDataChange}
                 onValidationChange={handleValidationChange}
               />
-            )}
-            {type === 'template' && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Template Name</label>
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-                    value={formData.name || ''}
-                    onChange={(e) => handleFormDataChange({ name: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Template Content</label>
-                  <textarea
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent font-mono text-sm"
-                    style={{ minHeight: '400px' }}
-                    value={markdownContent}
-                    onChange={(e) => setMarkdownContent(e.target.value)}
-                  />
-                </div>
-              </div>
             )}
           </div>
         ) : (
