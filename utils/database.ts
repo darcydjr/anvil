@@ -11,10 +11,13 @@ import { hashPassword } from './password';
 const DB_DIR = path.join(process.cwd(), 'data');
 const DB_PATH = path.join(DB_DIR, 'users.db');
 
+export type UserRole = 'admin' | 'user';
+
 export interface User {
   id: number;
   username: string;
   password_hash: string;
+  role: UserRole;
   created_at: string;
   updated_at: string;
   last_login: string | null;
@@ -24,6 +27,7 @@ export interface User {
 export interface UserWithoutPassword {
   id: number;
   username: string;
+  role: UserRole;
   created_at: string;
   updated_at: string;
   last_login: string | null;
@@ -52,6 +56,7 @@ export function initializeDatabase(): void {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'user',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       last_login DATETIME,
@@ -61,6 +66,19 @@ export function initializeDatabase(): void {
 
   db.exec(createTableSQL);
   console.log('[AUTH-DB] Users table initialized');
+
+  // Migrate existing database to add role column if it doesn't exist
+  try {
+    db.exec(`
+      ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user';
+    `);
+    console.log('[AUTH-DB] Added role column to existing users table');
+  } catch (error: any) {
+    // Column already exists, ignore error
+    if (!error.message.includes('duplicate column name')) {
+      console.error('[AUTH-DB] Migration error:', error);
+    }
+  }
 
   // Create index on username for faster lookups
   const createIndexSQL = `
@@ -85,9 +103,9 @@ async function createDefaultAdminUser(): Promise<void> {
   try {
     const adminPassword = await hashPassword('admin123');
     const stmt = db!.prepare(
-      'INSERT INTO users (username, password_hash) VALUES (?, ?)'
+      'INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)'
     );
-    stmt.run('admin', adminPassword);
+    stmt.run('admin', adminPassword, 'admin');
     console.log('[AUTH-DB] Default admin user created (username: admin, password: admin123)');
     console.log('[AUTH-DB] ⚠️  WARNING: Change default admin password in production!');
   } catch (error) {
@@ -96,19 +114,34 @@ async function createDefaultAdminUser(): Promise<void> {
 }
 
 /**
- * Create a new user
- * @param username - Unique username
- * @param passwordHash - Bcrypt hash of password
- * @returns The new user's ID
+ * Update the admin user to have admin role (for migration)
  */
-export function createUser(username: string, passwordHash: string): number {
+export function updateAdminRole(): void {
   if (!db) throw new Error('Database not initialized');
 
   const stmt = db.prepare(
-    'INSERT INTO users (username, password_hash) VALUES (?, ?)'
+    'UPDATE users SET role = ? WHERE username = ?'
   );
 
-  const result = stmt.run(username, passwordHash);
+  stmt.run('admin', 'admin');
+  console.log('[AUTH-DB] Updated admin user role to admin');
+}
+
+/**
+ * Create a new user
+ * @param username - Unique username
+ * @param passwordHash - Bcrypt hash of password
+ * @param role - User role (admin or user)
+ * @returns The new user's ID
+ */
+export function createUser(username: string, passwordHash: string, role: UserRole = 'user'): number {
+  if (!db) throw new Error('Database not initialized');
+
+  const stmt = db.prepare(
+    'INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)'
+  );
+
+  const result = stmt.run(username, passwordHash, role);
   return result.lastInsertRowid as number;
 }
 
@@ -136,10 +169,84 @@ export function getUserById(userId: number): UserWithoutPassword | null {
   if (!db) throw new Error('Database not initialized');
 
   const stmt = db.prepare(
-    'SELECT id, username, created_at, updated_at, last_login, is_active FROM users WHERE id = ? AND is_active = 1'
+    'SELECT id, username, role, created_at, updated_at, last_login, is_active FROM users WHERE id = ? AND is_active = 1'
   );
 
   return stmt.get(userId) as UserWithoutPassword | null;
+}
+
+/**
+ * Get all users (admin only)
+ * @returns Array of users without passwords
+ */
+export function getAllUsers(): UserWithoutPassword[] {
+  if (!db) throw new Error('Database not initialized');
+
+  const stmt = db.prepare(
+    'SELECT id, username, role, created_at, updated_at, last_login, is_active FROM users ORDER BY created_at DESC'
+  );
+
+  return stmt.all() as UserWithoutPassword[];
+}
+
+/**
+ * Update user role
+ * @param userId - User ID
+ * @param role - New role
+ */
+export function updateUserRole(userId: number, role: UserRole): void {
+  if (!db) throw new Error('Database not initialized');
+
+  const stmt = db.prepare(
+    'UPDATE users SET role = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+  );
+
+  stmt.run(role, userId);
+}
+
+/**
+ * Update user information
+ * @param userId - User ID
+ * @param updates - Fields to update
+ */
+export function updateUser(userId: number, updates: { username?: string; role?: UserRole; is_active?: number }): void {
+  if (!db) throw new Error('Database not initialized');
+
+  const fields: string[] = [];
+  const values: any[] = [];
+
+  if (updates.username !== undefined) {
+    fields.push('username = ?');
+    values.push(updates.username);
+  }
+  if (updates.role !== undefined) {
+    fields.push('role = ?');
+    values.push(updates.role);
+  }
+  if (updates.is_active !== undefined) {
+    fields.push('is_active = ?');
+    values.push(updates.is_active);
+  }
+
+  if (fields.length === 0) return;
+
+  fields.push('updated_at = CURRENT_TIMESTAMP');
+  values.push(userId);
+
+  const sql = `UPDATE users SET ${fields.join(', ')} WHERE id = ?`;
+  const stmt = db.prepare(sql);
+  stmt.run(...values);
+}
+
+/**
+ * Delete user permanently
+ * @param userId - User ID
+ */
+export function deleteUser(userId: number): void {
+  if (!db) throw new Error('Database not initialized');
+
+  const stmt = db.prepare('DELETE FROM users WHERE id = ?');
+  stmt.run(userId);
 }
 
 /**

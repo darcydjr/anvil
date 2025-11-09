@@ -34,9 +34,13 @@ import type {
   Capability, FileLocation, VersionInfo, Dependency
 } from './types/server-types';
 import rateLimit from 'express-rate-limit';
-import { initializeDatabase, getUserByUsername, updateLastLogin } from './utils/database';
+import {
+  initializeDatabase, getUserByUsername, updateLastLogin, getAllUsers,
+  createUser, updateUser, deleteUser, updateAdminRole
+} from './utils/database';
 import { generateToken, validateToken, extractToken } from './utils/auth';
-import { verifyPassword } from './utils/password';
+import { verifyPassword, hashPassword } from './utils/password';
+import { authenticateToken, requireAdmin } from './utils/middleware';
 
 // File watcher variable for graceful shutdown
 let fileWatcher: FSWatcher | null = null;
@@ -1340,17 +1344,18 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
     // Update last login timestamp
     updateLastLogin(user.id);
 
-    // Generate JWT token
-    const token = generateToken(user.id, user.username);
+    // Generate JWT token with role
+    const token = generateToken(user.id, user.username, user.role);
 
-    console.log('[AUTH] Login successful for user:', username);
+    console.log('[AUTH] Login successful for user:', username, 'with role:', user.role);
 
     res.json({
       success: true,
       token,
       user: {
         id: user.id,
-        username: user.username
+        username: user.username,
+        role: user.role
       }
     });
   } catch (error) {
@@ -1395,13 +1400,158 @@ app.get('/api/auth/verify', (req, res) => {
     success: true,
     user: {
       id: payload.userId,
-      username: payload.username
+      username: payload.username,
+      role: payload.role
     }
   });
 });
 
 // ============================================
 // END AUTHENTICATION ENDPOINTS
+// ============================================
+
+// ============================================
+// ADMIN USER MANAGEMENT ENDPOINTS
+// ============================================
+
+// Get all users (admin only)
+app.get('/api/admin/users', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const users = getAllUsers();
+    console.log('[ADMIN] Retrieved all users, count:', users.length);
+    res.json({ success: true, users });
+  } catch (error) {
+    console.error('[ADMIN] Error getting users:', error);
+    res.status(500).json({ success: false, error: 'Failed to retrieve users' });
+  }
+});
+
+// Create new user (admin only)
+app.post('/api/admin/users', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { username, password, role } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Username and password are required'
+      });
+    }
+
+    // Validate role
+    if (role && role !== 'admin' && role !== 'user') {
+      return res.status(400).json({
+        success: false,
+        error: 'Role must be either "admin" or "user"'
+      });
+    }
+
+    // Check if username already exists
+    const existingUser = getUserByUsername(username);
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        error: 'Username already exists'
+      });
+    }
+
+    // Hash password
+    const passwordHash = await hashPassword(password);
+
+    // Create user
+    const userId = createUser(username, passwordHash, role || 'user');
+
+    console.log('[ADMIN] Created new user:', username, 'with role:', role || 'user');
+
+    res.status(201).json({
+      success: true,
+      message: 'User created successfully',
+      userId
+    });
+  } catch (error) {
+    console.error('[ADMIN] Error creating user:', error);
+    res.status(500).json({ success: false, error: 'Failed to create user' });
+  }
+});
+
+// Update user (admin only)
+app.put('/api/admin/users/:userId', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const { username, role, is_active, password } = req.body;
+
+    if (isNaN(userId)) {
+      return res.status(400).json({ success: false, error: 'Invalid user ID' });
+    }
+
+    // Validate role if provided
+    if (role && role !== 'admin' && role !== 'user') {
+      return res.status(400).json({
+        success: false,
+        error: 'Role must be either "admin" or "user"'
+      });
+    }
+
+    const updates: any = {};
+    if (username !== undefined) updates.username = username;
+    if (role !== undefined) updates.role = role;
+    if (is_active !== undefined) updates.is_active = is_active;
+
+    // Update basic user info
+    updateUser(userId, updates);
+
+    // Update password if provided
+    if (password) {
+      const { updateUserPassword } = await import('./utils/database');
+      const passwordHash = await hashPassword(password);
+      updateUserPassword(userId, passwordHash);
+    }
+
+    console.log('[ADMIN] Updated user:', userId, 'with updates:', updates);
+
+    res.json({
+      success: true,
+      message: 'User updated successfully'
+    });
+  } catch (error) {
+    console.error('[ADMIN] Error updating user:', error);
+    res.status(500).json({ success: false, error: 'Failed to update user' });
+  }
+});
+
+// Delete user (admin only)
+app.delete('/api/admin/users/:userId', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+
+    if (isNaN(userId)) {
+      return res.status(400).json({ success: false, error: 'Invalid user ID' });
+    }
+
+    // Prevent deleting yourself
+    if (req.user && req.user.userId === userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot delete your own account'
+      });
+    }
+
+    deleteUser(userId);
+
+    console.log('[ADMIN] Deleted user:', userId);
+
+    res.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    console.error('[ADMIN] Error deleting user:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete user' });
+  }
+});
+
+// ============================================
+// END ADMIN USER MANAGEMENT ENDPOINTS
 // ============================================
 
 // Unified enabler template endpoint
@@ -5199,6 +5349,14 @@ process.on('SIGINT', gracefulShutdown);
 console.log('[AUTH] Initializing authentication database...');
 initializeDatabase();
 console.log('[AUTH] Authentication database initialized');
+
+// Ensure admin user has admin role (for migration from older versions)
+try {
+  updateAdminRole();
+} catch (error) {
+  // Ignore if admin user doesn't exist yet
+  console.log('[AUTH] Admin user role update skipped (user may not exist)');
+}
 
 server.listen(PORT, () => {
   logger.info(`Anvil server running`, {

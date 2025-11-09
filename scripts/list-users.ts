@@ -57,7 +57,7 @@ function listUsers(): void {
   try {
     // Get all users
     const users = db.prepare(`
-      SELECT id, username, created_at, last_login, is_active
+      SELECT id, username, role, created_at, last_login, is_active
       FROM users
       ORDER BY id ASC
     `).all() as any[];
@@ -69,20 +69,21 @@ function listUsers(): void {
     }
 
     console.log('');
-    console.log('='.repeat(100));
+    console.log('='.repeat(110));
     console.log(`${colors.blue}Total Users: ${users.length}${colors.reset}`);
-    console.log('='.repeat(100));
+    console.log('='.repeat(110));
     console.log('');
 
     // Table header
     console.log(
       `${colors.blue}${'ID'.padEnd(6)} | ` +
       `${'Username'.padEnd(20)} | ` +
+      `${'Role'.padEnd(8)} | ` +
       `${'Status'.padEnd(10)} | ` +
       `${'Created'.padEnd(22)} | ` +
       `${'Last Login'.padEnd(22)}${colors.reset}`
     );
-    console.log('-'.repeat(100));
+    console.log('-'.repeat(110));
 
     // Table rows
     users.forEach((user) => {
@@ -90,29 +91,36 @@ function listUsers(): void {
         `${colors.green}Active${colors.reset}` :
         `${colors.red}Inactive${colors.reset}`;
 
+      const role = user.role === 'admin' ?
+        `${colors.yellow}${user.role}${colors.reset}` :
+        user.role;
+
       const createdAt = formatDate(user.created_at);
       const lastLogin = formatDate(user.last_login);
 
       console.log(
         `${user.id.toString().padEnd(6)} | ` +
         `${user.username.padEnd(20)} | ` +
+        `${role.padEnd(18)} | ` +
         `${status.padEnd(20)} | ` +
         `${createdAt.padEnd(22)} | ` +
         `${lastLogin.padEnd(22)}`
       );
     });
 
-    console.log('-'.repeat(100));
+    console.log('-'.repeat(110));
     console.log('');
 
     // Summary statistics
     const activeUsers = users.filter(u => u.is_active === 1).length;
     const inactiveUsers = users.filter(u => u.is_active === 0).length;
     const usersWithLogin = users.filter(u => u.last_login !== null).length;
+    const adminUsers = users.filter(u => u.role === 'admin').length;
 
     console.log(`${colors.blue}Summary:${colors.reset}`);
     console.log(`  Active users:     ${colors.green}${activeUsers}${colors.reset}`);
     console.log(`  Inactive users:   ${colors.red}${inactiveUsers}${colors.reset}`);
+    console.log(`  Admin users:      ${colors.yellow}${adminUsers}${colors.reset}`);
     console.log(`  Users with login: ${colors.blue}${usersWithLogin}${colors.reset}`);
     console.log('');
 

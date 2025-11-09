@@ -30,6 +30,7 @@ import Settings from './components/Settings'
 import Discovery from './components/Discovery'
 import Plan from './components/Plan'
 import ManageWorkspaces from './components/ManageWorkspaces'
+import AdminUserManagement from './components/AdminUserManagement'
 import DesignSystemDebug from './pages/DesignSystemDebug'
 import { getCurrentDesignSystem, applyDesignSystem } from './config/designSystems'
 
@@ -75,6 +76,13 @@ function AppContent(): JSX.Element {
                 <PrivateRoute>
                   <Layout>
                     <Settings />
+                  </Layout>
+                </PrivateRoute>
+              } />
+              <Route path="/admin/users" element={
+                <PrivateRoute>
+                  <Layout>
+                    <AdminUserManagement />
                   </Layout>
                 </PrivateRoute>
               } />

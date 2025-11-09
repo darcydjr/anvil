@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings, HelpCircle, Lightbulb, Clipboard, Search, X, MessageSquare, Upload } from 'lucide-react'
+import { Settings, HelpCircle, Lightbulb, Clipboard, Search, X, MessageSquare, Upload, Shield } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
+import { useAuth } from '../contexts/AuthContext'
 import { version } from '../../../package.json'
 import WorkspaceSelector from './WorkspaceSelector'
 import { Button } from './ui/button'
@@ -11,6 +12,7 @@ import { getCurrentDesignSystem } from '../config/designSystems'
 
 export default function Header(): JSX.Element {
   const { config, setSelectedCapability, searchTerm, setSearchTerm, performSearch } = useApp()
+  const { isAdmin } = useAuth()
   const navigate = useNavigate()
   const [localSearchTerm, setLocalSearchTerm] = useState('')
   const [logoFilter, setLogoFilter] = useState('')
@@ -192,6 +194,17 @@ export default function Header(): JSX.Element {
               >
                 <Settings size={20} />
               </Button>
+              {isAdmin() && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={(): void => navigate('/admin/users')}
+                  title="User Management (Admin)"
+                  className="text-purple-600 hover:bg-purple-600/10 hover:text-purple-600/80 transition-colors dark:text-purple-400 dark:hover:bg-purple-400/10"
+                >
+                  <Shield size={20} />
+                </Button>
+              )}
             </ButtonGroup>
             <ThemeToggle />
           </div>

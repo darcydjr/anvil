@@ -6,9 +6,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
 
+export type UserRole = 'admin' | 'user';
+
 interface User {
   id: number;
   username: string;
+  role: UserRole;
 }
 
 interface AuthContextType {
@@ -17,6 +20,7 @@ interface AuthContextType {
   user: User | null;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
+  isAdmin: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -115,12 +119,17 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
     });
   };
 
+  const isAdmin = (): boolean => {
+    return user?.role === 'admin';
+  };
+
   const value: AuthContextType = {
     isAuthenticated,
     loading,
     user,
     login,
-    logout
+    logout,
+    isAdmin
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
