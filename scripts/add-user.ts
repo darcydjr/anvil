@@ -119,7 +119,7 @@ function validatePassword(password: string): { valid: boolean; errors: string[] 
   };
 }
 
-async function addUser(username: string, password: string): Promise<void> {
+async function addUser(username: string, password: string, role: string = 'user'): Promise<void> {
   // Validate inputs
   const usernameValidation = validateUsername(username);
   if (!usernameValidation.valid) {
@@ -131,6 +131,12 @@ async function addUser(username: string, password: string): Promise<void> {
   if (!passwordValidation.valid) {
     printError('Password does not meet requirements:');
     passwordValidation.errors.forEach(err => console.error(`  - ${err}`));
+    process.exit(1);
+  }
+
+  // Validate role
+  if (role !== 'admin' && role !== 'user') {
+    printError(`Invalid role '${role}'. Must be 'admin' or 'user'`);
     process.exit(1);
   }
 
@@ -164,11 +170,11 @@ async function addUser(username: string, password: string): Promise<void> {
     printInfo('Hashing password...');
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
-    // Insert user
-    const stmt = db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)');
-    const result = stmt.run(username, passwordHash);
+    // Insert user with role
+    const stmt = db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)');
+    const result = stmt.run(username, passwordHash, role);
 
-    printSuccess(`User '${username}' created successfully`);
+    printSuccess(`User '${username}' created successfully with role '${role}'`);
     printInfo(`User ID: ${result.lastInsertRowid}`);
 
   } catch (error: any) {
@@ -191,6 +197,7 @@ async function main(): Promise<void> {
 
   let username: string;
   let password: string;
+  let role: string = 'user';
 
   if (args.length === 0) {
     // Interactive mode
@@ -205,6 +212,13 @@ async function main(): Promise<void> {
       });
     });
 
+    role = await new Promise((resolve) => {
+      rl.question('Enter role (admin/user) [user]: ', (answer) => {
+        const input = answer.trim().toLowerCase();
+        resolve(input || 'user');
+      });
+    });
+
     rl.close();
 
     password = await promptPassword('Enter password: ');
@@ -215,22 +229,25 @@ async function main(): Promise<void> {
       process.exit(1);
     }
 
-  } else if (args.length === 2) {
+  } else if (args.length === 2 || args.length === 3) {
     // Command-line arguments mode
     username = args[0];
     password = args[1];
+    role = args[2] || 'user';
   } else {
     printError('Invalid arguments');
     console.log('');
     console.log('Usage:');
     console.log('  Interactive mode:  npm run add-user');
-    console.log('  Command line:      npm run add-user <username> <password>');
-    console.log('  Or:                ./add-user.sh <username> <password>');
+    console.log('  Command line:      npm run add-user <username> <password> [role]');
+    console.log('  Or:                ./add-user.sh <username> <password> [role]');
+    console.log('');
+    console.log('  role: admin or user (default: user)');
     console.log('');
     process.exit(1);
   }
 
-  await addUser(username, password);
+  await addUser(username, password, role);
   console.log('');
 }
 

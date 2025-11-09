@@ -5,6 +5,7 @@
 
 import jwt from 'jsonwebtoken';
 import { Request } from 'express';
+import { UserRole } from './database';
 
 // Ensure JWT_SECRET is set
 if (!process.env.JWT_SECRET) {
@@ -17,6 +18,7 @@ const TOKEN_EXPIRATION = '24h';
 export interface JWTPayload {
   userId: number;
   username: string;
+  role: UserRole;
   iat?: number;  // Issued at
   exp?: number;  // Expiration
 }
@@ -25,12 +27,14 @@ export interface JWTPayload {
  * Generate a JWT token for an authenticated user
  * @param userId - The user's database ID
  * @param username - The user's username
+ * @param role - The user's role
  * @returns JWT token string
  */
-export function generateToken(userId: number, username: string): string {
+export function generateToken(userId: number, username: string, role: UserRole): string {
   const payload: JWTPayload = {
     userId,
-    username
+    username,
+    role
   };
 
   return jwt.sign(payload, JWT_SECRET, {
