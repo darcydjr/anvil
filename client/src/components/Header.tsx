@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings, HelpCircle, Lightbulb, Clipboard, Search, X, MessageSquare } from 'lucide-react'
+import { Settings, HelpCircle, Lightbulb, Clipboard, Search, X, MessageSquare, Upload } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { version } from '../../../package.json'
 import WorkspaceSelector from './WorkspaceSelector'
@@ -14,6 +14,7 @@ export default function Header(): JSX.Element {
   const navigate = useNavigate()
   const [localSearchTerm, setLocalSearchTerm] = useState('')
   const [logoFilter, setLogoFilter] = useState('')
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   // Update logo filter based on design system
   useEffect(() => {
@@ -48,6 +49,25 @@ export default function Header(): JSX.Element {
     setLocalSearchTerm('')
     setSearchTerm('')
     performSearch('')
+  }
+
+  const handleFileUploadClick = (): void => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const files = e.target.files
+    if (files && files.length > 0) {
+      // Handle the uploaded files here
+      console.log('Files selected:', Array.from(files).map(f => f.name))
+      // You can add additional logic here to process the files
+      // For now, we'll just log them to the console
+
+      // Reset the input so the same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
   }
 
   // Sync local state with context
@@ -109,7 +129,24 @@ export default function Header(): JSX.Element {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={handleFileChange}
+              multiple
+              accept=".md,.txt,.pdf,.doc,.docx,.json,.csv,.xml,.html,.css,.js,.ts,.tsx,.jsx,.py,.java,.cpp,.c,.h,.hpp,.go,.rs,.rb,.php,.swift,.kt,.yaml,.yml,text/*,application/pdf,application/json"
+            />
             <ButtonGroup>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleFileUploadClick}
+                title="Upload Files"
+                className="text-primary hover:bg-primary/10 hover:text-primary/80 transition-colors"
+              >
+                <Upload size={20} />
+              </Button>
               <Button
                 variant="outline"
                 size="icon"
