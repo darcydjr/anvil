@@ -10,7 +10,11 @@ import { ButtonGroup } from './ui/button-group'
 import { ThemeToggle } from './ui/theme-toggle'
 import { getCurrentDesignSystem } from '../config/designSystems'
 
-export default function Header(): JSX.Element {
+interface HeaderProps {
+  onChatToggle?: () => void
+}
+
+export default function Header({ onChatToggle }: HeaderProps): JSX.Element {
   const { config, setSelectedCapability, searchTerm, setSearchTerm, performSearch } = useApp()
   const { isAdmin } = useAuth()
   const navigate = useNavigate()
@@ -26,8 +30,8 @@ export default function Header(): JSX.Element {
     if (system.id === 'purple') {
       // Purple tint: hue-rotate to purple range
       setLogoFilter('brightness(0) saturate(100%) invert(21%) sepia(89%) saturate(3067%) hue-rotate(280deg) brightness(91%) contrast(102%)')
-    } else if (system.id === 'ford') {
-      // Ford blue tint
+    } else if (system.id === 'blue') {
+      // Blue tint
       setLogoFilter('brightness(0) saturate(100%) invert(11%) sepia(98%) saturate(4289%) hue-rotate(221deg) brightness(95%) contrast(107%)')
     } else {
       // Default (no filter)
@@ -161,7 +165,7 @@ export default function Header(): JSX.Element {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={(): void => navigate('/chat')}
+                onClick={onChatToggle}
                 title="AI Chat Assistant"
                 className="text-primary hover:bg-primary/10 hover:text-primary/80 transition-colors"
               >

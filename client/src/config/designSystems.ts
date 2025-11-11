@@ -112,11 +112,11 @@ export const purpleDesignSystem: DesignSystem = {
   }
 }
 
-// Ford Design System (Blue)
-export const fordDesignSystem: DesignSystem = {
-  id: 'ford',
-  name: 'Ford Design System',
-  description: 'Professional blue theme inspired by Ford branding',
+// Blue Design System
+export const blueDesignSystem: DesignSystem = {
+  id: 'blue',
+  name: 'Blue Design System',
+  description: 'Professional blue theme with clean aesthetics',
   primaryHex: '#003478',
   colors: {
     light: {
@@ -166,21 +166,21 @@ export const fordDesignSystem: DesignSystem = {
 
 // All available design systems
 export const designSystems: DesignSystem[] = [
+  blueDesignSystem,
   purpleDesignSystem,
-  fordDesignSystem,
 ]
 
 // Get design system by ID
 export function getDesignSystem(id: string): DesignSystem {
-  return designSystems.find(ds => ds.id === id) || purpleDesignSystem
+  return designSystems.find(ds => ds.id === id) || blueDesignSystem
 }
 
 // Get current design system from localStorage
 export function getCurrentDesignSystem(): DesignSystem {
-  if (typeof window === 'undefined') return purpleDesignSystem
+  if (typeof window === 'undefined') return blueDesignSystem
 
   const savedId = localStorage.getItem('designSystem')
-  return savedId ? getDesignSystem(savedId) : purpleDesignSystem
+  return savedId ? getDesignSystem(savedId) : blueDesignSystem
 }
 
 // Save design system selection

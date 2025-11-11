@@ -3,7 +3,7 @@
     {
       "id": "ws-default",
       "name": "Default Workspace",
-      "description": "Default workspace for getting started with Ford Anvil",
+      "description": "Default workspace for getting started with Anvil",
       "isActive": true,
       "projectPaths": [
         {
@@ -77,7 +77,7 @@
     "level": "DEBUG"
   },
   "ui": {
-    "title": "Ford Anvil",
+    "title": "Anvil",
     "description": "AI Powered Product Development"
   },
   "defaults": {
@@ -87,8 +87,8 @@
     "codeReview": "Not Required"
   },
   "aiAssistant": {
-    "provider": "claude-code",
-    "claudeCodePath": "claude-code",
-    "copilotPath": "gh copilot"
+    "provider": "claude",
+    "model": "claude-3-haiku-20240307",
+    "maxTokens": 2048
   }
 }

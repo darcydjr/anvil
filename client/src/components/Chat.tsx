@@ -20,6 +20,25 @@ import { Button } from './ui/button';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+// Create axios instance with auth token interceptor
+const api = axios.create({
+  baseURL: '/',
+});
+
+// Add request interceptor to inject authentication token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
@@ -27,9 +46,9 @@ interface ChatMessage {
 }
 
 interface ChatConfig {
-  provider: 'claude-code' | 'copilot';
-  claudeCodePath?: string;
-  copilotPath?: string;
+  provider: 'claude' | 'openai';
+  model?: string;
+  maxTokens?: number;
 }
 
 const Chat: React.FC = () => {
@@ -58,7 +77,7 @@ const Chat: React.FC = () => {
 
   const loadConfig = async () => {
     try {
-      const response = await axios.get('/api/chat/config');
+      const response = await api.get('/api/chat/config');
       if (response.data.success && response.data.config) {
         setConfig(response.data.config);
       } else {
@@ -72,7 +91,7 @@ const Chat: React.FC = () => {
 
   const loadChatHistory = async () => {
     try {
-      const response = await axios.get(`/api/chat/history/${sessionId}`);
+      const response = await api.get(`/api/chat/history/${sessionId}`);
       if (response.data.success && response.data.messages) {
         setMessages(response.data.messages.map((msg: any) => ({
           ...msg,
@@ -104,7 +123,7 @@ const Chat: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('/api/chat/message', {
+      const response = await api.post('/api/chat/message', {
         sessionId,
         message: inputMessage
       });
@@ -138,7 +157,7 @@ const Chat: React.FC = () => {
   const clearChat = async () => {
     if (window.confirm('Are you sure you want to clear the chat history?')) {
       try {
-        await axios.delete(`/api/chat/session/${sessionId}`);
+        await api.delete(`/api/chat/session/${sessionId}`);
         setMessages([]);
         toast.success('Chat history cleared');
       } catch (error: any) {
@@ -172,7 +191,7 @@ const Chat: React.FC = () => {
             <h1 className="text-2xl font-bold">AI Chat</h1>
             {config && (
               <p className="text-sm text-muted-foreground">
-                Using {config.provider === 'claude-code' ? 'Claude Code' : 'GitHub Copilot'}
+                Using {config.provider === 'claude' ? 'Claude' : 'OpenAI'} {config.model && `(${config.model})`}
               </p>
             )}
           </div>
@@ -211,7 +230,7 @@ const Chat: React.FC = () => {
               >
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs font-semibold">
-                    {message.role === 'user' ? 'You' : config?.provider === 'claude-code' ? 'Claude Code' : 'Copilot'}
+                    {message.role === 'user' ? 'You' : config?.provider === 'claude' ? 'Claude' : 'AI'}
                   </span>
                   <span className="text-xs opacity-70">
                     {formatTimestamp(message.timestamp)}

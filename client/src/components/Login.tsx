@@ -73,7 +73,7 @@ const Login: React.FC = () => {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-foreground">Ford Anvil</h2>
+          <h2 className="text-3xl font-bold text-foreground">Anvil</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             AI-Powered Product Development
           </p>

@@ -43,9 +43,10 @@ export interface LoggingConfig {
 }
 
 export interface AIAssistantConfig {
-  provider: 'claude-code' | 'copilot';
-  claudeCodePath?: string;
-  copilotPath?: string;
+  provider: 'claude' | 'openai';
+  apiKey?: string;
+  model?: string;
+  maxTokens?: number;
 }
 
 export interface Config {

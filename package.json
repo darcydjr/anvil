@@ -44,6 +44,7 @@
     "rename:dry-run": "node scripts/rename-project.js --dry-run"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.68.0",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/slider": "^5.0.1",
     "@react-navigation/bottom-tabs": "^7.4.7",

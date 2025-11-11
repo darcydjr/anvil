@@ -18,6 +18,10 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+// Debug: Check if API key is loaded
+console.log('[STARTUP] ANTHROPIC_API_KEY loaded:', !!process.env.ANTHROPIC_API_KEY);
+console.log('[STARTUP] ANTHROPIC_API_KEY length:', process.env.ANTHROPIC_API_KEY?.length || 0);
+
 import express, { Request, Response } from 'express';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -42,6 +46,7 @@ import { generateToken, validateToken, extractToken } from './utils/auth';
 import { verifyPassword, hashPassword } from './utils/password';
 import { authenticateToken, requireAdmin } from './utils/middleware';
 import { isAuthEnabled } from './utils/authConfig';
+import { chatService } from './services/chatService';
 
 // File watcher variable for graceful shutdown
 let fileWatcher: FSWatcher | null = null;
@@ -259,8 +264,15 @@ try {
   });
 
   // Initialize chat service with AI assistant config
+  logger.info('[CONFIG] Initializing chat service', {
+    hasAiAssistant: !!config.aiAssistant,
+    provider: config.aiAssistant?.provider
+  });
+
   if (config.aiAssistant) {
     chatService.setConfig(config.aiAssistant);
+  } else {
+    logger.warn('[CONFIG] No aiAssistant config found, chat will not be available');
   }
 } catch (error) {
   console.error('Error loading configuration, using defaults:', error.message);
@@ -317,8 +329,15 @@ async function reloadConfig(): Promise<void> {
     console.log('[CONFIG] Config reloaded successfully, activeWorkspaceId:', config.activeWorkspaceId);
 
     // Re-initialize chat service with updated AI assistant config
+    logger.info('[CONFIG] Re-initializing chat service after reload', {
+      hasAiAssistant: !!config.aiAssistant,
+      provider: config.aiAssistant?.provider
+    });
+
     if (config.aiAssistant) {
       chatService.setConfig(config.aiAssistant);
+    } else {
+      logger.warn('[CONFIG] No aiAssistant config found after reload');
     }
 
   } catch (error) {
@@ -4054,9 +4073,9 @@ app.post('/api/config/defaults', async (req, res) => {
 // Chat API Endpoints
 
 // Send a message to the AI assistant
-app.post('/api/chat/message', async (req, res) => {
+app.post('/api/chat/message', authenticateToken, async (req, res) => {
   try {
-    const { sessionId, message } = req.body;
+    const { sessionId, message, workspaceContext } = req.body;
 
     if (!sessionId || typeof sessionId !== 'string') {
       return res.status(400).json({ error: 'Session ID is required' });
@@ -4068,10 +4087,11 @@ app.post('/api/chat/message', async (req, res) => {
 
     logger.info('[CHAT] Received message', {
       sessionId,
-      messageLength: message.length
+      messageLength: message.length,
+      hasWorkspaceContext: !!workspaceContext
     });
 
-    const response = await chatService.sendMessage(sessionId, message);
+    const response = await chatService.sendMessage(sessionId, message, workspaceContext);
 
     res.json({
       success: true,
@@ -4087,7 +4107,7 @@ app.post('/api/chat/message', async (req, res) => {
 });
 
 // Get chat history for a session
-app.get('/api/chat/history/:sessionId', (req, res) => {
+app.get('/api/chat/history/:sessionId', authenticateToken, (req, res) => {
   try {
     const { sessionId } = req.params;
 
@@ -4109,7 +4129,7 @@ app.get('/api/chat/history/:sessionId', (req, res) => {
 });
 
 // Clear a chat session
-app.delete('/api/chat/session/:sessionId', (req, res) => {
+app.delete('/api/chat/session/:sessionId', authenticateToken, (req, res) => {
   try {
     const { sessionId } = req.params;
 
@@ -4130,7 +4150,7 @@ app.delete('/api/chat/session/:sessionId', (req, res) => {
 });
 
 // Get current AI assistant configuration
-app.get('/api/chat/config', (req, res) => {
+app.get('/api/chat/config', authenticateToken, (req, res) => {
   try {
     res.json({
       success: true,
