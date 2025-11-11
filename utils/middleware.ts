@@ -6,6 +6,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { extractToken, validateToken } from './auth';
 import { UserRole } from './database';
+import { isAuthEnabled } from './authConfig';
 
 // Extend Express Request to include user info
 declare global {
@@ -22,8 +23,21 @@ declare global {
 
 /**
  * Middleware to authenticate and attach user to request
+ * Bypasses authentication if disabled in config
  */
 export function authenticateToken(req: Request, res: Response, next: NextFunction): void {
+  // Check if authentication is disabled
+  if (!isAuthEnabled()) {
+    // Bypass authentication - attach default admin user
+    req.user = {
+      userId: 1,
+      username: 'admin',
+      role: 'admin' as UserRole
+    };
+    next();
+    return;
+  }
+
   const token = extractToken(req);
 
   if (!token) {

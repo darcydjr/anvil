@@ -39,6 +39,7 @@
     "add-user": "ts-node scripts/add-user.ts",
     "delete-user": "ts-node scripts/delete-user.ts",
     "list-users": "ts-node scripts/list-users.ts",
+    "toggle-auth": "ts-node scripts/toggle-auth.ts",
     "rename": "node scripts/rename-project.js",
     "rename:dry-run": "node scripts/rename-project.js --dry-run"
   },

@@ -45,14 +45,30 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
   // Check for existing token on mount
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('auth_token');
-
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
       try {
+        // First check if authentication is enabled
+        const statusResponse = await axios.get('/api/auth/status');
+
+        if (statusResponse.data.success && !statusResponse.data.authEnabled) {
+          // Authentication is disabled - auto-login as admin
+          setIsAuthenticated(true);
+          setUser({
+            id: 1,
+            username: 'admin',
+            role: 'admin'
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Authentication is enabled - check for token
+        const token = localStorage.getItem('auth_token');
+
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
         // Verify token with server
         const response = await axios.get('/api/auth/verify', {
           headers: {
@@ -68,7 +84,7 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
           localStorage.removeItem('auth_token');
         }
       } catch (error) {
-        // Token verification failed
+        // Token verification failed or status check failed
         localStorage.removeItem('auth_token');
       } finally {
         setLoading(false);

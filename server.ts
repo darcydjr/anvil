@@ -41,6 +41,7 @@ import {
 import { generateToken, validateToken, extractToken } from './utils/auth';
 import { verifyPassword, hashPassword } from './utils/password';
 import { authenticateToken, requireAdmin } from './utils/middleware';
+import { isAuthEnabled } from './utils/authConfig';
 
 // File watcher variable for graceful shutdown
 let fileWatcher: FSWatcher | null = null;
@@ -1403,6 +1404,14 @@ app.get('/api/auth/verify', (req, res) => {
       username: payload.username,
       role: payload.role
     }
+  });
+});
+
+// Check if authentication is enabled
+app.get('/api/auth/status', (req, res) => {
+  res.json({
+    success: true,
+    authEnabled: isAuthEnabled()
   });
 });
 
