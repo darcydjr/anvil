@@ -15,10 +15,15 @@ interface DefaultsConfig {
   codeReview: string
 }
 
+interface TipConfig {
+  enabled: boolean
+  frequency: number // in minutes
+}
+
 interface Config {
   server?: ServerConfig
   defaults?: DefaultsConfig
-  templates?: string
+  tipOfTheDay?: TipConfig
 }
 
 export default function Settings(): React.ReactElement {
@@ -31,6 +36,7 @@ export default function Settings(): React.ReactElement {
   const [isDefaultValuesExpanded, setIsDefaultValuesExpanded] = useState<boolean>(false)
   const [isDesignSystemExpanded, setIsDesignSystemExpanded] = useState<boolean>(true)
   const [selectedDesignSystem, setSelectedDesignSystem] = useState<DesignSystem>(getCurrentDesignSystem())
+  const [isTipSettingsExpanded, setIsTipSettingsExpanded] = useState<boolean>(false)
 
   useEffect(() => {
     loadConfig()
@@ -74,14 +80,6 @@ export default function Settings(): React.ReactElement {
     }
   }
 
-
-  const updateConfigField = (field: keyof Config, value: string): void => {
-    if (!config) return
-    setConfig({
-      ...config,
-      [field]: value
-    })
-  }
 
   const updateNestedConfigField = (section: keyof Config, field: string, value: string | number): void => {
     if (!config) return
@@ -285,25 +283,64 @@ export default function Settings(): React.ReactElement {
           )}
         </section>
 
-
-        {/* Templates Configuration */}
-        <section className="bg-card rounded-lg shadow-md border border-border p-6">
-          <h2 className="text-xl font-semibold text-foreground mb-2">Templates Configuration</h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            Templates are shared across all workspaces and define the structure for new documents.
-          </p>
-
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Templates Path</label>
-            <input
-              type="text"
-              value={config.templates || ''}
-              onChange={(e) => updateConfigField('templates', e.target.value)}
-              className="w-full px-3 py-2 bg-card border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground"
-              placeholder="./templates"
-            />
+        {/* Tip of the Day Settings */}
+        <section className="bg-card rounded-lg shadow-md border border-border">
+          <div
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+            onClick={() => setIsTipSettingsExpanded(!isTipSettingsExpanded)}
+          >
+            <h2 className="text-xl font-semibold text-foreground">Tip of the Day Settings</h2>
+            {isTipSettingsExpanded ? <ChevronDown size={20} className="text-muted-foreground" /> : <ChevronRight size={20} className="text-muted-foreground" />}
           </div>
+
+          {isTipSettingsExpanded && (
+            <div className="border-t border-border p-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="tipEnabled"
+                  checked={config.tipOfTheDay?.enabled !== false}
+                  onChange={(e) => updateNestedConfigField('tipOfTheDay', 'enabled', e.target.checked)}
+                  className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-ring focus:ring-2"
+                />
+                <label htmlFor="tipEnabled" className="text-sm font-medium text-foreground">
+                  Enable Tip of the Day
+                </label>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Show helpful tips about using Anvil that slide up from the bottom of the navigation panel.
+              </p>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Tip Frequency</label>
+                <select
+                  value={config.tipOfTheDay?.frequency || 60}
+                  onChange={(e) => updateNestedConfigField('tipOfTheDay', 'frequency', parseInt(e.target.value))}
+                  className="w-full px-3 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-foreground"
+                  disabled={config.tipOfTheDay?.enabled === false}
+                >
+                  <option value={15}>Every 15 minutes</option>
+                  <option value={30}>Every 30 minutes</option>
+                  <option value={60}>Every 1 hour</option>
+                  <option value={120}>Every 2 hours</option>
+                  <option value={240}>Every 4 hours</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={saveConfig}
+                  disabled={saving}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Save size={16} />
+                  {saving ? 'Saving...' : 'Save Tip Settings'}
+                </button>
+              </div>
+            </div>
+          )}
         </section>
+
       </div>
     </div>
   )

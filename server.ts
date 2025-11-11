@@ -114,10 +114,6 @@ function validateConfig(config: Config): string[] {
     }
   }
 
-  // Validate templates path
-  if (!config.templates || typeof config.templates !== 'string') {
-    errors.push('Config must have a templates path')
-  }
   
   // Validate server config
   if (config.server) {
@@ -180,8 +176,7 @@ function getConfigPaths(config: Config): ConfigPaths {
       return pathItem.path // New format with icon
     })
     return {
-      projectPaths: fallbackPaths,
-      templates: config.templates
+      projectPaths: fallbackPaths
     }
   }
 
@@ -194,8 +189,7 @@ function getConfigPaths(config: Config): ConfigPaths {
   })
 
   return {
-    projectPaths: projectPaths,
-    templates: config.templates
+    projectPaths: projectPaths
   }
 }
 
@@ -288,7 +282,6 @@ try {
       }
     ],
     activeWorkspaceId: "ws-default",
-    templates: "./templates",
     server: {
       port: 3000
     },
@@ -429,9 +422,7 @@ async function scanDirectory(dirPath: string, baseUrl: string = ''): Promise<Doc
 
       // Determine type based on filename or explicit type field
       let itemType = 'document'
-      if (baseUrl.includes('/templates')) {
-        itemType = 'template'
-      } else if (file.includes('-capability.md')) {
+      if (file.includes('-capability.md')) {
         itemType = 'capability'
       } else if (file.includes('-enabler.md')) {
         itemType = 'enabler'
@@ -546,14 +537,43 @@ async function enhanceDependencyTablesWithNames(html) {
         }
       }
     }
-    
+
+    // Create a map of enabler ID to name for quick lookup
+    const enablerMap = new Map();
+
+    // Read all enabler files from all project paths to build the map
+    for (const projectPath of configPaths.projectPaths) {
+      const resolvedPath = path.resolve(projectPath);
+      if (!await fs.pathExists(resolvedPath)) {
+        continue;
+      }
+
+      const files = await fs.readdir(resolvedPath);
+      const enablerFiles = files.filter(file => file.endsWith('-enabler.md'));
+
+      for (const file of enablerFiles) {
+        try {
+          const filePath = path.join(resolvedPath, file);
+          const content = await fs.readFile(filePath, 'utf8');
+          const id = extractId(content);
+          const name = extractName(content);
+
+          if (id && name) {
+            enablerMap.set(id, name);
+          }
+        } catch (error) {
+          console.warn(`Could not process enabler file ${file}:`, error.message);
+        }
+      }
+    }
+
     // Enhanced regex to find dependency table rows with capability IDs
     const dependencyTableRegex = /<tr>\s*<td>([A-Z]+-\d+)<\/td>\s*<td>([^<]*)<\/td>\s*<\/tr>/g;
-    
+
     // Replace each table row with enhanced version that includes capability name
-    const enhancedHtml = html.replace(dependencyTableRegex, (match, capabilityId, description) => {
+    let enhancedHtml = html.replace(dependencyTableRegex, (match, capabilityId, description) => {
       const capabilityName = capabilityMap.get(capabilityId);
-      
+
       if (capabilityName) {
         // Add the name after the ID in the same cell
         return match.replace(
@@ -561,7 +581,25 @@ async function enhanceDependencyTablesWithNames(html) {
           `<td><strong>${capabilityId}</strong><br/><span style="font-size: 0.9em; opacity: 0.8;">${capabilityName}</span></td>`
         );
       }
-      
+
+      return match; // Return unchanged if no name found
+    });
+
+    // Enhanced regex to find dependency table rows with enabler IDs
+    const enablerTableRegex = /<tr>\s*<td>(ENB-\d+)<\/td>\s*<td>([^<]*)<\/td>\s*<\/tr>/g;
+
+    // Replace each table row with enhanced version that includes enabler name
+    enhancedHtml = enhancedHtml.replace(enablerTableRegex, (match, enablerId, description) => {
+      const enablerName = enablerMap.get(enablerId);
+
+      if (enablerName) {
+        // Add the name after the ID in the same cell, similar to capability format
+        return match.replace(
+          `<td>${enablerId}</td>`,
+          `<td><strong>${enablerId}</strong><br/><span style="font-size: 0.9em; opacity: 0.8;">${enablerName}</span></td>`
+        );
+      }
+
       return match; // Return unchanged if no name found
     });
     
@@ -662,28 +700,9 @@ async function enhanceEnablerTablesWithDynamicData(html) {
                       <td><span class="priority-${enablerData.priority.toLowerCase()}">${enablerData.priority}</span></td>
                     </tr>`;
                   } else if (cellCount === 2) {
-                    // Two column format: ID and Description
-                    // Transform to full format with dynamic data
-                    const descriptionMatch = rowMatch.match(/<td[^>]*>(?:ENB-\d+)<\/td>\s*<td[^>]*>(.*?)<\/td>/);
-                    const description = descriptionMatch ? descriptionMatch[1] : '';
-
-                    return `<tr>
-                      <td>${enablerData.id}</td>
-                      <td>${enablerData.name}</td>
-                      <td><span class="status-${enablerData.status.toLowerCase().replace(/\s+/g, '-')}">${enablerData.status}</span></td>
-                      <td><span class="approval-${enablerData.approval.toLowerCase().replace(/\s+/g, '-')}">${enablerData.approval}</span></td>
-                      <td><span class="priority-${enablerData.priority.toLowerCase()}">${enablerData.priority}</span></td>
-                    </tr>`;
-                  } else {
-                    // Legacy format: Update with fresh data
-                    // Transform old format to new format without description column
-                    return `<tr>
-                      <td>${enablerData.id}</td>
-                      <td>${enablerData.name}</td>
-                      <td><span class="status-${enablerData.status.toLowerCase().replace(/\s+/g, '-')}">${enablerData.status}</span></td>
-                      <td><span class="approval-${enablerData.approval.toLowerCase().replace(/\s+/g, '-')}">${enablerData.approval}</span></td>
-                      <td><span class="priority-${enablerData.priority.toLowerCase()}">${enablerData.priority}</span></td>
-                    </tr>`;
+                    // Two column format: ID and Description (likely dependency tables)
+                    // Leave dependency tables alone - they're handled by enhanceDependencyTablesWithNames
+                    return rowMatch;
                   }
                 } else {
                   // Enabler not found - show warning
@@ -702,9 +721,9 @@ async function enhanceEnablerTablesWithDynamicData(html) {
       }
     );
 
-    // Also update the table header if it's the new format (single column or old format)
+    // Update table header only for single column tables (not dependency tables)
     enhancedHtml = enhancedHtml.replace(
-      /<tr[^>]*>\s*<th[^>]*>Enabler ID<\/th>\s*(<th[^>]*>Description<\/th>\s*)?<\/tr>/,
+      /<tr[^>]*>\s*<th[^>]*>Enabler ID<\/th>\s*<\/tr>/,
       `<tr>
         <th>Enabler ID</th>
         <th>Name</th>
@@ -1645,7 +1664,6 @@ app.get('/api/capabilities', async (req, res) => {
   try {
     const configPaths = getConfigPaths(config);
     const allItems = await scanProjectPaths(configPaths.projectPaths);
-    const templates = await scanDirectory(configPaths.templates, 'templates');
 
     // Filter out non-document files and separate capabilities and enablers
     const excludedFiles = ['SOFTWARE_DEVELOPMENT_PLAN.md', 'README.md', 'CONTRIBUTING.md', 'LICENSE', 'NOTICE'];
@@ -1664,8 +1682,7 @@ app.get('/api/capabilities', async (req, res) => {
 
     res.json({
       capabilities,
-      enablers,
-      templates
+      enablers
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1679,7 +1696,6 @@ app.get('/api/capabilities-dynamic', async (req, res) => {
   try {
     const configPaths = getConfigPaths(config);
     const allItems = await scanProjectPaths(configPaths.projectPaths);
-    const templates = await scanDirectory(configPaths.templates, 'templates');
 
     // Filter out non-document files and separate capabilities and enablers
     const excludedFiles = ['SOFTWARE_DEVELOPMENT_PLAN.md', 'README.md', 'CONTRIBUTING.md', 'LICENSE', 'NOTICE'];
@@ -1784,8 +1800,7 @@ app.get('/api/capabilities-dynamic', async (req, res) => {
 
     res.json({
       capabilities: enhancedCapabilities,
-      enablers,
-      templates
+      enablers
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1883,7 +1898,6 @@ app.get('/api/capabilities-with-dependencies', async (req, res) => {
   try {
     const configPaths = getConfigPaths(config);
     const allItems = await scanProjectPaths(configPaths.projectPaths);
-    const templates = await scanDirectory(configPaths.templates, 'templates');
 
     // Filter out non-document files and separate capabilities and enablers
     const excludedFiles = ['SOFTWARE_DEVELOPMENT_PLAN.md', 'README.md', 'CONTRIBUTING.md', 'LICENSE', 'NOTICE'];
@@ -1953,8 +1967,7 @@ app.get('/api/capabilities-with-dependencies', async (req, res) => {
 
     res.json({
       capabilities: enhancedCapabilities,
-      enablers,
-      templates
+      enablers
     });
   } catch (error) {
     console.error('[CAPABILITIES-WITH-DEPS] Error loading capabilities with dependencies:', error);
@@ -1973,11 +1986,7 @@ app.get('/api/file/*', async (req, res) => {
     let cleanFilePath;
     let fileLocation = null;
 
-    if (filePath.startsWith('templates/')) {
-      cleanFilePath = filePath.replace('templates/', '');
-      fullPath = path.join(configPaths.templates, cleanFilePath);
-      projectRoot = path.resolve(configPaths.templates);
-    } else {
+    {
       // Try to find file in project paths
       cleanFilePath = filePath;
       // Remove common prefixes
@@ -2071,14 +2080,7 @@ app.post('/api/file/*', async (req, res) => {
     let cleanFilePath;
     let fileLocation = null;
 
-    if (filePath.startsWith('templates/')) {
-      const configPaths = getConfigPaths(config);
-      const templatePath = path.resolve(configPaths.templates);
-      cleanFilePath = filePath.replace('templates/', '');
-      fullPath = path.join(templatePath, cleanFilePath);
-      projectRoot = path.resolve(templatePath);
-      console.log('[SAVE] Using templates path:', templatePath);
-    } else {
+    {
       // Find file in project paths or use first project path for new files
       const configPaths = getConfigPaths(config);
       cleanFilePath = filePath;
@@ -2201,12 +2203,7 @@ app.delete('/api/file/*', async (req, res) => {
     let cleanFilePath;
     let fileLocation = null;
 
-    if (filePath.startsWith('templates/')) {
-      const configPaths = getConfigPaths(config);
-      cleanFilePath = filePath.replace('templates/', '');
-      fullPath = path.join(configPaths.templates, cleanFilePath);
-      projectRoot = path.resolve(configPaths.templates);
-    } else {
+    {
       // Find file in project paths
       const configPaths = getConfigPaths(config);
       cleanFilePath = filePath;
@@ -2312,14 +2309,7 @@ app.put('/api/file/rename/*', async (req, res) => {
     let oldProjectRoot, newProjectRoot;
     let oldCleanPath, newCleanPath;
     
-    if (oldFilePath.startsWith('templates/')) {
-      const configPaths = getConfigPaths(config);
-      oldCleanPath = oldFilePath.replace('templates/', '');
-      newCleanPath = newFilePath.replace('templates/', '');
-      projectRoot = path.resolve(configPaths.templates);
-      oldProjectRoot = projectRoot;
-      newProjectRoot = projectRoot;
-    } else {
+    {
       // For capabilities and enablers - search for existing file across all project paths
       const configPaths = getConfigPaths(config);
       oldCleanPath = oldFilePath;
@@ -2376,11 +2366,7 @@ app.put('/api/file/rename/*', async (req, res) => {
     }
     
     try {
-      if (oldFilePath.startsWith('templates/')) {
-        // Template files - use same project root for both
-        oldFullPath = validateAndResolvePath(oldCleanPath, projectRoot, 'old rename path');
-        newFullPath = validateAndResolvePath(newCleanPath, projectRoot, 'new rename path');
-      } else {
+      {
         // Capability/Enabler files - may be cross-project move
         oldFullPath = validateAndResolvePath(oldCleanPath, oldProjectRoot, 'old rename path');
         newFullPath = validateAndResolvePath(newCleanPath, newProjectRoot, 'new rename path');
@@ -2397,8 +2383,8 @@ app.put('/api/file/rename/*', async (req, res) => {
       return res.status(403).json({ error: 'Access denied: ' + securityError.message });
     }
     
-    // Note: We already verified the old file exists during path resolution for non-template files
-    if (oldFilePath.startsWith('templates/') && !await fs.pathExists(oldFullPath)) {
+    // Verify the old file exists
+    if (!await fs.pathExists(oldFullPath)) {
       return res.status(404).json({ error: 'Original file not found' });
     }
 

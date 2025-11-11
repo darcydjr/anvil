@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import mermaid from 'mermaid'
 import { useApp } from '../contexts/AppContext'
-import { Maximize2, Minimize2, X, Move, RotateCcw } from 'lucide-react'
+import { Maximize2, Minimize2, X, Move, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react'
 
 interface DiagramData {
   capabilities: any[]
@@ -21,6 +21,10 @@ export default function RelationshipDiagram(): JSX.Element {
   const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState<boolean>(false)
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
+  const [zoomLevel, setZoomLevel] = useState<number>(1)
+  const [minZoom] = useState<number>(0.3)
+  const [maxZoom] = useState<number>(3)
+  const [zoomInputValue, setZoomInputValue] = useState<string>('100')
 
   // Load diagram data with dependencies
   useEffect(() => {
@@ -234,11 +238,12 @@ graph TB
         const { svg } = await mermaid.render(diagramId, diagramSyntax)
         mermaidRef.current.innerHTML = svg
 
-        // Add click handlers for navigation and apply pan transform
+        // Add click handlers for navigation and apply pan and zoom transform
         const svgElement = mermaidRef.current.querySelector('svg')
         if (svgElement) {
           svgElement.addEventListener('click', handleDiagramClick)
-          svgElement.style.transform = `translate(${panOffset.x}px, ${panOffset.y}px)`
+          svgElement.style.transform = `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`
+          svgElement.style.transformOrigin = 'center center'
           svgElement.style.cursor = isPanMode ? (isDragging ? 'grabbing' : 'grab') : 'default'
         }
 
@@ -264,7 +269,7 @@ graph TB
         svgElement.removeEventListener('click', handleDiagramClick)
       }
     }
-  }, [diagramSyntax, diagramId, panOffset, isPanMode, isDragging])
+  }, [diagramSyntax, diagramId, panOffset, zoomLevel, isPanMode, isDragging])
 
   const handleDiagramClick = (event: MouseEvent): void => {
     // Find clicked node
@@ -292,6 +297,45 @@ graph TB
 
   const resetPan = (): void => {
     setPanOffset({ x: 0, y: 0 })
+  }
+
+  const zoomIn = (): void => {
+    const newZoom = Math.min(zoomLevel + 0.2, maxZoom)
+    setZoomLevel(newZoom)
+    setZoomInputValue(Math.round(newZoom * 100).toString())
+  }
+
+  const zoomOut = (): void => {
+    const newZoom = Math.max(zoomLevel - 0.2, minZoom)
+    setZoomLevel(newZoom)
+    setZoomInputValue(Math.round(newZoom * 100).toString())
+  }
+
+  const resetZoom = (): void => {
+    setZoomLevel(1)
+    setZoomInputValue('100')
+    setPanOffset({ x: 0, y: 0 })
+  }
+
+  const handleZoomInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const value = e.target.value.replace(/[^\d]/g, '') // Only allow digits
+    setZoomInputValue(value)
+  }
+
+  const handleZoomInputBlur = (): void => {
+    const numValue = parseInt(zoomInputValue) || 100
+    const clampedValue = Math.max(minZoom * 100, Math.min(maxZoom * 100, numValue))
+    const newZoom = clampedValue / 100
+
+    setZoomLevel(newZoom)
+    setZoomInputValue(clampedValue.toString())
+  }
+
+  const handleZoomInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key === 'Enter') {
+      handleZoomInputBlur()
+      e.currentTarget.blur()
+    }
   }
 
   const handleMouseDown = useCallback((event: React.MouseEvent) => {
@@ -322,6 +366,15 @@ graph TB
   const handleMouseLeave = useCallback(() => {
     setIsDragging(false)
   }, [])
+
+  const handleWheel = useCallback((event: React.WheelEvent) => {
+    event.preventDefault()
+
+    const delta = event.deltaY > 0 ? -0.1 : 0.1
+    const newZoom = Math.max(minZoom, Math.min(maxZoom, zoomLevel + delta))
+    setZoomLevel(newZoom)
+    setZoomInputValue(Math.round(newZoom * 100).toString())
+  }, [minZoom, maxZoom, zoomLevel])
 
   // Close expanded view on escape key
   useEffect(() => {
@@ -390,11 +443,12 @@ graph TB
         const { svg } = await mermaid.render(expandedDiagramId, diagramSyntax)
         expandedMermaidRef.current.innerHTML = svg
 
-        // Add click handlers for navigation and apply pan transform
+        // Add click handlers for navigation and apply pan and zoom transform
         const svgElement = expandedMermaidRef.current.querySelector('svg')
         if (svgElement) {
           svgElement.addEventListener('click', handleDiagramClick)
-          svgElement.style.transform = `translate(${panOffset.x}px, ${panOffset.y}px)`
+          svgElement.style.transform = `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`
+          svgElement.style.transformOrigin = 'center center'
           svgElement.style.cursor = isPanMode ? (isDragging ? 'grabbing' : 'grab') : 'default'
         }
 
@@ -420,7 +474,7 @@ graph TB
         svgElement.removeEventListener('click', handleDiagramClick)
       }
     }
-  }, [diagramSyntax, expandedDiagramId, isExpanded, panOffset, isPanMode, isDragging])
+  }, [diagramSyntax, expandedDiagramId, isExpanded, panOffset, zoomLevel, isPanMode, isDragging])
 
   if (loading || diagramLoading) {
     return (
@@ -451,9 +505,51 @@ graph TB
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Reset Controls - Always visible on the left */}
+          <button
+            onClick={resetZoom}
+            className="flex items-center justify-center w-8 h-8 text-muted-foreground rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+            title="Reset zoom and pan"
+          >
+            <RotateCcw size={16} />
+          </button>
+
+          {/* Zoom Controls */}
+          <div className="flex items-center gap-1 bg-muted rounded-md p-1">
+            <button
+              onClick={zoomOut}
+              disabled={zoomLevel <= minZoom}
+              className="flex items-center justify-center w-8 h-8 text-muted-foreground rounded hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Zoom out"
+            >
+              <ZoomOut size={16} />
+            </button>
+            <div className="relative">
+              <input
+                type="text"
+                value={zoomInputValue}
+                onChange={handleZoomInputChange}
+                onBlur={handleZoomInputBlur}
+                onKeyPress={handleZoomInputKeyPress}
+                className="w-12 px-1 py-1 text-xs text-center bg-transparent text-muted-foreground border-none outline-none focus:bg-accent focus:text-accent-foreground rounded"
+                title="Click to edit zoom level"
+              />
+              <span className="absolute right-0 top-1/2 transform -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">%</span>
+            </div>
+            <button
+              onClick={zoomIn}
+              disabled={zoomLevel >= maxZoom}
+              className="flex items-center justify-center w-8 h-8 text-muted-foreground rounded hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Zoom in"
+            >
+              <ZoomIn size={16} />
+            </button>
+          </div>
+
+          {/* Pan Controls */}
           <button
             onClick={togglePanMode}
-            className={`flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors ${
+            className={`flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors min-w-[80px] ${
               isPanMode
                 ? 'bg-secondary text-secondary-foreground hover:bg-secondary/90'
                 : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
@@ -461,18 +557,8 @@ graph TB
             title={isPanMode ? 'Disable pan mode' : 'Enable pan mode'}
           >
             <Move size={16} />
-            {isPanMode ? 'Pan: ON' : 'Pan'}
+            <span>{isPanMode ? 'ON' : 'OFF'}</span>
           </button>
-          {isPanMode && (
-            <button
-              onClick={resetPan}
-              className="flex items-center gap-2 px-3 py-2 text-sm bg-muted text-muted-foreground rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
-              title="Reset pan position"
-            >
-              <RotateCcw size={16} />
-              Reset
-            </button>
-          )}
           {isExpanded ? (
             <>
               <button
@@ -509,6 +595,7 @@ graph TB
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
+        onWheel={handleWheel}
         style={{
           cursor: isPanMode ? (isDragging ? 'grabbing' : 'grab') : 'default',
           userSelect: isPanMode ? 'none' : 'auto'
