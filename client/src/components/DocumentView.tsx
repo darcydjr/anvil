@@ -420,6 +420,7 @@ export default function DocumentView(): React.ReactElement {
           }
         }
 
+
         // Create folder icon container
         const iconContainer = doc.createElement('span')
         iconContainer.className = 'folder-icon-container'
@@ -475,7 +476,8 @@ export default function DocumentView(): React.ReactElement {
     return doc.body.innerHTML
   }, [calculateRelativePath])
 
-  // Attach click handlers to folder icons after HTML is rendered
+
+  // Attach click handlers to folder and copy icons after HTML is rendered
   useEffect(() => {
     if (contentRef.current) {
       const folderIcon = contentRef.current.querySelector('[data-open-explorer="true"]')
@@ -486,9 +488,12 @@ export default function DocumentView(): React.ReactElement {
           handleOpenExplorer()
         }
         folderIcon.addEventListener('click', clickHandler)
+      }
 
-        return () => {
-          folderIcon.removeEventListener('click', clickHandler)
+
+      return () => {
+        if (folderIcon) {
+          folderIcon.removeEventListener('click', () => {})
         }
       }
     }

@@ -4666,6 +4666,9 @@ app.get('*', (req, res) => {
 // Create HTTP server for WebSocket support
 const server = http.createServer(app);
 
+// Increase max listeners to prevent warning
+server.setMaxListeners(20);
+
 // Initialize WebSocket server
 wss = new WebSocket.Server({ server });
 
