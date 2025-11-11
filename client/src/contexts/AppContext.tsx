@@ -300,6 +300,10 @@ export function AppProvider({ children }: AppProviderProps): JSX.Element {
       setSelectedDocument(null)
       clearHistory()
 
+      // Force WebSocket reconnection when switching workspaces
+      console.log('[AppContext] Workspace switched, reconnecting WebSocket...')
+      websocketService.forceReconnect()
+
       loadData()
 
       return true
@@ -452,6 +456,8 @@ export function AppProvider({ children }: AppProviderProps): JSX.Element {
 
   // Function to check for metadata changes and show notifications
   const checkForMetadataChanges = useCallback(async (filePath: string, source: 'form-save' | 'external-change' = 'external-change') => {
+    console.log(`[AppContext] checkForMetadataChanges called with:`, { filePath, source })
+
     try {
       // Only suppress notifications for form saves, not external changes
       if (source === 'form-save') {
@@ -483,10 +489,17 @@ export function AppProvider({ children }: AppProviderProps): JSX.Element {
       const previousMetadata = JSON.parse(localStorage.getItem(storageKey) || '{}')
 
       // Check for changes in Status or Approval
-      const statusChanged = previousMetadata.Status && currentMetadata.Status &&
-                           previousMetadata.Status !== currentMetadata.Status
-      const approvalChanged = previousMetadata.Approval && currentMetadata.Approval &&
-                             previousMetadata.Approval !== currentMetadata.Approval
+      const statusChanged = (previousMetadata.Status || '') !== (currentMetadata.Status || '')
+      const approvalChanged = (previousMetadata.Approval || '') !== (currentMetadata.Approval || '')
+
+      console.log('[AppContext] Status change check:', {
+        previousStatus: previousMetadata.Status,
+        currentStatus: currentMetadata.Status,
+        statusChanged,
+        previousApproval: previousMetadata.Approval,
+        currentApproval: currentMetadata.Approval,
+        approvalChanged
+      })
 
       if (statusChanged || approvalChanged) {
         // Collect all changes to show in overlay
@@ -495,20 +508,27 @@ export function AppProvider({ children }: AppProviderProps): JSX.Element {
         if (statusChanged) {
           changes.push({
             field: 'Status',
-            oldValue: previousMetadata.Status,
-            newValue: currentMetadata.Status
+            oldValue: previousMetadata.Status || '(empty)',
+            newValue: currentMetadata.Status || '(empty)'
           })
         }
 
         if (approvalChanged) {
           changes.push({
             field: 'Approval',
-            oldValue: previousMetadata.Approval,
-            newValue: currentMetadata.Approval
+            oldValue: previousMetadata.Approval || '(empty)',
+            newValue: currentMetadata.Approval || '(empty)'
           })
         }
 
         // Trigger external change notification via custom event for DocumentView
+        console.log(`[AppContext] Dispatching external-change event:`, {
+          documentId,
+          documentName,
+          changes,
+          filePath
+        })
+
         const event = new CustomEvent('external-change', {
           detail: {
             documentId,
@@ -534,6 +554,19 @@ export function AppProvider({ children }: AppProviderProps): JSX.Element {
     checkForMetadataChangesRef.current = checkForMetadataChanges
   }, [loadData, checkForMetadataChanges])
 
+  // Watch for workspace changes and reconnect WebSocket
+  const [previousActiveWorkspaceId, setPreviousActiveWorkspaceId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (state.activeWorkspaceId &&
+        previousActiveWorkspaceId &&
+        state.activeWorkspaceId !== previousActiveWorkspaceId) {
+      console.log('[AppContext] Active workspace changed, forcing WebSocket reconnection...')
+      websocketService.forceReconnect()
+    }
+    setPreviousActiveWorkspaceId(state.activeWorkspaceId)
+  }, [state.activeWorkspaceId, previousActiveWorkspaceId])
+
   useEffect(() => {
     loadData()
     loadConfig()
@@ -541,17 +574,29 @@ export function AppProvider({ children }: AppProviderProps): JSX.Element {
 
     websocketService.connect()
 
+    // Debug WebSocket connection status
+    setTimeout(() => {
+      console.log('[AppContext] WebSocket connection status:', websocketService.getIsConnected())
+    }, 1000)
+
     const removeListener = websocketService.addListener((data: WebSocketData) => {
-      console.log('WebSocket data received in AppContext:', data)
+      console.log('[AppContext] WebSocket data received:', data)
 
       if (data.type === 'file-change') {
         const filePath = (data.filePath || '').toLowerCase()
-        if (filePath.endsWith('.md') && (filePath.includes('capability') || filePath.includes('enabler'))) {
-          console.log('Markdown file changed, refreshing data:', data.filePath)
+        console.log('[AppContext] Processing file-change event for:', filePath)
+        console.log('[AppContext] File ends with .md:', filePath.endsWith('.md'))
+
+        if (filePath.endsWith('.md')) {
+          console.log('[AppContext] Markdown file changed, processing:', data.filePath)
+          console.log('[AppContext] checkForMetadataChangesRef.current available:', !!checkForMetadataChangesRef.current)
 
           // Check for metadata changes and show toast notifications using ref
           if (checkForMetadataChangesRef.current) {
+            console.log('[AppContext] Calling checkForMetadataChanges with:', data.filePath)
             checkForMetadataChangesRef.current(data.filePath || '')
+          } else {
+            console.warn('[AppContext] checkForMetadataChangesRef.current is not available!')
           }
 
           setTimeout(() => {

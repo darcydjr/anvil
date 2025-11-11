@@ -151,27 +151,39 @@ function getConfigPaths(config: Config): ConfigPaths {
     }
     console.warn(`[CONFIG] Using fallback workspace: ${fallbackWorkspace.id}`)
     const fallbackPaths = fallbackWorkspace.projectPaths.map(pathItem => {
-      if (typeof pathItem === 'string') {
-        return pathItem // Legacy format
-      }
-      return pathItem.path // New format with icon
+      const rawPath = typeof pathItem === 'string' ? pathItem : pathItem.path
+      return normalizeWatchPath(rawPath)
     })
     return {
       projectPaths: fallbackPaths
     }
   }
 
-  // Extract just the path strings from path objects (support both legacy string format and new object format)
+  // Extract and normalize path strings (support both legacy string format and new object format)
   const projectPaths = activeWorkspace.projectPaths.map(pathItem => {
-    if (typeof pathItem === 'string') {
-      return pathItem // Legacy format
-    }
-    return pathItem.path // New format with icon
+    const rawPath = typeof pathItem === 'string' ? pathItem : pathItem.path
+    return normalizeWatchPath(rawPath)
   })
 
   return {
     projectPaths: projectPaths
   }
+}
+
+// Helper function to normalize paths for file watching
+function normalizeWatchPath(inputPath: string): string {
+  let normalizedPath: string
+
+  if (path.isAbsolute(inputPath)) {
+    // For absolute paths, use as-is but normalize separators
+    normalizedPath = path.resolve(inputPath)
+  } else {
+    // For relative paths, resolve relative to current working directory
+    normalizedPath = path.resolve(process.cwd(), inputPath)
+  }
+
+  // Convert to forward slashes for consistent cross-platform handling
+  return normalizedPath.replace(/\\/g, '/')
 }
 
 // Deep merge function for configuration objects
@@ -401,6 +413,25 @@ async function scanProjectPaths(projectPaths: string[]): Promise<DocumentItem[]>
 
 // Function to find file across project paths
 async function findFileInProjectPaths(filePath: string, projectPaths: (string | { path: string; icon?: string })[]): Promise<FileLocation | null> {
+  // First check if filePath is already an absolute path within one of our project paths
+  if (path.isAbsolute(filePath)) {
+    const normalizedFilePath = filePath.replace(/\\/g, '/');
+
+    for (const projectPath of projectPaths) {
+      const pathString = typeof projectPath === 'string' ? projectPath : projectPath.path;
+      const normalizedProjectPath = path.resolve(pathString).replace(/\\/g, '/');
+
+      // Check if the absolute file path is within this project path
+      if (normalizedFilePath.startsWith(normalizedProjectPath) && await fs.pathExists(filePath)) {
+        return {
+          fullPath: path.resolve(filePath),
+          projectRoot: path.resolve(pathString)
+        };
+      }
+    }
+  }
+
+  // Traditional relative path search
   for (const projectPath of projectPaths) {
     // Ensure projectPath is a string - handle both legacy string format and new object format
     const pathString = typeof projectPath === 'string' ? projectPath : projectPath.path;
@@ -4659,11 +4690,23 @@ function broadcastFileChange(changeType, filePath) {
       filePath
     });
 
+    console.log(`[WEBSOCKET] Broadcasting file-change:`, {
+      changeType,
+      filePath,
+      clientCount: wss.clients.size,
+      message
+    });
+
     wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(message);
+        console.log(`[WEBSOCKET] Sent message to client`);
+      } else {
+        console.log(`[WEBSOCKET] Skipped client with readyState:`, client.readyState);
       }
     });
+  } else {
+    console.log(`[WEBSOCKET] Cannot broadcast - WebSocket server not available`);
   }
 }
 
@@ -4679,45 +4722,63 @@ function setupFileWatchers() {
 
     console.log('Setting up file watchers for .md files in paths:', configPaths.projectPaths);
 
-    // Test if directories exist and find actual .md files
+    // Validate and collect all .md files with proper path handling
+    const validDirectories = [];
     const allMdFiles = [];
-    configPaths.projectPaths.forEach(p => {
-      const exists = fs.existsSync(p);
-      console.log(`Testing directory access: ${p}`, exists ? 'EXISTS' : 'NOT FOUND');
+
+    configPaths.projectPaths.forEach(normalizedPath => {
+      const exists = fs.existsSync(normalizedPath);
+      console.log(`Testing directory access: ${normalizedPath}`, exists ? 'EXISTS' : 'NOT FOUND');
 
       if (exists) {
+        validDirectories.push(normalizedPath);
         try {
-          const files = fs.readdirSync(p);
+          const files = fs.readdirSync(normalizedPath);
           const mdFiles = files
             .filter(file => file.endsWith('.md') && !file.includes('backup'))
-            .map(file => path.join(p, file));
+            .map(file => {
+              // Use proper path joining and normalization
+              const fullPath = path.join(normalizedPath, file);
+              return fullPath.replace(/\\/g, '/');
+            });
           allMdFiles.push(...mdFiles);
-          console.log(`Found .md files in ${p}:`, files.filter(file => file.endsWith('.md') && !file.includes('backup')));
+          console.log(`Found .md files in ${normalizedPath}:`, files.filter(file => file.endsWith('.md') && !file.includes('backup')));
         } catch (err) {
-          console.error(`Error reading directory ${p}:`, err.message);
+          console.error(`Error reading directory ${normalizedPath}:`, err.message);
         }
       }
     });
 
+    console.log('Valid directories to watch:', validDirectories);
     console.log('All .md files to watch:', allMdFiles);
 
-    // Watch the directories and all existing .md files
-    const watchTargets = [...configPaths.projectPaths, ...allMdFiles];
+    // Only watch directories, not individual files (more reliable for cross-platform)
+    const watchTargets = validDirectories;
 
+    if (watchTargets.length === 0) {
+      console.warn('No valid directories to watch for .md files');
+      return;
+    }
+
+    // Try native watching first, fall back to polling if it fails
     fileWatcher = chokidar.watch(watchTargets, {
       persistent: true,
       ignoreInitial: true,
-      usePolling: true,
-      interval: 1000,
+      usePolling: false, // Try native watching first
       ignored: [
         '**/backup/**',
         '**/backup',
-        /backup/
+        /backup/,
+        '**/node_modules/**',
+        '**/.git/**'
       ],
       awaitWriteFinish: {
-        stabilityThreshold: 300,
+        stabilityThreshold: 500, // Increased for better stability
         pollInterval: 100
-      }
+      },
+      // Better cross-platform support
+      atomic: true,
+      followSymlinks: false
     });
 
     fileWatcher
@@ -4726,87 +4787,88 @@ function setupFileWatchers() {
         console.log('Watched files:', fileWatcher.getWatched());
       })
       .on('add', (filePath) => {
-        console.log('File added:', filePath);
-        if (filePath.endsWith('.md')) {
-          broadcastFileChange('add', filePath);
+        const normalizedPath = filePath.replace(/\\/g, '/');
+        console.log('File added:', normalizedPath);
+        if (normalizedPath.endsWith('.md') && !normalizedPath.includes('backup')) {
+          broadcastFileChange('add', normalizedPath);
         }
       })
       .on('change', (filePath) => {
-        console.log('File changed:', filePath);
-        if (filePath.endsWith('.md')) {
-          broadcastFileChange('change', filePath);
+        const normalizedPath = filePath.replace(/\\/g, '/');
+        console.log('File changed:', normalizedPath);
+        if (normalizedPath.endsWith('.md') && !normalizedPath.includes('backup')) {
+          broadcastFileChange('change', normalizedPath);
         }
       })
       .on('unlink', (filePath) => {
-        console.log('File removed:', filePath);
-        if (filePath.endsWith('.md')) {
-          broadcastFileChange('unlink', filePath);
+        const normalizedPath = filePath.replace(/\\/g, '/');
+        console.log('File removed:', normalizedPath);
+        if (normalizedPath.endsWith('.md') && !normalizedPath.includes('backup')) {
+          broadcastFileChange('unlink', normalizedPath);
         }
       })
       .on('error', (error) => {
         console.error('File watcher error:', error);
         // Try polling mode if native watching fails
         console.log('Retrying with polling mode...');
-        setupFileWatchersWithPolling();
+        setupFileWatchersWithPolling(validDirectories);
       });
 
   } catch (error) {
     console.error('Failed to setup file watchers:', error);
-    // Fallback to polling mode
-    setupFileWatchersWithPolling();
+    // Fallback to polling mode with the validated directories
+    const configPaths = getConfigPaths(config);
+    setupFileWatchersWithPolling(configPaths.projectPaths);
   }
 }
 
 // Fallback function for polling mode
-function setupFileWatchersWithPolling() {
+function setupFileWatchersWithPolling(validDirectories?: string[]) {
   if (fileWatcher) {
     fileWatcher.close();
   }
 
   try {
-    const configPaths = getConfigPaths(config);
+    // Use provided valid directories or get from config
+    const watchDirectories = validDirectories || getConfigPaths(config).projectPaths;
 
-    console.log('Setting up file watchers with POLLING for .md files in paths:', configPaths.projectPaths);
+    console.log('Setting up file watchers with POLLING for .md files in paths:', watchDirectories);
 
-    // Test if directories exist and find actual .md files
-    const allMdFiles = [];
-    configPaths.projectPaths.forEach(p => {
+    // Filter for existing directories only
+    const existingDirectories = watchDirectories.filter(p => {
       const exists = fs.existsSync(p);
       console.log(`Testing directory access (POLLING): ${p}`, exists ? 'EXISTS' : 'NOT FOUND');
-
-      if (exists) {
-        try {
-          const files = fs.readdirSync(p);
-          const mdFiles = files
-            .filter(file => file.endsWith('.md') && !file.includes('backup'))
-            .map(file => path.join(p, file));
-          allMdFiles.push(...mdFiles);
-          console.log(`Found .md files (POLLING) in ${p}:`, files.filter(file => file.endsWith('.md') && !file.includes('backup')));
-        } catch (err) {
-          console.error(`Error reading directory (POLLING) ${p}:`, err.message);
-        }
-      }
+      return exists;
     });
 
-    console.log('All .md files to watch (POLLING):', allMdFiles);
+    if (existingDirectories.length === 0) {
+      console.warn('No valid directories found for polling mode');
+      return;
+    }
 
-    // Watch the directories and all existing .md files
-    const watchTargets = [...configPaths.projectPaths, ...allMdFiles];
+    console.log('Valid directories for polling:', existingDirectories);
+
+    // Watch only directories in polling mode (more reliable)
+    const watchTargets = existingDirectories;
 
     fileWatcher = chokidar.watch(watchTargets, {
       persistent: true,
       ignoreInitial: true,
       usePolling: true, // Force polling mode
-      interval: 1000, // Poll every second
+      interval: 2000, // Poll every 2 seconds for less aggressive polling
       ignored: [
         '**/backup/**',
         '**/backup',
-        /backup/
+        /backup/,
+        '**/node_modules/**',
+        '**/.git/**'
       ],
       awaitWriteFinish: {
-        stabilityThreshold: 300,
+        stabilityThreshold: 500,
         pollInterval: 100
-      }
+      },
+      atomic: true,
+      followSymlinks: false
     });
 
     fileWatcher
@@ -4814,30 +4876,71 @@ function setupFileWatchersWithPolling() {
         console.log('File watcher (POLLING) is ready. Watching for changes...');
       })
       .on('add', (filePath) => {
-        console.log('File added (POLLING):', filePath);
-        if (filePath.endsWith('.md')) {
-          broadcastFileChange('add', filePath);
+        const normalizedPath = filePath.replace(/\\/g, '/');
+        console.log('File added (POLLING):', normalizedPath);
+        if (normalizedPath.endsWith('.md') && !normalizedPath.includes('backup')) {
+          broadcastFileChange('add', normalizedPath);
         }
       })
       .on('change', (filePath) => {
-        console.log('File changed (POLLING):', filePath);
-        if (filePath.endsWith('.md')) {
-          broadcastFileChange('change', filePath);
+        const normalizedPath = filePath.replace(/\\/g, '/');
+        console.log('File changed (POLLING):', normalizedPath);
+        if (normalizedPath.endsWith('.md') && !normalizedPath.includes('backup')) {
+          broadcastFileChange('change', normalizedPath);
         }
       })
       .on('unlink', (filePath) => {
-        console.log('File removed (POLLING):', filePath);
-        if (filePath.endsWith('.md')) {
-          broadcastFileChange('unlink', filePath);
+        const normalizedPath = filePath.replace(/\\/g, '/');
+        console.log('File removed (POLLING):', normalizedPath);
+        if (normalizedPath.endsWith('.md') && !normalizedPath.includes('backup')) {
+          broadcastFileChange('unlink', normalizedPath);
         }
       })
       .on('error', (error) => {
         console.error('File watcher (POLLING) error:', error);
+        console.error('Polling mode failed. File watching is unavailable.');
       });
 
   } catch (error) {
     console.error('Failed to setup file watchers with polling:', error);
   }
+}
+
+// Debug function to test file watcher configuration
+function debugFileWatcher() {
+  console.log('\n=== FILE WATCHER DEBUG ===');
+
+  const configPaths = getConfigPaths(config);
+  console.log('Active workspace ID:', config.activeWorkspaceId);
+  console.log('Project paths from config:', configPaths.projectPaths);
+
+  configPaths.projectPaths.forEach((normalizedPath, index) => {
+    console.log(`Path ${index + 1}: ${normalizedPath}`);
+    console.log(`  - Exists: ${fs.existsSync(normalizedPath)}`);
+    console.log(`  - Is absolute: ${path.isAbsolute(normalizedPath)}`);
+
+    if (fs.existsSync(normalizedPath)) {
+      try {
+        const files = fs.readdirSync(normalizedPath);
+        const mdFiles = files.filter(file => file.endsWith('.md') && !file.includes('backup'));
+        console.log(`  - .md files found: ${mdFiles.length} (${mdFiles.join(', ')})`);
+      } catch (err) {
+        console.log(`  - Error reading directory: ${err.message}`);
+      }
+    }
+  });
+
+  console.log('File watcher status:', fileWatcher ? 'ACTIVE' : 'NOT ACTIVE');
+  if (fileWatcher) {
+    console.log('Watched files/directories:', JSON.stringify(fileWatcher.getWatched(), null, 2));
+  }
+
+  console.log('WebSocket server status:', wss ? 'ACTIVE' : 'NOT ACTIVE');
+  if (wss) {
+    console.log('Connected WebSocket clients:', wss.clients.size);
+  }
+
+  console.log('=== END DEBUG ===\n');
 }
 
 // Graceful shutdown handling
@@ -4874,4 +4977,9 @@ server.listen(PORT, () => {
 
   // Setup file watchers after server starts
   setupFileWatchers();
+
+  // Debug file watcher setup
+  setTimeout(() => {
+    debugFileWatcher();
+  }, 2000); // Wait 2 seconds for watcher to initialize
 });

@@ -93,58 +93,53 @@ const tips: Tip[] = [
     content: 'Use markdown syntax in text fields to add **bold**, *italic*, `code`, and other formatting to your documentation.'
   },
   {
-    id: 'export-options',
-    title: '18. Document Export',
-    content: 'Export your capabilities and enablers to various formats for sharing with stakeholders or importing into other tools.'
-  },
-  {
     id: 'system-architecture',
-    title: '19. Architecture Diagrams',
+    title: '18. Architecture Diagrams',
     content: 'Navigate to the system view to see visual relationship diagrams showing how your capabilities and enablers connect.'
   },
   {
     id: 'status-progression',
-    title: '20. Workflow States',
+    title: '19. Workflow States',
     content: 'Follow the natural progression: Draft → Analysis → Design → Implementation → Complete to track your development lifecycle.'
   },
   {
     id: 'priority-levels',
-    title: '21. Priority Management',
+    title: '20. Priority Management',
     content: 'Assign Critical, High, Medium, or Low priorities to capabilities and requirements to guide development focus.'
   },
   {
     id: 'owner-assignment',
-    title: '22. Responsibility Tracking',
+    title: '21. Responsibility Tracking',
     content: 'Assign owners to capabilities and enablers to maintain clear accountability throughout your project.'
   },
   {
     id: 'id-conventions',
-    title: '23. ID Naming System',
+    title: '22. ID Naming System',
     content: 'Follow the CAP-XXXX format for capabilities and ENB-XXXX for enablers to maintain consistent identification across your project.'
   },
   {
     id: 'template-usage',
-    title: '24. Template Benefits',
+    title: '23. Template Benefits',
     content: 'Always start new documents from templates to ensure consistent structure and include all required metadata fields.'
   },
   {
     id: 'review-cycles',
-    title: '25. Review Workflow',
+    title: '24. Review Workflow',
     content: 'Use Analysis Review and Design Review checkpoints to ensure quality gates are met before moving to implementation.'
   },
   {
     id: 'settings-customization',
-    title: '26. Personalization',
+    title: '25. Personalization',
     content: 'Visit Settings to customize default values, tip frequency, and other preferences to match your workflow.'
   },
   {
     id: 'collaboration-tips',
-    title: '27. Team Collaboration',
+    title: '26. Team Collaboration',
     content: 'Use clear, descriptive titles and maintain consistent naming conventions to help team members understand your architecture.'
   },
   {
     id: 'refactoring-workflow',
-    title: '28. Refactoring Process',
+    title: '27. Refactoring Process',
     content: 'Refactoring flow: add/modify requirements → mark requirements as "Ready for Refactor" or "Ready for Retirement" → mark enablers as "Ready for Refactor" → set capability to "Ready for Refactor" to trigger redesign workflow.'
   }
 ]

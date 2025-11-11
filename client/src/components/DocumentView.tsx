@@ -586,7 +586,12 @@ export default function DocumentView(): React.ReactElement {
   // Listen for external change events from AppContext
   useEffect(() => {
     const handleExternalChange = (event: CustomEvent) => {
+      console.log('[DocumentView] Received external-change event:', event.detail)
       const { documentId, documentName, changes, filePath } = event.detail
+
+      console.log('[DocumentView] Current path:', path)
+      console.log('[DocumentView] Event filePath:', filePath)
+      console.log('[DocumentView] Path match check:', path && filePath && (filePath.includes(path) || path.includes(filePath)))
 
       // Only show overlay if this document is currently viewed
       if (path && filePath && (filePath.includes(path) || path.includes(filePath))) {
