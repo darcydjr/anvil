@@ -1,4 +1,4 @@
-# Ford Anvil
+# Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Version](https://img.shields.io/badge/version-3.4.13-green.svg)]()
@@ -7,9 +7,9 @@
 
 **An AI-Powered No-Code Development Framework** that takes you from **Idea → Requirements → Design → Code → Test** without writing a single line of code or vice-versa from **Code -> Design -> Requirements -> Capability**
 
-Ford Anvil provides a clean, organized interface for defining product specifications that automatically transform into working software through AI-powered development workflows.
+Anvil provides a clean, organized interface for defining product specifications that automatically transform into working software through AI-powered development workflows.
 
-Ford Anvil is not just a PRD management tool - it's a complete product development pipeline that transforms ideas into working software. Define your product requirements using structured capabilities and enablers, then watch as AI automatically generates your entire application with comprehensive testing through seamless integration with Claude Code and other AI development tools.
+Anvil is not just a PRD management tool - it's a complete product development pipeline that transforms ideas into working software. Define your product requirements using structured capabilities and enablers, then watch as AI automatically generates your entire application with comprehensive testing through seamless integration with Claude Code and other AI development tools.
 
 **Complete Development Pipeline:**
 - 💡 **Idea**: Capture and organize product concepts
@@ -21,13 +21,13 @@ Ford Anvil is not just a PRD management tool - it's a complete product developme
 
 ### Philosophy & Focus
 
-Ford Anvil is specifically designed for the **right side of the engineering problem** - the **Technical Capabilities and Enablers** that form the architectural foundation of software systems.
+Anvil is specifically designed for the **right side of the engineering problem** - the **Technical Capabilities and Enablers** that form the architectural foundation of software systems.
 
 Product development has two distinct sides:
 - **Left Side (Creative Design Space)**: Experiences and Features - the domain of Product Managers and UX designers
 - **Right Side (Technical Implementation)**: Technical Capabilities and Enablers - the domain of Engineers and Architects
 
-Ford Anvil focuses exclusively on the right side, helping engineering teams define, organize, and manage the technical capabilities that enable product experiences. A new platform is coming soon for the left side that will marry **Experiences and Features** (Product Managers) with **Technical Capabilities and Enablers** (Engineers) to build the architectural runway needed to support exceptional user experiences.
+Anvil focuses exclusively on the right side, helping engineering teams define, organize, and manage the technical capabilities that enable product experiences. A new platform is coming soon for the left side that will marry **Experiences and Features** (Product Managers) with **Technical Capabilities and Enablers** (Engineers) to build the architectural runway needed to support exceptional user experiences.
 
 ### Core Principles
 
@@ -50,9 +50,9 @@ Ford Anvil focuses exclusively on the right side, helping engineering teams defi
 ## Application Interface
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/darcydjr/anvil/main/docs/anvil-screenshot.png" alt="Ford Anvil Application Screenshot" width="600">
+  <img src="https://raw.githubusercontent.com/darcydjr/anvil/main/docs/anvil-screenshot.png" alt="Anvil Application Screenshot" width="600">
   <br>
-  <em>Ford Anvil's clean interface showing capability management with structured metadata, enabler relationships, and comprehensive status tracking</em>
+  <em>Anvil's clean interface showing capability management with structured metadata, enabler relationships, and comprehensive status tracking</em>
 </div>
 
 ## Quick Start
@@ -71,7 +71,7 @@ npm run rename "YourProjectName"
 
 See [RENAMING.md](RENAMING.md) for full documentation.
 
-### Launch Ford Anvil
+### Launch Anvil
 
 **Windows:**
 ```bash
@@ -92,12 +92,12 @@ npm start    # Start the server
 
 The start scripts will:
 - Automatically install dependencies if needed
-- Start the Ford Anvil server
+- Start the Anvil server
 - Open at http://localhost:3000
 
 ### Launch Claude Code for Implementation
 
-Once you have your specifications ready in Ford Anvil:
+Once you have your specifications ready in Anvil:
 
 1. **Navigate to Project Directory**:
    ```bash
@@ -129,7 +129,7 @@ Once you have your specifications ready in Ford Anvil:
 
 ### Discovery Mode: Reverse Engineering Made Easy
 
-**Discovery** in Ford Anvil is designed for **reverse engineering existing applications** and quickly understanding their technical architecture to add new capabilities. This powerful workflow allows you to:
+**Discovery** in Anvil is designed for **reverse engineering existing applications** and quickly understanding their technical architecture to add new capabilities. This powerful workflow allows you to:
 
 #### 🔍 **Analyze Existing Codebases**
 - **Code Analysis**: Claude automatically scans your existing application files
@@ -158,11 +158,11 @@ Once you have your specifications ready in Ford Anvil:
 
 ## Examples
 
-Ford Anvil includes practical examples that demonstrate the **Capabilities → Enablers** approach using human-understandable language patterns.
+Anvil includes practical examples that demonstrate the **Capabilities → Enablers** approach using human-understandable language patterns.
 
 ### Weather Example 1: Simple Verb-to-Noun Architecture
 
-Located in `examples/weather-example-1/specifications/`, this example demonstrates Ford Anvil's core philosophy of **human-readable capability definition** using a simple weather application.
+Located in `examples/weather-example-1/specifications/`, this example demonstrates Anvil's core philosophy of **human-readable capability definition** using a simple weather application.
 
 #### Capability Structure (Verbs → Actions)
 - **"Display Weather"** (`CAP-547983`) - The action of showing weather information to users
@@ -184,7 +184,7 @@ Located in `examples/weather-example-1/specifications/`, this example demonstrat
 
 📋 **Requirements Traceability**: Each enabler contains detailed functional and non-functional requirements that map directly to implementation tasks.
 
-This example showcases how Ford Anvil transforms high-level business capabilities into implementable technical specifications while maintaining clarity and traceability throughout the development process.
+This example showcases how Anvil transforms high-level business capabilities into implementable technical specifications while maintaining clarity and traceability throughout the development process.
 
 ### Weather Example 2: Advanced Multi-Component Architecture
 
@@ -227,7 +227,7 @@ Located in `examples/weather-example-2/specifications/`, this complex example de
 ⏱️ **Real-time Systems** - Live monitoring with sub-second responsiveness
 🔌 **Integration Patterns** - External services and third-party API management
 
-This advanced example is ideal for exploring complex system design, learning microservices patterns, and understanding how Ford Anvil manages large-scale, multi-component architectures with sophisticated capability and enabler relationships.
+This advanced example is ideal for exploring complex system design, learning microservices patterns, and understanding how Anvil manages large-scale, multi-component architectures with sophisticated capability and enabler relationships.
 
 ### Hello World Example
 
@@ -235,10 +235,10 @@ Located in `examples/hello-world/specifications/`, this provides a foundational 
 
 ## Implementation Workflow
 
-Ford Anvil is designed to work seamlessly with Claude Code for automated development implementation:
+Anvil is designed to work seamlessly with Claude Code for automated development implementation:
 
-### Step 1: Product Definition in Ford Anvil
-1. **Create Capabilities**: Define high-level system capabilities using Ford Anvil's capability forms
+### Step 1: Product Definition in Anvil
+1. **Create Capabilities**: Define high-level system capabilities using Anvil's capability forms
 2. **Add Enablers**: Break down capabilities into detailed enablers with requirements
 3. **Set Status Fields**: Configure Analysis Review and Design Review requirements for each document
 4. **Development Plans**: Ensure each enabler includes a comprehensive Development Plan section
@@ -265,7 +265,7 @@ Claude Code will automatically:
    - Update Status: "Ready for Implementation" → "In Implementation" → "Implemented"
 
 4. **🔄 Status Synchronization**:
-   - Automatically update Ford Anvil document statuses
+   - Automatically update Anvil document statuses
    - Sync requirement completion states
    - Trigger automated workflow transitions
 
@@ -274,7 +274,7 @@ Claude Code will automatically:
 - **Clear Requirements**: Use Functional and Non-Functional requirement tables with priorities
 - **Status Configuration**: Set Analysis Review and Design Review to "Required" for comprehensive implementation
 - **Directory Structure**: Organize specifications in logical system/component folders for Claude to navigate
-- **Regular Sync**: Refresh Ford Anvil after implementation phases to see updated statuses
+- **Regular Sync**: Refresh Anvil after implementation phases to see updated statuses
 
 ## Features
 
@@ -343,7 +343,7 @@ Claude Code will automatically:
 
 ## Configuration
 
-Ford Anvil supports **workspace-based configuration** for managing multiple document collections:
+Anvil supports **workspace-based configuration** for managing multiple document collections:
 
 ### Workspace Features
 - **Multiple Workspaces**: Create and manage multiple independent workspaces
@@ -368,7 +368,7 @@ Ford Anvil supports **workspace-based configuration** for managing multiple docu
   "templates": "./templates",
   "server": { "port": 3000 },
   "ui": {
-    "title": "Ford Anvil",
+    "title": "Anvil",
     "description": "Product Requirements Document Browser"
   }
 }
@@ -412,7 +412,7 @@ Ford Anvil supports **workspace-based configuration** for managing multiple docu
 
 ### 🚀 **Bulk Edit Feature Evolution** (v3.4.0 → v3.4.2)
 
-Ford Anvil has progressively enhanced its bulk editing capabilities across three major releases, providing comprehensive batch operations for both Enabler and Capability forms:
+Anvil has progressively enhanced its bulk editing capabilities across three major releases, providing comprehensive batch operations for both Enabler and Capability forms:
 
 **v3.4.0**: Initial bulk edit implementation for requirements in Enabler Forms
 **v3.4.1**: Enhanced with selective requirement editing and repositioned interface
@@ -656,10 +656,10 @@ This evolution provides a unified, consistent bulk editing experience across all
 - **FLEXIBLE WORKFLOWS**: Support for partial requirement status transitions
 
 ### v3.4.0 - Foundation: Bulk Edit Requirements ✅
-*The groundbreaking release that introduced bulk editing capabilities to Ford Anvil*
+*The groundbreaking release that introduced bulk editing capabilities to Anvil*
 
 #### 🎯 **Revolutionary Requirement Management**
-- **FIRST BULK EDIT IMPLEMENTATION**: Pioneered bulk editing in Ford Anvil with collapsible panels for Functional and Non-Functional Requirements
+- **FIRST BULK EDIT IMPLEMENTATION**: Pioneered bulk editing in Anvil with collapsible panels for Functional and Non-Functional Requirements
 - **COMPREHENSIVE FIELD SUPPORT**: Introduced bulk updating of Priority, Status, and Approval fields across all requirements simultaneously
 - **INTELLIGENT PARTIAL UPDATES**: Innovative "leave empty to skip" design allowing targeted bulk changes without affecting other fields
 - **EXPANDABLE INTERFACE**: Clean, collapsible panel design that maintains form aesthetics while adding powerful functionality
@@ -684,7 +684,7 @@ This evolution provides a unified, consistent bulk editing experience across all
 - **SCALABILITY BREAKTHROUGH**: Made managing enablers with 20+ requirements practical and efficient for the first time
 
 #### 🏗️ **Foundation for Future Development**
-This version established the core patterns, components, and user experience principles that would be enhanced in v3.4.1 with selective editing and extended to Capability Forms in v3.4.2, creating Ford Anvil's comprehensive bulk editing ecosystem.
+This version established the core patterns, components, and user experience principles that would be enhanced in v3.4.1 with selective editing and extended to Capability Forms in v3.4.2, creating Anvil's comprehensive bulk editing ecosystem.
 
 ### v3.3.0 - Enhanced Enabler Dependencies & Navigation Fixes ✅
 
@@ -994,7 +994,7 @@ This version established the core patterns, components, and user experience prin
 ### v2.0.0 - Claude Code AI Subagent System ✅
 
 #### 🤖 **NEW: AI-Powered Development Automation**
-Ford Anvil now includes a comprehensive **Claude Code Subagent System** that transforms your specifications into working software through AI-orchestrated workflows.
+Anvil now includes a comprehensive **Claude Code Subagent System** that transforms your specifications into working software through AI-orchestrated workflows.
 
 **Key Features:**
 - **Agent Control Center**: Access via Bot icon (🤖) in header or navigate to `/agents`
