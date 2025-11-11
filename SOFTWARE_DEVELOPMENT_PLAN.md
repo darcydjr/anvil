@@ -863,10 +863,10 @@ Before proceeding to next step, verify enabler contains ALL these metadata field
 ## File Naming and ID Generation Schema
 
 ### Unique ID Format:
-- **Capabilities**: `CAP-XXXXXX` (e.g., `CAP-123456`)
-- **Enablers**: `ENB-XXXXXX` (e.g., `ENB-654321`)
-- **Functional Requirements**: `FR-XXXXXX` (e.g., `FR-789012`)
-- **Non-Functional Requirements**: `NFR-XXXXXX` (e.g., `NFR-345678`)
+- **Capabilities**: `CAP-XXXXXXXXX` (e.g., `CAP-123456789`)
+- **Enablers**: `ENB-XXXXXXXXX` (e.g., `ENB-987654321`)
+- **Functional Requirements**: `FR-XXXXXXXXX` (e.g., `FR-789012345`)
+- **Non-Functional Requirements**: `NFR-XXXXXXXXX` (e.g., `NFR-345678901`)
 
 ### ID Generation Algorithm (Standalone):
 **For projects without running Anvil server**, use this algorithm:
@@ -875,9 +875,9 @@ Before proceeding to next step, verify enabler contains ALL these metadata field
 function generateSemiUniqueNumber() {
   const now = Date.now();
   const timeComponent = parseInt(now.toString().slice(-4));
-  const randomComponent = Math.floor(Math.random() * 100);
-  const combined = timeComponent * 100 + randomComponent;
-  return combined.toString().padStart(6, '0').slice(-6);
+  const randomComponent = Math.floor(Math.random() * 100000);
+  const combined = timeComponent * 100000 + randomComponent;
+  return combined.toString().padStart(9, '0').slice(-9);
 }
 
 function findExistingIds(prefix) {
@@ -900,8 +900,8 @@ function generateUniqueId(prefix) {
     // Add small delay for different timestamp
   }
 
-  // Fallback: sequential numbering from 100000
-  let sequentialNum = 100000;
+  // Fallback: sequential numbering from 100000000
+  let sequentialNum = 100000000;
   while (existingIds.includes(`${prefix}-${sequentialNum}`)) {
     sequentialNum++;
   }

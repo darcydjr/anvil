@@ -1,6 +1,6 @@
 {
   "name": "anvil-client",
-  "version": "3.4.49",
+  "version": "3.5.0",
   "private": true,
   "type": "module",
   "author": "Darcy Davidson",

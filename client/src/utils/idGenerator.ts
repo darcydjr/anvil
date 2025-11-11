@@ -1,21 +1,21 @@
 // ID Generation Utility
-// Generates semi-unique 6-digit IDs for capabilities and enablers
+// Generates semi-unique 9-digit IDs for capabilities and enablers
 
 /**
- * Generates a semi-unique 6-digit number based on current timestamp and random component
- * @returns A 6-digit number string
+ * Generates a semi-unique 9-digit number based on current timestamp and random component
+ * @returns A 9-digit number string
  */
 function generateSemiUniqueNumber(): string {
-  // Use current timestamp (last 4 digits) + 2-digit random number
+  // Use current timestamp (last 4 digits) + 5-digit random number
   const now = Date.now()
   const timeComponent = parseInt(now.toString().slice(-4))
-  const randomComponent = Math.floor(Math.random() * 100)
+  const randomComponent = Math.floor(Math.random() * 100000)
 
-  // Combine and ensure it's 6 digits
-  const combined = timeComponent * 100 + randomComponent
+  // Combine and ensure it's 9 digits
+  const combined = timeComponent * 100000 + randomComponent
 
-  // Ensure it's exactly 6 digits by padding or truncating
-  return combined.toString().padStart(6, '0').slice(-6)
+  // Ensure it's exactly 9 digits by padding or truncating
+  return combined.toString().padStart(9, '0').slice(-9)
 }
 
 /**
@@ -47,7 +47,7 @@ function extractNumericIds(ids: string[], prefix: string): string[] {
 /**
  * Generates a unique capability ID
  * @param existingCapabilityIds - Array of existing capability IDs
- * @returns New capability ID in format CAP-123456
+ * @returns New capability ID in format CAP-123456789
  */
 export function generateCapabilityId(existingCapabilityIds: string[] = []): string {
   const numericIds = extractNumericIds(existingCapabilityIds, 'CAP-')
@@ -69,7 +69,7 @@ export function generateCapabilityId(existingCapabilityIds: string[] = []): stri
   }
 
   // Fallback to sequential numbering if semi-unique generation fails
-  let sequentialNum = 100000
+  let sequentialNum = 100000000
   while (idExists(`CAP-${sequentialNum}`, existingCapabilityIds)) {
     sequentialNum++
   }
@@ -80,7 +80,7 @@ export function generateCapabilityId(existingCapabilityIds: string[] = []): stri
 /**
  * Generates a unique enabler ID
  * @param existingEnablerIds - Array of existing enabler IDs
- * @returns New enabler ID in format ENB-123456
+ * @returns New enabler ID in format ENB-123456789
  */
 export function generateEnablerId(existingEnablerIds: string[] = []): string {
   const numericIds = extractNumericIds(existingEnablerIds, 'ENB-')
@@ -102,7 +102,7 @@ export function generateEnablerId(existingEnablerIds: string[] = []): string {
   }
 
   // Fallback to sequential numbering if semi-unique generation fails
-  let sequentialNum = 100000
+  let sequentialNum = 100000000
   while (idExists(`ENB-${sequentialNum}`, existingEnablerIds)) {
     sequentialNum++
   }
@@ -113,7 +113,7 @@ export function generateEnablerId(existingEnablerIds: string[] = []): string {
 /**
  * Generates a unique functional requirement ID
  * @param existingRequirementIds - Array of existing FR IDs
- * @returns New functional requirement ID in format FR-123456
+ * @returns New functional requirement ID in format FR-123456789
  */
 export function generateFunctionalRequirementId(existingRequirementIds: string[] = []): string {
   const numericIds = extractNumericIds(existingRequirementIds, 'FR-')
@@ -135,7 +135,7 @@ export function generateFunctionalRequirementId(existingRequirementIds: string[]
   }
 
   // Fallback to sequential numbering if semi-unique generation fails
-  let sequentialNum = 100000
+  let sequentialNum = 100000000
   while (idExists(`FR-${sequentialNum}`, existingRequirementIds)) {
     sequentialNum++
   }
@@ -146,7 +146,7 @@ export function generateFunctionalRequirementId(existingRequirementIds: string[]
 /**
  * Generates a unique non-functional requirement ID
  * @param existingRequirementIds - Array of existing NFR IDs
- * @returns New non-functional requirement ID in format NFR-123456
+ * @returns New non-functional requirement ID in format NFR-123456789
  */
 export function generateNonFunctionalRequirementId(existingRequirementIds: string[] = []): string {
   const numericIds = extractNumericIds(existingRequirementIds, 'NFR-')
@@ -168,7 +168,7 @@ export function generateNonFunctionalRequirementId(existingRequirementIds: strin
   }
 
   // Fallback to sequential numbering if semi-unique generation fails
-  let sequentialNum = 100000
+  let sequentialNum = 100000000
   while (idExists(`NFR-${sequentialNum}`, existingRequirementIds)) {
     sequentialNum++
   }

@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-3.4.39-green.svg)]()
+[![Version](https://img.shields.io/badge/version-3.5.0-green.svg)]()
 
 ## Overview
 
@@ -418,6 +418,7 @@ Anvil supports **workspace-based configuration** for managing multiple document 
 
 ### 📋 **Recent Major Features Summary**
 
+- **v3.5.0**: 🔢 **9-Digit ID System** - Upgraded unique ID generation from 6 to 9 digits (CAP-123456789, ENB-987654321, etc.) across all components for enhanced uniqueness and reduced collision probability
 - **v3.4.39**: 📝 **Development Plan Minor Update** - Fixed step numbering and clarified implementation workflow in SOFTWARE_DEVELOPMENT_PLAN.md
 - **v3.4.38**: 📋 **Development Plan Enhancement** - Enhanced SOFTWARE_DEVELOPMENT_PLAN.md with stricter design completion gates, placeholder capability styling rules, and improved workflow verification steps
 - **v3.4.37**: 🗑️ **Legacy Template Cleanup** - Removed all legacy template folder infrastructure and UI (templates now sourced from SOFTWARE_DEVELOPMENT_PLAN.md)

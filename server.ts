@@ -826,20 +826,20 @@ function parseRequirementsTable(markdown: string, sectionTitle: string, fields: 
 // Replicates client-side logic for generating unique IDs
 
 /**
- * Generates a semi-unique 6-digit number based on current timestamp and random component
- * @returns {string} A 6-digit number string
+ * Generates a semi-unique 9-digit number based on current timestamp and random component
+ * @returns {string} A 9-digit number string
  */
 function generateSemiUniqueNumber() {
-  // Use current timestamp (last 4 digits) + 2-digit random number
+  // Use current timestamp (last 4 digits) + 5-digit random number
   const now = Date.now();
   const timeComponent = parseInt(now.toString().slice(-4));
-  const randomComponent = Math.floor(Math.random() * 100);
+  const randomComponent = Math.floor(Math.random() * 100000);
 
-  // Combine and ensure it's 6 digits
-  const combined = timeComponent * 100 + randomComponent;
+  // Combine and ensure it's 9 digits
+  const combined = timeComponent * 100000 + randomComponent;
 
-  // Ensure it's exactly 6 digits by padding or truncating
-  return combined.toString().padStart(6, '0').slice(-6);
+  // Ensure it's exactly 9 digits by padding or truncating
+  return combined.toString().padStart(9, '0').slice(-9);
 }
 
 /**
@@ -868,7 +868,7 @@ async function scanExistingIds(prefix) {
 
 /**
  * Generates a unique capability ID
- * @returns {Promise<string>} New capability ID in format CAP-123456
+ * @returns {Promise<string>} New capability ID in format CAP-123456789
  */
 async function generateCapabilityId() {
   const existingIds = await scanExistingIds('CAP-');
@@ -890,7 +890,7 @@ async function generateCapabilityId() {
   }
 
   // Fallback to sequential numbering if semi-unique generation fails
-  let sequentialNum = 100000;
+  let sequentialNum = 100000000;
   while (existingIds.includes(`CAP-${sequentialNum}`)) {
     sequentialNum++;
   }
@@ -900,7 +900,7 @@ async function generateCapabilityId() {
 
 /**
  * Generates a unique enabler ID
- * @returns {Promise<string>} New enabler ID in format ENB-123456
+ * @returns {Promise<string>} New enabler ID in format ENB-123456789
  */
 async function generateEnablerId() {
   const existingIds = await scanExistingIds('ENB-');
@@ -922,7 +922,7 @@ async function generateEnablerId() {
   }
 
   // Fallback to sequential numbering if semi-unique generation fails
-  let sequentialNum = 100000;
+  let sequentialNum = 100000000;
   while (existingIds.includes(`ENB-${sequentialNum}`)) {
     sequentialNum++;
   }
@@ -932,7 +932,7 @@ async function generateEnablerId() {
 
 /**
  * Generates a unique functional requirement ID
- * @returns {Promise<string>} New FR ID in format FR-123456
+ * @returns {Promise<string>} New FR ID in format FR-123456789
  */
 async function generateFunctionalRequirementId() {
   const existingIds = await scanExistingIds('FR-');
@@ -954,7 +954,7 @@ async function generateFunctionalRequirementId() {
   }
 
   // Fallback to sequential numbering if semi-unique generation fails
-  let sequentialNum = 100000;
+  let sequentialNum = 100000000;
   while (existingIds.includes(`FR-${sequentialNum}`)) {
     sequentialNum++;
   }
@@ -964,7 +964,7 @@ async function generateFunctionalRequirementId() {
 
 /**
  * Generates a unique non-functional requirement ID
- * @returns {Promise<string>} New NFR ID in format NFR-123456
+ * @returns {Promise<string>} New NFR ID in format NFR-123456789
  */
 async function generateNonFunctionalRequirementId() {
   const existingIds = await scanExistingIds('NFR-');
@@ -986,7 +986,7 @@ async function generateNonFunctionalRequirementId() {
   }
 
   // Fallback to sequential numbering if semi-unique generation fails
-  let sequentialNum = 100000;
+  let sequentialNum = 100000000;
   while (existingIds.includes(`NFR-${sequentialNum}`)) {
     sequentialNum++;
   }
