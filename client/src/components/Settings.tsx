@@ -341,6 +341,45 @@ export default function Settings(): React.ReactElement {
           )}
         </section>
 
+        {/* AI Chat Assistant configuration (inserted 2025-11-12T23:28:45.392Z) */}
+        <section className="bg-card rounded-lg shadow-md border border-border mt-6">
+          <div
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+            onClick={() => setIsTipSettingsExpanded(!isTipSettingsExpanded)}
+          >
+            <h2 className="text-xl font-semibold text-foreground">AI Chat Assistant configuration</h2>
+            {isTipSettingsExpanded ? <ChevronDown size={20} className="text-muted-foreground" /> : <ChevronRight size={20} className="text-muted-foreground" />}
+          </div>
+
+          {isTipSettingsExpanded && (
+            <div className="border-t border-border p-4 space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Enter your Anthropic Claude API key. To obtain a key: 1) Log in to <a className="text-primary underline" href="https://console.anthropic.com" target="_blank" rel="noreferrer">console.anthropic.com</a>, 2) Navigate to API Keys, 3) Generate a new key, 4) Copy and paste it below. Your key is stored in your local configuration file (config.local.json) and used only for AI chat requests.
+              </p>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Claude API Key</label>
+                <input
+                  type="password"
+                  value={(config as any).aiAssistant?.apiKey || ''}
+                  onChange={(e) => setConfig({ ...(config as any), aiAssistant: { ...((config as any).aiAssistant || {}), provider: 'claude', apiKey: e.target.value } })}
+                  placeholder="sk-ant-..."
+                  className="w-full px-3 py-2 bg-card border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-foreground font-mono"
+                />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={saveConfig}
+                  disabled={saving}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Save size={16} />
+                  {saving ? 'Saving...' : 'Save AI Assistant Settings'}
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+
       </div>
     </div>
   )

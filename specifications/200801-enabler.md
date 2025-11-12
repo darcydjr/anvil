@@ -34,6 +34,7 @@ RESTful API endpoints for reading and updating configuration files with atomic w
 - Endpoints:
   - GET `/api/config`
   - GET `/api/config/defaults`
+  - POST `/api/config`
   - POST `/api/config/defaults`
 - Location: server.ts
 - File: config.json
