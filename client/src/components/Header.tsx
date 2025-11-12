@@ -61,18 +61,36 @@ export default function Header({ onChatToggle }: HeaderProps): JSX.Element {
     fileInputRef.current?.click()
   }
 
+  const [pendingFiles, setPendingFiles] = useState<File[]>([])
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const files = e.target.files
     if (files && files.length > 0) {
-      // Handle the uploaded files here
-      console.log('Files selected:', Array.from(files).map(f => f.name))
-      // You can add additional logic here to process the files
-      // For now, we'll just log them to the console
+      setPendingFiles(Array.from(files))
+    }
+  }
 
-      // Reset the input so the same file can be selected again
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
+  const handlePerformUpload = async (): Promise<void> => {
+    if (pendingFiles.length === 0) return
+    try {
+      const formData = new FormData()
+      pendingFiles.forEach(f => formData.append('files', f))
+      // optional targetPath left blank to use root of uploaded-assets
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        console.error('Upload failed:', data)
+      } else {
+        console.log('Upload success:', data)
       }
+    } catch (err) {
+      console.error('Upload error:', err)
+    } finally {
+      setPendingFiles([])
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
@@ -148,11 +166,22 @@ export default function Header({ onChatToggle }: HeaderProps): JSX.Element {
                 variant="outline"
                 size="icon"
                 onClick={handleFileUploadClick}
-                title="Upload Files"
+                title="Select Files"
                 className="text-primary hover:bg-primary/10 hover:text-primary/80 transition-colors"
               >
                 <Upload size={20} />
               </Button>
+              {pendingFiles.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePerformUpload}
+                  title={`Upload ${pendingFiles.length} file(s)`}
+                  className="text-green-600 hover:bg-green-600/10 hover:text-green-600/80 transition-colors dark:text-green-400 dark:hover:bg-green-400/10"
+                >
+                  Upload ({pendingFiles.length})
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="icon"
