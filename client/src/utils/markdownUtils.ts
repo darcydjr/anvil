@@ -287,7 +287,7 @@ export function convertFormToMarkdown(formData: FormData, type: DocumentType): s
       markdown += `| ID | Name | Requirement | Priority | Status | Approval |\n`
       markdown += `|----|------|-------------|----------|--------|----------|\n`
       enbData.functionalRequirements.forEach(req => {
-        markdown += `| ${req.id || ''} | ${req.name || ''} | ${req.requirement || ''} | ${req.priority || PRIORITY_VALUES.REQUIREMENT.MUST_HAVE} | ${req.status || STATUS_VALUES.REQUIREMENT.IN_DRAFT} | ${req.approval || APPROVAL_VALUES.NOT_APPROVED} |\n`
+        markdown += `| ${req.id || ''} | ${req.name || ''} | ${(req.requirement || '').replace(/\n/g, '<br>')} | ${req.priority || PRIORITY_VALUES.REQUIREMENT.MUST_HAVE} | ${req.status || STATUS_VALUES.REQUIREMENT.IN_DRAFT} | ${req.approval || APPROVAL_VALUES.NOT_APPROVED} |\n`
       })
     } else {
       markdown += `| ID | Name | Requirement | Priority | Status | Approval |\n`
@@ -302,7 +302,7 @@ export function convertFormToMarkdown(formData: FormData, type: DocumentType): s
       markdown += `| ID | Name | Type | Requirement | Priority | Status | Approval |\n`
       markdown += `|----|------|------|-------------|----------|--------|----------|\n`
       enbData.nonFunctionalRequirements.forEach(req => {
-        markdown += `| ${req.id || ''} | ${req.name || ''} | ${req.type || ''} | ${req.requirement || ''} | ${req.priority || PRIORITY_VALUES.REQUIREMENT.MUST_HAVE} | ${req.status || STATUS_VALUES.REQUIREMENT.IN_DRAFT} | ${req.approval || APPROVAL_VALUES.NOT_APPROVED} |\n`
+        markdown += `| ${req.id || ''} | ${req.name || ''} | ${req.type || ''} | ${(req.requirement || '').replace(/\n/g, '<br>')} | ${req.priority || PRIORITY_VALUES.REQUIREMENT.MUST_HAVE} | ${req.status || STATUS_VALUES.REQUIREMENT.IN_DRAFT} | ${req.approval || APPROVAL_VALUES.NOT_APPROVED} |\n`
       })
     } else {
       markdown += `| ID | Name | Type | Requirement | Priority | Status | Approval |\n`
@@ -648,6 +648,11 @@ function parseRequirementsTable(markdown: string, sectionTitle: string, fields: 
             // Positional mapping when no header info
             row[fields[j]] = cells[j] || row[fields[j]]
           }
+        }
+
+        // Decode HTML line breaks back to newlines for requirement fields
+        if (row.requirement) {
+          row.requirement = row.requirement.replace(/<br>/g, '\n')
         }
 
         result.push(row)

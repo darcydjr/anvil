@@ -6,6 +6,7 @@ import { generateEnablerId } from '../../utils/idGenerator'
 import { stateListenerManager } from '../../utils/stateListeners'
 import { STATUS_VALUES, APPROVAL_VALUES, PRIORITY_VALUES, REVIEW_VALUES } from '../../utils/constants'
 import { apiService } from '../../services/apiService'
+import { SearchableSelect } from '../ui/SearchableSelect'
 import toast from 'react-hot-toast'
 
 import { CapabilityFormData, Dependency, Enabler, generateCapabilityTechnicalSpecificationsTemplate } from '../../utils/markdownUtils'
@@ -350,7 +351,17 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
 
     return groups
   }, [availableCapabilities])
-  
+
+  // Convert capabilities to SearchableSelect options
+  const capabilityOptions = useMemo(() => {
+    return availableCapabilities.map(cap => ({
+      id: cap.id,
+      label: `${cap.id} - ${cap.title}`,
+      system: cap.system,
+      component: cap.component
+    }))
+  }, [availableCapabilities])
+
   // Memoize status, approval, priority, and review options
   const statusOptions = useMemo(() => [
     STATUS_VALUES.CAPABILITY.IN_DRAFT,
@@ -694,17 +705,6 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-foreground">Owner</label>
-            <input
-              type="text"
-              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-              value={data.owner || ''}
-              onChange={(e) => handleBasicChange('owner', e.target.value)}
-              placeholder="Product Team"
-            />
-          </div>
-
-          <div className="space-y-2">
             <label className="block text-sm font-medium text-foreground">Status</label>
             <select
               className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
@@ -720,6 +720,17 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">Owner</label>
+            <input
+              type="text"
+              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+              value={data.owner || ''}
+              onChange={(e) => handleBasicChange('owner', e.target.value)}
+              placeholder="Product Team"
+            />
           </div>
 
           <div className="space-y-2">
@@ -964,24 +975,12 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
                 {(data.internalUpstream || []).map((dep, index) => (
                   <tr key={index} className="border-b border-border hover:bg-accent">
                     <td className="p-2">
-                      <select
-                        className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      <SearchableSelect
                         value={dep.id || ''}
-                        onChange={(e) => handleArrayChange('internalUpstream', index, 'id', e.target.value)}
-                      >
-                        <option value="">Select capability</option>
-                        {Object.keys(groupedCapabilities).sort().map((system) =>
-                          Object.keys(groupedCapabilities[system]).sort().map((component) => (
-                            <optgroup key={`${system}-${component}`} label={`${system} → ${component}`}>
-                              {groupedCapabilities[system][component].map((cap) => (
-                                <option key={cap.id} value={cap.id}>
-                                  {cap.id} - {cap.title}
-                                </option>
-                              ))}
-                            </optgroup>
-                          ))
-                        )}
-                      </select>
+                        onChange={(value) => handleArrayChange('internalUpstream', index, 'id', value)}
+                        options={capabilityOptions}
+                        placeholder="Select capability"
+                      />
                     </td>
                     <td className="p-2">
                       <textarea
@@ -1033,24 +1032,12 @@ function CapabilityForm({ data, onChange, isNew = false, currentPath = null }: C
                 {(data.internalDownstream || []).map((impact, index) => (
                   <tr key={index} className="border-b border-border hover:bg-accent">
                     <td className="p-2">
-                      <select
-                        className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      <SearchableSelect
                         value={impact.id || ''}
-                        onChange={(e) => handleArrayChange('internalDownstream', index, 'id', e.target.value)}
-                      >
-                        <option value="">Select capability</option>
-                        {Object.keys(groupedCapabilities).sort().map((system) =>
-                          Object.keys(groupedCapabilities[system]).sort().map((component) => (
-                            <optgroup key={`${system}-${component}`} label={`${system} → ${component}`}>
-                              {groupedCapabilities[system][component].map((cap) => (
-                                <option key={cap.id} value={cap.id}>
-                                  {cap.id} - {cap.title}
-                                </option>
-                              ))}
-                            </optgroup>
-                          ))
-                        )}
-                      </select>
+                        onChange={(value) => handleArrayChange('internalDownstream', index, 'id', value)}
+                        options={capabilityOptions}
+                        placeholder="Select capability"
+                      />
                     </td>
                     <td className="p-2">
                       <textarea

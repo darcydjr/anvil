@@ -323,6 +323,7 @@ export default function DocumentView(): React.ReactElement {
 
                   // Skip empty rows or rows without valid enabler IDs
                   if (enablerId) {
+
                     // Try to find description from various strategies
                     if (headerColumns.length >= 2) {
                       const descIndex = headerColumns.findIndex(h => h.includes('description'))

@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-3.4.13-green.svg)]()
+[![Version](https://img.shields.io/badge/version-3.4.39-green.svg)]()
 
 ## Overview
 
@@ -54,6 +54,38 @@ Anvil focuses exclusively on the right side, helping engineering teams define, o
   <br>
   <em>Anvil's clean interface showing capability management with structured metadata, enabler relationships, and comprehensive status tracking</em>
 </div>
+
+## System Requirements
+
+### Prerequisites
+
+Before running Anvil, ensure you have the following software installed:
+
+- **Node.js**: Version 18.0 or higher
+  - Download from [nodejs.org](https://nodejs.org/)
+  - Includes npm (Node Package Manager)
+- **Git**: For version control and cloning the repository
+  - Download from [git-scm.com](https://git-scm.com/)
+
+### Supported Platforms
+
+- **Windows**: Windows 10/11 (x64)
+- **macOS**: macOS 10.15+ (Intel and Apple Silicon)
+- **Linux**: Ubuntu 18.04+, CentOS 7+, or equivalent distributions
+
+### Minimum Hardware Requirements
+
+- **RAM**: 4 GB minimum, 8 GB recommended
+- **Storage**: 500 MB available disk space
+- **CPU**: Modern multi-core processor (Intel i5 or equivalent)
+
+### Verify Installation
+
+Check your Node.js and npm versions:
+```bash
+node --version    # Should show v18.0.0 or higher
+npm --version     # Should show 8.0.0 or higher
+```
 
 ## Quick Start
 
@@ -112,14 +144,9 @@ Once you have your specifications ready in Anvil:
 
 3. **Implementation Commands**:
 
-   **For Discovery (Documentation Only):**
+   **For Reverse Engineering (Discovery) (Documentation Only):**
    ```
-   Claude, please read the SOFTWARE_DEVELOPMENT_PLAN.md in the specifications folder and perform DISCOVERY ONLY on this project. Create specifications documentation but DO NOT implement anything.
-   ```
-
-   **For Reverse Engineering Existing Applications:**
-   ```
-   Claude, I have an existing application that I want to reverse engineer and add new capabilities to. Please analyze the codebase, create capability and enabler specifications, and then suggest new capabilities I can add.
+   Claude, please read the SOFTWARE_DEVELOPMENT_PLAN.md in the specifications folder and perform DISCOVERY ONLY on this project. Create specifications documentation but DO NOT implement anything. Then suggest new capabilites I can add.
    ```
 
    **For Implementation (After Discovery Complete):**
@@ -309,7 +336,7 @@ Claude Code will automatically:
 - **Form-based Editor**: User-friendly web forms with markdown editing toggle
 - **Auto-naming Convention**: Ensures proper file naming (-capability.md, -enabler.md)
 
-### Dependency Management (v3.2.1)
+### Dependency Management (v3.4.28)
 - **Enabler-to-Enabler Dependencies**: Complete dependency mapping between enablers with hierarchical selection
 - **Hierarchical Selection**: System → Component → Capability → Enabler structure for easy navigation
 - **Upstream Dependencies**: Define enablers that deliver inputs, services, or data required by the current enabler
@@ -318,8 +345,10 @@ Claude Code will automatically:
 - **Visual Guidance**: Informational message boxes explain upstream and downstream relationships
 - **Consistent UX**: Matches capability dependency structure for familiar user experience
 - **Proper Positioning**: Dependencies section appears after Non-Functional Requirements in both form and view modes
+- **Enhanced Dependency Display**: Enabler dependencies now show formatted "ENB-XXXXX - Enabler Name" similar to capability dependencies
 - **Clean Table Display**: Fixed enabler dependency viewer to show only Enabler ID and Description columns, filtering out status metadata
 - **Smart Data Extraction**: Intelligently extracts enabler IDs and descriptions while removing extraneous data from legacy table formats
+- **Dual Enhancement System**: Separate enhancement functions for capability enabler tables vs dependency tables to prevent formatting conflicts
 
 ## Architecture
 
@@ -403,7 +432,23 @@ Anvil supports **workspace-based configuration** for managing multiple document 
 
 ### 📋 **Recent Major Features Summary**
 
+- **v3.4.39**: 📝 **Development Plan Minor Update** - Fixed step numbering and clarified implementation workflow in SOFTWARE_DEVELOPMENT_PLAN.md
+- **v3.4.38**: 📋 **Development Plan Enhancement** - Enhanced SOFTWARE_DEVELOPMENT_PLAN.md with stricter design completion gates, placeholder capability styling rules, and improved workflow verification steps
+- **v3.4.37**: 🗑️ **Legacy Template Cleanup** - Removed all legacy template folder infrastructure and UI (templates now sourced from SOFTWARE_DEVELOPMENT_PLAN.md)
+- **v3.4.36**: Removed obsolete templates configuration section from Settings page
+- **v3.4.35**: Added configurable Tip of the Day settings with enable/disable toggle and frequency control (15 min to 4 hours)
+- **v3.4.34**: Added animated Tip of the Day feature with helpful usage instructions that appears in the navigation area
+- **v3.4.21**: Added searchable/filterable dependency selectors with type-to-search functionality and improved visual hierarchy
+- **v3.4.20**: Fixed EnablerForm dependency selector data structure causing JavaScript errors when adding dependencies
+- **v3.4.19**: Standardized EnablerForm dependency selectors to match CapabilityForm format
+- **v3.4.18**: Swapped Owner and Status field positions in CapabilityForm Basic Information section
+- **v3.4.17**: Increased EnablerForm editor width by 20% for better workspace (marked for easy revert)
+- **v3.4.16**: Added move to top/bottom arrows in requirements tables for quick reordering
+- **v3.4.15**: Fixed multiline text support in requirements with proper markdown encoding/decoding
+- **v3.4.14**: Enhanced requirement fields to support multiline text input with auto-expansion
 - **v3.4.12**: Removed unused Imported Components functionality from Settings
+- **v3.4.33**: Enhanced System Architecture diagram with zoom controls and editable zoom input
+- **v3.4.31**: Added professional zoom in/out controls with mouse wheel support to System Architecture diagram
 - **v3.4.11**: Improved DocumentEditor header positioning within layout boundaries
 - **v3.4.7**: Added pan functionality to System Architecture diagram
 - **v3.4.6**: Enhanced DocumentView sticky header within content area
@@ -509,13 +554,23 @@ This evolution provides a unified, consistent bulk editing experience across all
 - **SEAMLESS EDITING**: Edit controls remain accessible while respecting layout boundaries
 - **VISUAL POLISH**: Clean header positioning eliminates visual gaps and overlaps
 
-### v3.4.10 - v3.4.7 - Pan Functionality & Enhanced Navigation ✅
+### v3.4.33 - Professional Zoom & Navigation Controls ✅
 
-#### 🎯 **System Architecture Pan Controls**
-- **PAN MODE TOGGLE**: Added pan functionality to System Architecture diagram with toggle button
-- **MOUSE INTERACTION**: Drag to pan when pan mode enabled with visual cursor feedback
-- **RESET FUNCTIONALITY**: Reset button to restore diagram to original position
-- **DUAL VIEW SUPPORT**: Pan works in both normal and expanded diagram views
+#### 🔍 **Enhanced System Architecture Diagram Controls**
+- **ZOOM IN/OUT BUTTONS**: Professional ± controls with 20% increments (30% to 300% range)
+- **EDITABLE ZOOM INPUT**: Click percentage to type exact zoom levels with validation
+- **MOUSE WHEEL ZOOM**: Natural scroll-to-zoom functionality with smooth scaling
+- **PAN MODE TOGGLE**: Drag functionality with clear ON/OFF state indicator
+- **STABLE CONTROL BAR**: Fixed layout prevents UI shifting during interaction
+- **SMART RESET**: Always-visible reset button for instant return to default view
+- **DUAL VIEW SUPPORT**: All controls work in both normal and expanded diagram views
+
+#### 🎯 **Professional Navigation Experience**
+- **TRANSFORM ORIGIN**: Zoom centered for natural scaling behavior
+- **SYNCHRONIZED CONTROLS**: All zoom methods (buttons, wheel, input) stay in sync
+- **RANGE VALIDATION**: Automatic clamping of zoom values to valid range
+- **KEYBOARD SUPPORT**: Enter key to apply typed zoom levels
+- **VISUAL FEEDBACK**: Disabled states and hover effects for intuitive interaction
 
 #### 🔧 **Enhanced Navigation Experience**
 - **STICKY HEADERS**: Document headers stay at top of content area during scrolling

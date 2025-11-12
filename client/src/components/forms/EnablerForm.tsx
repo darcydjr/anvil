@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Plus, Trash2, RefreshCcw, GripVertical, Maximize2, Minimize2, Edit3 } from 'lucide-react'
+import { Plus, Trash2, RefreshCcw, GripVertical, Maximize2, Minimize2, Edit3, ChevronUp, ChevronDown } from 'lucide-react'
 import { apiService } from '../../services/apiService'
 import { generateFunctionalRequirementId, generateNonFunctionalRequirementId } from '../../utils/idGenerator'
 import { stateListenerManager } from '../../utils/stateListeners'
 import { STATUS_VALUES, APPROVAL_VALUES, PRIORITY_VALUES, REVIEW_VALUES } from '../../utils/constants'
+import { SearchableSelect } from '../ui/SearchableSelect'
 import toast from 'react-hot-toast'
 
 import { EnablerFormData, FunctionalRequirement, NonFunctionalRequirement, Dependency, generateEnablerTechnicalSpecificationsTemplate } from '../../utils/markdownUtils'
@@ -34,179 +35,6 @@ interface CapabilityLinksResponse {
   capabilities: CapabilityLink[]
 }
 
-interface SearchableEnablerSelectProps {
-  value: string
-  onChange: (value: string) => void
-  enablers: EnablerLink[]
-  groupedEnablers: any
-  placeholder: string
-}
-
-// Searchable Enabler Select Component
-function SearchableEnablerSelect({ value, onChange, enablers, groupedEnablers, placeholder }: SearchableEnablerSelectProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [searchText, setSearchText] = useState('')
-  const [filteredGroups, setFilteredGroups] = useState(groupedEnablers)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-
-  // Filter groups based on search text
-  useEffect(() => {
-    if (!searchText.trim()) {
-      setFilteredGroups(groupedEnablers)
-      return
-    }
-
-    const lowerFilter = searchText.toLowerCase().trim()
-    const filtered = {}
-
-    Object.keys(groupedEnablers).forEach(system => {
-      Object.keys(groupedEnablers[system]).forEach(component => {
-        Object.keys(groupedEnablers[system][component]).forEach(capabilityKey => {
-          const enablers = groupedEnablers[system][component][capabilityKey]
-          const filteredEnablers = enablers.filter(enabler =>
-            enabler.id.toLowerCase().includes(lowerFilter) ||
-            enabler.name.toLowerCase().includes(lowerFilter) ||
-            (enabler.capabilityName && enabler.capabilityName.toLowerCase().includes(lowerFilter)) ||
-            (enabler.capabilitySystem && enabler.capabilitySystem.toLowerCase().includes(lowerFilter)) ||
-            (enabler.capabilityComponent && enabler.capabilityComponent.toLowerCase().includes(lowerFilter))
-          )
-
-          if (filteredEnablers.length > 0) {
-            if (!filtered[system]) {
-              filtered[system] = {}
-            }
-            if (!filtered[system][component]) {
-              filtered[system][component] = {}
-            }
-            filtered[system][component][capabilityKey] = filteredEnablers
-          }
-        })
-      })
-    })
-
-    setFilteredGroups(filtered)
-  }, [searchText, groupedEnablers])
-
-  // Handle escape key to close dropdown
-  useEffect(() => {
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === 'Escape' && isOpen) {
-        setIsOpen(false)
-        setSearchText('')
-      }
-    }
-
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [isOpen])
-
-  // Handle ESC key to close dropdown and clear search
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      setSearchText('')
-      setIsOpen(false)
-    }
-  }
-
-  // Get display text for selected value
-  const getDisplayText = () => {
-    if (!value) return placeholder
-
-    // Find the selected enabler
-    for (const system of Object.keys(groupedEnablers)) {
-      for (const component of Object.keys(groupedEnablers[system])) {
-        for (const capabilityKey of Object.keys(groupedEnablers[system][component])) {
-          const enabler = groupedEnablers[system][component][capabilityKey].find(e => e.id === value)
-          if (enabler) {
-            return `${enabler.id} - ${enabler.name}`
-          }
-        }
-      }
-    }
-    return value // Fallback if not found
-  }
-
-  const handleSelect = (enablerId: string) => {
-    onChange(enablerId)
-    setIsOpen(false)
-    setSearchText('')
-  }
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <button
-        type="button"
-        className="w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring text-left"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <span className={value ? '' : 'text-muted-foreground'}>
-          {getDisplayText()}
-        </span>
-      </button>
-
-      {isOpen && (
-        <div className="fixed inset-0 z-[9999]" onClick={() => setIsOpen(false)}>
-          <div
-            className="absolute bg-background border border-border rounded-md shadow-xl max-h-72 overflow-hidden"
-            style={{
-              top: dropdownRef.current?.getBoundingClientRect().bottom || 0,
-              left: dropdownRef.current?.getBoundingClientRect().left || 0,
-              width: dropdownRef.current?.getBoundingClientRect().width || 'auto',
-              minWidth: '300px'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-2 border-b border-border">
-              <input
-                type="text"
-                className="w-full px-2 py-1 bg-background border border-border rounded text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                placeholder="Type to filter enablers... (ESC to clear)"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                autoFocus
-              />
-            </div>
-            <div className="max-h-56 overflow-y-auto">
-              <div
-                className="px-3 py-2 text-sm cursor-pointer hover:bg-accent"
-                onClick={() => handleSelect('')}
-              >
-                <span className="text-muted-foreground">Select enabler</span>
-              </div>
-              {Object.keys(filteredGroups).sort().map((system) =>
-                Object.keys(filteredGroups[system]).sort().map((component) =>
-                  Object.keys(filteredGroups[system][component]).sort().map((capabilityKey) => (
-                    <div key={`${system}-${component}-${capabilityKey}`}>
-                      <div className="px-3 py-1 text-xs font-medium text-muted-foreground bg-accent/50">
-                        {system} → {component} → {capabilityKey}
-                      </div>
-                      {filteredGroups[system][component][capabilityKey].map((enabler) => (
-                        <div
-                          key={enabler.id}
-                          className="px-3 py-2 text-sm cursor-pointer hover:bg-accent"
-                          onClick={() => handleSelect(enabler.id)}
-                        >
-                          {enabler.id} - {enabler.name}
-                        </div>
-                      ))}
-                    </div>
-                  ))
-                )
-              )}
-              {Object.keys(filteredGroups).length === 0 && (
-                <div className="px-3 py-2 text-sm text-muted-foreground">
-                  No enablers found matching "{searchText}"
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
 
 // Bulk Edit Panel Component
 interface BulkEditPanelProps {
@@ -657,32 +485,47 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
     return groups
   }, [availableCapabilities])
 
-  // Group enablers by system, component, and capability
+  // Group enablers by system and component (flattened for use in selects)
   const groupedEnablers = useMemo(() => {
     const groups = {}
 
     availableEnablers.forEach(enabler => {
       const system = enabler.capabilitySystem || 'Unknown System'
       const component = enabler.capabilityComponent || 'Unknown Component'
-      const capabilityKey = enabler.capabilityName || 'Unknown Capability'
 
       if (!groups[system]) {
         groups[system] = {}
       }
 
       if (!groups[system][component]) {
-        groups[system][component] = {}
+        groups[system][component] = []
       }
 
-      if (!groups[system][component][capabilityKey]) {
-        groups[system][component][capabilityKey] = []
-      }
-
-      groups[system][component][capabilityKey].push(enabler)
+      groups[system][component].push(enabler)
     })
 
     return groups
   }, [availableEnablers])
+
+  // Convert enablers to SearchableSelect options
+  const enablerOptions = useMemo(() => {
+    return availableEnablers.map(enabler => ({
+      id: enabler.id,
+      label: `${enabler.id} - ${enabler.name}`,
+      system: enabler.capabilitySystem,
+      component: enabler.capabilityComponent
+    }))
+  }, [availableEnablers])
+
+  // Convert capabilities to SearchableSelect options
+  const capabilityOptions = useMemo(() => {
+    return availableCapabilities.map(cap => ({
+      id: cap.id,
+      label: `${cap.id} - ${cap.title}`,
+      system: cap.system,
+      component: cap.component
+    }))
+  }, [availableCapabilities])
 
   const nfrTypes = [
     'Performance', 'Scalability', 'Security', 'Reliability', 'Availability',
@@ -751,6 +594,72 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
     })
   }, [])
 
+  // Move requirement to top or bottom
+  const moveRequirement = useCallback((type: 'functional' | 'nonFunctional', index: number, direction: 'top' | 'bottom') => {
+    const field = type === 'functional' ? 'functionalRequirements' : 'nonFunctionalRequirements'
+    const requirements = [...(data[field] || [])]
+
+    if (requirements.length <= 1) return
+
+    // Remove the item from current position
+    const [item] = requirements.splice(index, 1)
+
+    // Insert at new position
+    if (direction === 'top') {
+      requirements.unshift(item)
+    } else {
+      requirements.push(item)
+    }
+
+    onChange({ [field]: requirements })
+
+    // Update selections to maintain consistency
+    if (type === 'functional') {
+      const newSelected = new Set<number>()
+      selectedFunctionalRequirements.forEach(selectedIndex => {
+        if (selectedIndex === index) {
+          // The moved item goes to new position
+          newSelected.add(direction === 'top' ? 0 : requirements.length - 1)
+        } else if (direction === 'top') {
+          // Items shift down when something moves to top
+          if (selectedIndex < index) {
+            newSelected.add(selectedIndex + 1)
+          } else {
+            newSelected.add(selectedIndex)
+          }
+        } else {
+          // Items shift up when something moves to bottom
+          if (selectedIndex > index) {
+            newSelected.add(selectedIndex - 1)
+          } else {
+            newSelected.add(selectedIndex)
+          }
+        }
+      })
+      setSelectedFunctionalRequirements(newSelected)
+    } else {
+      const newSelected = new Set<number>()
+      selectedNonFunctionalRequirements.forEach(selectedIndex => {
+        if (selectedIndex === index) {
+          newSelected.add(direction === 'top' ? 0 : requirements.length - 1)
+        } else if (direction === 'top') {
+          if (selectedIndex < index) {
+            newSelected.add(selectedIndex + 1)
+          } else {
+            newSelected.add(selectedIndex)
+          }
+        } else {
+          if (selectedIndex > index) {
+            newSelected.add(selectedIndex - 1)
+          } else {
+            newSelected.add(selectedIndex)
+          }
+        }
+      })
+      setSelectedNonFunctionalRequirements(newSelected)
+    }
+  }, [data, onChange, selectedFunctionalRequirements, selectedNonFunctionalRequirements])
+
 
   return (
     <div className="space-y-6">
@@ -792,24 +701,13 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-foreground">Capability ID</label>
-            <select
-              className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+            <SearchableSelect
               value={data.capabilityId || ''}
-              onChange={(e) => handleBasicChange('capabilityId', e.target.value)}
-            >
-              <option value="">Select a capability...</option>
-              {Object.keys(groupedCapabilities).sort().map((system) =>
-                Object.keys(groupedCapabilities[system]).sort().map((component) => (
-                  <optgroup key={`${system}-${component}`} label={`${system} → ${component}`}>
-                    {groupedCapabilities[system][component].map((cap) => (
-                      <option key={cap.id} value={cap.id}>
-                        {cap.id} - {cap.title}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))
-              )}
-            </select>
+              onChange={(value) => handleBasicChange('capabilityId', value)}
+              options={capabilityOptions}
+              placeholder="Select a capability..."
+              className="px-3 py-2 focus:ring-2 focus:ring-ring focus:border-transparent"
+            />
             {validationErrors.capabilityId && (
               <span className="text-xs text-destructive">{validationErrors.capabilityId}</span>
             )}
@@ -971,8 +869,30 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
                       className="rounded"
                     />
                   </td>
-                  <td className="p-2 cursor-move">
-                    <GripVertical className="w-4 h-4 text-muted-foreground" />
+                  <td className="p-2">
+                    <div className="flex items-center gap-1">
+                      <GripVertical className="w-4 h-4 text-muted-foreground cursor-move" />
+                      <div className="flex flex-col">
+                        <button
+                          type="button"
+                          onClick={() => moveRequirement('functional', index, 'top')}
+                          className="p-0.5 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
+                          title="Move to top"
+                          disabled={index === 0}
+                        >
+                          <ChevronUp className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveRequirement('functional', index, 'bottom')}
+                          className="p-0.5 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
+                          title="Move to bottom"
+                          disabled={index === (data.functionalRequirements || []).length - 1}
+                        >
+                          <ChevronDown className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
                   </td>
                   <td className="p-2">
                     <input
@@ -995,12 +915,32 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
                   <td className="p-2">
                     <textarea
                       className={`w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-y ${
-                        expandedRequirements.has(`functional_${index}`) ? 'min-h-32' : ''
+                        expandedRequirements.has(`functional_${index}`) ? 'min-h-32' : 'min-h-[60px]'
                       }`}
                       value={req.requirement || ''}
                       onChange={(e) => handleArrayChange('functionalRequirements', index, 'requirement', e.target.value)}
-                      placeholder="Describe the functional requirement"
-                      rows={expandedRequirements.has(`functional_${index}`) ? 8 : 2}
+                      onPaste={(e) => {
+                        // Get the pasted text from clipboard
+                        const pastedText = e.clipboardData?.getData('text/plain') || ''
+                        // Auto-expand if pasted content has multiple lines
+                        if (pastedText.includes('\n') && !expandedRequirements.has(`functional_${index}`)) {
+                          // Small delay to ensure paste completes
+                          setTimeout(() => {
+                            toggleRequirementExpansion('functional', index)
+                          }, 100)
+                        }
+                      }}
+                      placeholder="Describe the functional requirement (supports multiple lines)"
+                      rows={expandedRequirements.has(`functional_${index}`) ? 8 : 3}
+                      style={{
+                        minHeight: expandedRequirements.has(`functional_${index}`) ? '128px' : '60px'
+                      }}
+                      onInput={(e) => {
+                        // Auto-resize textarea to fit content
+                        const target = e.target as HTMLTextAreaElement
+                        target.style.height = 'auto'
+                        target.style.height = `${Math.max(target.scrollHeight, expandedRequirements.has(`functional_${index}`) ? 128 : 60)}px`
+                      }}
                     />
                   </td>
                   <td className="p-2">
@@ -1158,8 +1098,30 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
                       className="rounded"
                     />
                   </td>
-                  <td className="p-2 cursor-move">
-                    <GripVertical className="w-4 h-4 text-muted-foreground" />
+                  <td className="p-2">
+                    <div className="flex items-center gap-1">
+                      <GripVertical className="w-4 h-4 text-muted-foreground cursor-move" />
+                      <div className="flex flex-col">
+                        <button
+                          type="button"
+                          onClick={() => moveRequirement('nonFunctional', index, 'top')}
+                          className="p-0.5 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
+                          title="Move to top"
+                          disabled={index === 0}
+                        >
+                          <ChevronUp className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveRequirement('nonFunctional', index, 'bottom')}
+                          className="p-0.5 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
+                          title="Move to bottom"
+                          disabled={index === (data.nonFunctionalRequirements || []).length - 1}
+                        >
+                          <ChevronDown className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
                   </td>
                   <td className="p-2">
                     <input
@@ -1194,12 +1156,32 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
                   <td className="p-2">
                     <textarea
                       className={`w-full px-2 py-1 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-y ${
-                        expandedRequirements.has(`nonFunctional_${index}`) ? 'min-h-32' : ''
+                        expandedRequirements.has(`nonFunctional_${index}`) ? 'min-h-32' : 'min-h-[60px]'
                       }`}
                       value={req.requirement || ''}
                       onChange={(e) => handleArrayChange('nonFunctionalRequirements', index, 'requirement', e.target.value)}
-                      placeholder="Describe the non-functional requirement"
-                      rows={expandedRequirements.has(`nonFunctional_${index}`) ? 8 : 2}
+                      onPaste={(e) => {
+                        // Get the pasted text from clipboard
+                        const pastedText = e.clipboardData?.getData('text/plain') || ''
+                        // Auto-expand if pasted content has multiple lines
+                        if (pastedText.includes('\n') && !expandedRequirements.has(`nonFunctional_${index}`)) {
+                          // Small delay to ensure paste completes
+                          setTimeout(() => {
+                            toggleRequirementExpansion('nonFunctional', index)
+                          }, 100)
+                        }
+                      }}
+                      placeholder="Describe the non-functional requirement (supports multiple lines)"
+                      rows={expandedRequirements.has(`nonFunctional_${index}`) ? 8 : 3}
+                      style={{
+                        minHeight: expandedRequirements.has(`nonFunctional_${index}`) ? '128px' : '60px'
+                      }}
+                      onInput={(e) => {
+                        // Auto-resize textarea to fit content
+                        const target = e.target as HTMLTextAreaElement
+                        target.style.height = 'auto'
+                        target.style.height = `${Math.max(target.scrollHeight, expandedRequirements.has(`nonFunctional_${index}`) ? 128 : 60)}px`
+                      }}
                     />
                   </td>
                   <td className="p-2">
@@ -1324,11 +1306,10 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
                 {(data.internalUpstream || []).map((dep, index) => (
                   <tr key={index} className="border-b border-border hover:bg-accent">
                     <td className="p-2">
-                      <SearchableEnablerSelect
+                      <SearchableSelect
                         value={dep.id || ''}
                         onChange={(value) => handleArrayChange('internalUpstream', index, 'id', value)}
-                        enablers={availableEnablers}
-                        groupedEnablers={groupedEnablers}
+                        options={enablerOptions}
                         placeholder="Select enabler"
                       />
                     </td>
@@ -1382,11 +1363,10 @@ function EnablerForm({ data, onChange, onValidationChange }: EnablerFormProps): 
                 {(data.internalDownstream || []).map((impact, index) => (
                   <tr key={index} className="border-b border-border hover:bg-accent">
                     <td className="p-2">
-                      <SearchableEnablerSelect
+                      <SearchableSelect
                         value={impact.id || ''}
                         onChange={(value) => handleArrayChange('internalDownstream', index, 'id', value)}
-                        enablers={availableEnablers}
-                        groupedEnablers={groupedEnablers}
+                        options={enablerOptions}
                         placeholder="Select enabler"
                       />
                     </td>
