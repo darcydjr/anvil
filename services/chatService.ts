@@ -114,7 +114,7 @@ class ChatService {
         hasApiKeyInConfig: !!this.config.apiKey,
         hasApiKeyInEnv: !!process.env.ANTHROPIC_API_KEY
       });
-      throw new Error('AI assistant not properly initialized. Please check your API key configuration.');
+      throw new Error('The AI assistent needs to be configured. Please go to the Anvil settings page and configure accordingly.');
     }
 
     logger.info('Sending message to AI assistant', {
