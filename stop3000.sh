@@ -29,12 +29,12 @@ print_warning() {
 }
 
 # Kill processes by port
-print_status "Stopping server (port 3005)..."
+print_status "Stopping server (port 3000)..."
 if lsof -ti:3000 >/dev/null 2>&1; then
     lsof -ti:3000 | xargs kill -9 2>/dev/null
     print_success "Server stopped"
 else
-    print_warning "No server processes found on port 3005"
+    print_warning "No server processes found on port 3000"
 fi
 
 print_status "Stopping client (port 5173)..."
