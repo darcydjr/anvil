@@ -353,22 +353,8 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
   fileFilter: (req, file, cb) => {
-    // Accept markdown, text, pdf, and word documents
-    const allowedMimes = [
-      'text/markdown',
-      'text/plain',
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    ];
-    const allowedExts = ['.md', '.txt', '.pdf', '.doc', '.docx'];
-    const ext = path.extname(file.originalname).toLowerCase();
-
-    if (allowedMimes.includes(file.mimetype) || allowedExts.includes(ext)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type. Only markdown, text, PDF, and Word documents are allowed.'));
-    }
+    // Accept any file type (expanded per user request 2025-11-12T23:54:48.410Z)
+    cb(null, true);
   }
 });
 
