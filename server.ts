@@ -2426,7 +2426,7 @@ app.put('/api/file/rename/*', async (req, res) => {
 app.post('/api/upload', upload.array('files', 10), async (req, res) => {
   try {
     const files = req.files as Express.Multer.File[];
-    const targetPath = req.body.targetPath || 'specifications';
+    const targetPath = path.join('uploaded-assets', req.body.targetPath || '');
 
     console.log('[UPLOAD] Received files:', files?.length || 0);
     console.log('[UPLOAD] Target path:', targetPath);
