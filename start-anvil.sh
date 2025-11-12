@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Read version from package.json
-VERSION=$(cat package.json | grep -Po '"version":\s*"\K[^"]*')
+VERSION=$(node -p "require('./package.json').version")
 
 echo "============================================"
 echo "       Starting Anvil v$VERSION - Level 1!"
@@ -73,8 +73,8 @@ else
 
     # Check if any source files in client/src are newer than dist/index.html
     if [ "$NEED_CLIENT_BUILD" = false ]; then
-        SOURCE_NEWER_COUNT=$(find client/src -name "*.jsx" -o -name "*.js" -o -name "*.css" -o -name "*.ts" -o -name "*.tsx" | xargs ls -t 2>/dev/null | head -1 | xargs stat --format="%Y" 2>/dev/null || echo "0")
-        DIST_TIME=$(stat --format="%Y" dist/index.html 2>/dev/null || echo "0")
+        SOURCE_NEWER_COUNT=$(find client/src -name "*.jsx" -o -name "*.js" -o -name "*.css" -o -name "*.ts" -o -name "*.tsx" | xargs ls -t 2>/dev/null | head -1 | xargs stat -f "%m" 2>/dev/null || echo "0")
+        DIST_TIME=$(stat -f "%m" dist/index.html 2>/dev/null || echo "0")
 
         if [ "$SOURCE_NEWER_COUNT" -gt "$DIST_TIME" ]; then
             echo "Client source files have changed..."
