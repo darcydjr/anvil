@@ -358,6 +358,69 @@ const upload = multer({
   }
 });
 
+// Determine active workspace root (first project path of active workspace)
+function getActiveWorkspaceRoot(): string {
+  const activeWorkspace = config.workspaces?.find(ws => ws.id === config.activeWorkspaceId);
+  if (activeWorkspace && activeWorkspace.projectPaths && activeWorkspace.projectPaths.length > 0) {
+    const first = activeWorkspace.projectPaths[0];
+    return path.resolve(typeof first === 'string' ? first : first.path);
+  }
+  // Fallback to cwd if not found
+  return process.cwd();
+}
+
+// Ensure upload root directory exists under active workspace: <workspace root>/uploaded-assets
+function ensureUploadRoot(): string {
+  const workspaceRoot = getActiveWorkspaceRoot();
+  const uploadRoot = path.join(workspaceRoot, 'uploaded-assets');
+  fs.ensureDirSync(uploadRoot);
+  return uploadRoot;
+}
+
+// Securely resolve a subpath inside the upload root
+function resolveUploadPath(subPath: string): string {
+  const root = ensureUploadRoot();
+  // Clean subPath of leading slashes
+  const clean = (subPath || '').replace(/^[\\/]+/, '').trim();
+  const target = path.join(root, clean);
+  const resolvedRoot = path.resolve(root);
+  const resolvedTarget = path.resolve(target);
+  if (!resolvedTarget.startsWith(resolvedRoot)) {
+    throw new Error('Invalid targetPath (path traversal)');
+  }
+  fs.ensureDirSync(path.dirname(resolvedTarget));
+  return resolvedTarget;
+}
+
+// Upload endpoint: saves files to <active workspace>/uploaded-assets[/optional targetPath]
+// Field name expected: 'files'; optional text field 'targetPath'
+app.post('/api/upload', upload.array('files'), async (req, res) => {
+  try {
+    const files = req.files as Express.Multer.File[];
+    if (!files || files.length === 0) {
+      return res.status(400).json({ success: false, message: 'No files uploaded' });
+    }
+    const targetPath = req.body.targetPath || '';
+    const saved: any[] = [];
+    for (const file of files) {
+      // Combine optional targetPath + original filename
+      const savePath = resolveUploadPath(path.join(targetPath, file.originalname));
+      await fs.writeFile(savePath, file.buffer);
+      saved.push({
+        originalName: file.originalname,
+        size: file.size,
+        mimetype: file.mimetype,
+        path: savePath,
+        relativePath: path.relative(getActiveWorkspaceRoot(), savePath).replace(/\\/g, '/')
+      });
+    }
+    res.json({ success: true, files: saved });
+  } catch (error: any) {
+    console.error('[UPLOAD] Error handling upload:', error.message);
+    res.status(500).json({ success: false, message: 'Upload failed: ' + error.message });
+  }
+});
+
 // Set up marked with options
 marked.setOptions({
   breaks: true,

@@ -267,7 +267,7 @@ export const apiService = {
     }
   },
 
-  async uploadFiles(files: File[], targetPath: string = 'specifications'): Promise<ApiResponse> {
+  async uploadFiles(files: File[], targetPath: string = ''): Promise<ApiResponse> {
     try {
       if (!files || files.length === 0) {
         throw new Error('At least one file is required')
@@ -277,7 +277,7 @@ export const apiService = {
       files.forEach(file => {
         formData.append('files', file)
       })
-      formData.append('targetPath', targetPath)
+      if (targetPath) formData.append('targetPath', targetPath)
 
       const response = await api.post<ApiResponse>('/upload', formData, {
         headers: {
