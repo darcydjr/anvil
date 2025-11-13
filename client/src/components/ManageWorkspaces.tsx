@@ -30,7 +30,7 @@ export default function ManageWorkspaces(): JSX.Element {
   // Workspace form state
   const [newWorkspaceName, setNewWorkspaceName] = useState<string>('')
   const [newWorkspaceDescription, setNewWorkspaceDescription] = useState<string>('')
-  const [newWorkspacePaths, setNewWorkspacePaths] = useState<string[]>([''])
+  const [newWorkspacePaths, setNewWorkspacePaths] = useState<string[]>(['./[WorkspaceName]/specifications','./[WorkspaceName]/tests','./[WorkspaceName]/code','./[WorkspaceName]/uploaded-assets'])
   const [newWorkspaceCopySwPlan, setNewWorkspaceCopySwPlan] = useState<boolean>(true)
   const [editingWorkspaceId, setEditingWorkspaceId] = useState<string | null>(null)
   const [editWorkspaceName, setEditWorkspaceName] = useState<string>('')
