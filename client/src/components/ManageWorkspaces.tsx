@@ -31,6 +31,18 @@ export default function ManageWorkspaces(): JSX.Element {
   const [newWorkspaceName, setNewWorkspaceName] = useState<string>('')
   const [newWorkspaceDescription, setNewWorkspaceDescription] = useState<string>('')
   const [newWorkspacePaths, setNewWorkspacePaths] = useState<string[]>(['./[WorkspaceName]/specifications','./[WorkspaceName]/tests','./[WorkspaceName]/code','./[WorkspaceName]/uploaded-assets'])
+
+// Dynamically update mandatory path entries when name changes
+useEffect(() => {
+  const ws = newWorkspaceName.trim() || '[WorkspaceName]'
+  setNewWorkspacePaths([
+    `./${ws}/specifications`,
+    `./${ws}/tests`,
+    `./${ws}/code`,
+    `./${ws}/uploaded-assets`
+  ])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [newWorkspaceName])
   const [newWorkspaceCopySwPlan, setNewWorkspaceCopySwPlan] = useState<boolean>(true)
   const [editingWorkspaceId, setEditingWorkspaceId] = useState<string | null>(null)
   const [editWorkspaceName, setEditWorkspaceName] = useState<string>('')
