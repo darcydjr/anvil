@@ -362,10 +362,11 @@ const upload = multer({
 function getActiveWorkspaceRoot(): string {
   const activeWorkspace = config.workspaces?.find(ws => ws.id === config.activeWorkspaceId);
   if (activeWorkspace && activeWorkspace.projectPaths && activeWorkspace.projectPaths.length > 0) {
-    const first = activeWorkspace.projectPaths[0];
-    return path.resolve(typeof first === 'string' ? first : first.path);
+    // Derive workspace root as parent folder of first mandatory path (e.g. ./WorkspaceName/specifications)
+    const firstEntry = activeWorkspace.projectPaths[0];
+    const firstPath = path.resolve(typeof firstEntry === 'string' ? firstEntry : firstEntry.path);
+    return path.dirname(firstPath); // parent is the workspace root
   }
-  // Fallback to cwd if not found
   return process.cwd();
 }
 
@@ -4222,16 +4223,39 @@ app.post('/api/workspaces', async (req, res) => {
       return res.status(400).json({ error: 'Workspace name is required' });
     }
 
-    if (!projectPaths || !Array.isArray(projectPaths) || projectPaths.length === 0) {
-      return res.status(400).json({ error: 'At least one project path is required' });
+    const workspaceName = name.trim();
+
+    // Mandatory paths
+    const mandatory = [
+      { path: `./${workspaceName}/specifications`, icon: 'FileText' },
+      { path: `./${workspaceName}/code`, icon: 'Code' },
+      { path: `./${workspaceName}/tests`, icon: 'TestTube' },
+      { path: `./${workspaceName}/uploaded-assets`, icon: 'Folder' }
+    ];
+
+    // Merge user-provided additional paths (optional)
+    const additional: any[] = [];
+    if (Array.isArray(projectPaths)) {
+      for (const p of projectPaths) {
+        const pStr = typeof p === 'string' ? p : p.path;
+        if (!mandatory.some(m => m.path === pStr) && !additional.some(a => a.path === pStr)) {
+          additional.push(typeof p === 'string' ? { path: pStr } : p);
+        }
+      }
+    }
+    const combinedPaths = [...mandatory, ...additional];
+
+    // Ensure mandatory directories exist
+    for (const m of mandatory) {
+      try { fs.ensureDirSync(m.path); } catch (e) { /* ignore */ }
     }
 
     const newWorkspace = {
       id: `ws-${Date.now()}`,
-      name: name.trim(),
+      name: workspaceName,
       description: description?.trim() || '',
       isActive: false,
-      projectPaths: projectPaths,
+      projectPaths: combinedPaths,
       copySwPlan: copySwPlan !== false, // Default to true
       createdDate: new Date().toISOString()
     };
@@ -4314,12 +4338,33 @@ app.put('/api/workspaces/:id', async (req, res) => {
       workspace.description = description?.trim() || '';
     }
 
-    if (projectPaths !== undefined) {
-      if (!Array.isArray(projectPaths) || projectPaths.length === 0) {
-        return res.status(400).json({ error: 'At least one project path is required' });
+    // Recompute mandatory paths and merge additional ones
+    const workspaceName = workspace.name;
+    const mandatory = [
+      { path: `./${workspaceName}/specifications`, icon: 'FileText' },
+      { path: `./${workspaceName}/code`, icon: 'Code' },
+      { path: `./${workspaceName}/tests`, icon: 'TestTube' },
+      { path: `./${workspaceName}/uploaded-assets`, icon: 'Folder' }
+    ];
+    let extras: any[] = [];
+    if (projectPaths !== undefined && Array.isArray(projectPaths)) {
+      for (const p of projectPaths) {
+        const pStr = typeof p === 'string' ? p : p.path;
+        if (!mandatory.some(m => m.path === pStr) && !extras.some(e => e.path === pStr)) {
+          extras.push(typeof p === 'string' ? { path: pStr } : p);
+        }
       }
-      workspace.projectPaths = projectPaths;
+    } else {
+      // preserve existing extras
+      for (const existing of workspace.projectPaths) {
+        const eStr = typeof existing === 'string' ? existing : existing.path;
+        if (!mandatory.some(m => m.path === eStr)) {
+          extras.push(typeof existing === 'string' ? { path: eStr } : existing);
+        }
+      }
     }
+    workspace.projectPaths = [...mandatory, ...extras];
+    for (const m of mandatory) { try { fs.ensureDirSync(m.path); } catch (e) {} }
 
     if (copySwPlan !== undefined) {
       workspace.copySwPlan = copySwPlan !== false; // Default to true
