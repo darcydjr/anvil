@@ -208,11 +208,16 @@ useEffect(() => {
       `./${workspace.name}/tests`,
       `./${workspace.name}/uploaded-assets`
     ]
-    const pathStrings = (workspace.projectPaths || []).map(pathItem => {
-      const p = typeof pathItem === 'string' ? pathItem : pathItem.path || ''
-      return p
-    }).filter(p => !mandatory.includes(p)) // keep only extra paths
-    setEditWorkspacePaths(pathStrings)
+    const allPaths = (workspace.projectPaths || []).map(p => typeof p === 'string' ? p : p.path || '')
+    // Ensure mandatory indexes 0-3 in editWorkspacePaths
+    const mandatoryResolved = [
+      allPaths.find(p => p.endsWith('/specifications')) || mandatory[0],
+      allPaths.find(p => p.endsWith('/tests')) || mandatory[2].replace('/code','/tests'),
+      allPaths.find(p => p.endsWith('/code')) || mandatory[1],
+      allPaths.find(p => p.endsWith('/uploaded-assets')) || mandatory[3]
+    ]
+    const extras = allPaths.filter(p => !mandatoryResolved.includes(p))
+    setEditWorkspacePaths([...mandatoryResolved, ...extras])
     setShowEditForm(true)
   }
 
@@ -480,14 +485,22 @@ useEffect(() => {
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Mandatory Project Paths</label>
                 <div className="space-y-2 mb-4">
-                  {['specifications','tests','code','uploaded-assets'].map(label => {
-                    const ws = editWorkspaceName.trim() || '[WorkspaceName]'
-                    const fullPath = `./${ws}/${label}`
+                  {['specifications','tests','code','uploaded-assets'].map((label, idx) => {
+                    const current = editWorkspacePaths[idx] || ''
                     return (
                       <div key={label} className="flex items-center gap-2">
                         <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-muted-foreground"><Folder size={16} /></div>
                         <span className="text-xs font-medium w-28 text-muted-foreground capitalize">{label}</span>
-                        <input type="text" value={fullPath} disabled className="flex-1 px-3 py-2 bg-muted border border-border rounded-md text-foreground text-xs" />
+                        <input
+                          type="text"
+                          value={current}
+                          onChange={(e) => {
+                            const updated = [...editWorkspacePaths]
+                            updated[idx] = e.target.value
+                            setEditWorkspacePaths(updated)
+                          }}
+                          className="flex-1 px-3 py-2 bg-background border border-border rounded-md text-foreground text-xs"
+                        />
                       </div>
                     )
                   })}
