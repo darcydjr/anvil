@@ -478,7 +478,21 @@ useEffect(() => {
                 </small>
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Project Paths</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Mandatory Project Paths</label>
+                <div className="space-y-2 mb-4">
+                  {['specifications','tests','code','uploaded-assets'].map(label => {
+                    const ws = editWorkspaceName.trim() || '[WorkspaceName]'
+                    const fullPath = `./${ws}/${label}`
+                    return (
+                      <div key={label} className="flex items-center gap-2">
+                        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-muted-foreground"><Folder size={16} /></div>
+                        <span className="text-xs font-medium w-28 text-muted-foreground capitalize">{label}</span>
+                        <input type="text" value={fullPath} disabled className="flex-1 px-3 py-2 bg-muted border border-border rounded-md text-foreground text-xs" />
+                      </div>
+                    )
+                  })}
+                </div>
+                <label className="block text-sm font-medium text-foreground mb-2">Additional Project Paths</label>
                 {editWorkspacePaths.map((path, index) => (
                   <div
                     key={index}
