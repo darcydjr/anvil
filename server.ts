@@ -371,8 +371,8 @@ function getActiveWorkspaceRoot(): string {
 
 // Ensure upload root directory exists under active workspace: <workspace root>/uploaded-assets
 function ensureUploadRoot(): string {
-  const workspaceRoot = getActiveWorkspaceRoot();
-  const uploadRoot = path.join(workspaceRoot, 'uploaded-assets');
+  // Always store uploads at repository root ./uploaded-assets (not under specifications)
+  const uploadRoot = path.join(process.cwd(), 'uploaded-assets');
   fs.ensureDirSync(uploadRoot);
   return uploadRoot;
 }
