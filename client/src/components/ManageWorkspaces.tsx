@@ -62,10 +62,10 @@ export default function ManageWorkspaces(): JSX.Element {
 
   const createWorkspace = async (): Promise<void> => {
     const validPaths = newWorkspacePaths.filter(p => p && p.trim())
-    if (!newWorkspaceName.trim() || validPaths.length === 0) {
-      toast.error('Please provide workspace name and at least one project path')
+    if (!newWorkspaceName.trim()) {
+      toast.error('Please provide a workspace name')
       return
-    }
+    } // Additional paths optional now (mandatory auto-created)
 
     try {
       const response = await fetch('/api/workspaces', {
@@ -190,12 +190,16 @@ export default function ManageWorkspaces(): JSX.Element {
     setEditWorkspaceDescription(workspace.description || '')
     setEditWorkspaceCopySwPlan(workspace.copySwPlan !== false)
 
+    const mandatory = [
+      `./${workspace.name}/specifications`,
+      `./${workspace.name}/code`,
+      `./${workspace.name}/tests`,
+      `./${workspace.name}/uploaded-assets`
+    ]
     const pathStrings = (workspace.projectPaths || []).map(pathItem => {
-      if (typeof pathItem === 'string') {
-        return pathItem
-      }
-      return pathItem.path || ''
-    })
+      const p = typeof pathItem === 'string' ? pathItem : pathItem.path || ''
+      return p
+    }).filter(p => !mandatory.includes(p)) // keep only extra paths
     setEditWorkspacePaths(pathStrings)
     setShowEditForm(true)
   }
