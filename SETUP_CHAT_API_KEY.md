@@ -36,7 +36,8 @@ npm start
 
 ## Troubleshooting
 
-### Error: "AI assistant not properly initialized"
+### Error: "The AI assistant needs to be configured"
+- The AI assistant is not configured. Go to the Anvil settings page and add your Anthropic API key.
 - Make sure you added your API key to `.env`
 - Make sure you restarted the server after adding the key
 - Check that the API key starts with `sk-ant-`
