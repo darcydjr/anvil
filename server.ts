@@ -4227,10 +4227,10 @@ app.post('/api/workspaces', async (req, res) => {
 
     // Mandatory paths
     const mandatory = [
-      { path: `./${workspaceName}/specifications`, icon: 'FileText' },
-      { path: `./${workspaceName}/code`, icon: 'Code' },
-      { path: `./${workspaceName}/tests`, icon: 'TestTube' },
-      { path: `./${workspaceName}/uploaded-assets`, icon: 'Folder' }
+      { path: `./Workspaces/${workspaceName}/specifications`, icon: 'FileText' },
+      { path: `./Workspaces/${workspaceName}/code`, icon: 'Code' },
+      { path: `./Workspaces/${workspaceName}/tests`, icon: 'TestTube' },
+      { path: `./Workspaces/${workspaceName}/uploaded-assets`, icon: 'Folder' }
     ];
 
     // Merge user-provided additional paths (optional)
@@ -4341,10 +4341,10 @@ app.put('/api/workspaces/:id', async (req, res) => {
     // Recompute mandatory paths and merge additional ones
     const workspaceName = workspace.name;
     const mandatory = [
-      { path: `./${workspaceName}/specifications`, icon: 'FileText' },
-      { path: `./${workspaceName}/code`, icon: 'Code' },
-      { path: `./${workspaceName}/tests`, icon: 'TestTube' },
-      { path: `./${workspaceName}/uploaded-assets`, icon: 'Folder' }
+      { path: `./Workspaces/${workspaceName}/specifications`, icon: 'FileText' },
+      { path: `./Workspaces/${workspaceName}/code`, icon: 'Code' },
+      { path: `./Workspaces/${workspaceName}/tests`, icon: 'TestTube' },
+      { path: `./Workspaces/${workspaceName}/uploaded-assets`, icon: 'Folder' }
     ];
     let extras: any[] = [];
     if (projectPaths !== undefined && Array.isArray(projectPaths)) {
