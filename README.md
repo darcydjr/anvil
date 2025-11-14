@@ -89,6 +89,20 @@ npm --version     # Should show 8.0.0 or higher
 
 ## Quick Start
 
+### Customize Your Project Name
+
+Want to rebrand? Rename the project to your own name:
+
+```bash
+# Test the changes first (dry run)
+npm run rename:dry-run "YourProjectName"
+
+# Apply the changes
+npm run rename "YourProjectName"
+```
+
+See [RENAMING.md](RENAMING.md) for full documentation.
+
 ### Launch Anvil
 
 **Windows:**
