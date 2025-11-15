@@ -1,7 +1,7 @@
 # Anvil
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/version-3.5.0-green.svg)]()
+[![Version](https://img.shields.io/badge/version-3.5.2-green.svg)]()
 
 ## Overview
 
@@ -1084,6 +1084,23 @@ Anvil now includes a comprehensive **Claude Code Subagent System** that transfor
 - **APACHE 2.0 LICENSE**: Released under Apache 2.0 license with full open source compliance
 - **COMPREHENSIVE FEATURE SET**: Complete PRD management system with capabilities, enablers, and requirements tracking
 - **REACT + NODE.JS**: Modern full-stack application with React frontend and Node.js Express backend
+
+## Changelog
+
+### v3.5.2 - WebSocket Reconnection Fix (2025-11-14)
+- **🔧 Bug Fix**: Fixed WebSocket reconnection defect where file change notifications would stop working after workspace switching
+- **📱 Notifications**: Restored popup notifications and navigation panel status indicators after workspace changes
+- **🔗 WebSocket**: Implemented proper listener cleanup and re-establishment during workspace switches
+- **✨ Enhancement**: No longer requires F5 refresh to restore file change notifications after workspace switching
+
+### v3.5.1 - Performance Optimization (2025-11-14)
+- **🚀 Performance**: Implemented debounced data loading to resolve excessive API calls during capability editing and enabler addition
+- **⚡ Speed**: Reduced `/api/capabilities-dynamic` calls from potentially dozens per editing session to a single call after user stops typing
+- **📊 Efficiency**: Improved editing responsiveness for large projects (49+ capabilities, 155+ enablers, 1400+ requirements)
+- **🔧 Technical**: Added 2-second debouncing to WebSocket file-change event handling to batch rapid document saves
+
+### v3.5.0 - 9-Digit ID System
+- Enhanced ID system for better scalability and organization
 
 ## Contributing
 

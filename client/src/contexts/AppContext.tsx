@@ -1,6 +1,17 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useState, useRef, ReactNode } from 'react'
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useState, useRef, ReactNode, useMemo } from 'react'
 import { apiService } from '../services/apiService'
 import { websocketService } from '../services/websocketService'
+
+// Simple debounce utility function
+function debounce<T extends (...args: any[]) => void>(func: T, wait: number): T {
+  let timeoutId: NodeJS.Timeout | null = null
+  return ((...args: any[]) => {
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+    }
+    timeoutId = setTimeout(() => func(...args), wait)
+  }) as T
+}
 
 interface Capability {
   id?: string
@@ -229,6 +240,16 @@ export function AppProvider({ children }: AppProviderProps): JSX.Element {
     }
   }, [])
 
+  // Create debounced version of loadData to prevent excessive API calls during rapid file changes
+  const debouncedLoadData = useMemo(() =>
+    debounce(() => {
+      if (loadDataRef.current) {
+        console.log('[AppContext] Debounced loadData called - refreshing capabilities data')
+        loadDataRef.current()
+      }
+    }, 2000), // 2-second delay to batch rapid file changes
+  [])
+
   const loadDataWithDependencies = useCallback(async () => {
     try {
       const data = await apiService.getCapabilitiesWithDependencies()
@@ -300,9 +321,8 @@ export function AppProvider({ children }: AppProviderProps): JSX.Element {
       setSelectedDocument(null)
       clearHistory()
 
-      // Force WebSocket reconnection when switching workspaces
-      console.log('[AppContext] Workspace switched, reconnecting WebSocket...')
-      websocketService.forceReconnect()
+      // WebSocket reconnection will be handled by the workspace change useEffect
+      console.log('[AppContext] Workspace switched, WebSocket reconnection will be handled by workspace change effect...')
 
       loadData()
 
@@ -554,30 +574,9 @@ export function AppProvider({ children }: AppProviderProps): JSX.Element {
     checkForMetadataChangesRef.current = checkForMetadataChanges
   }, [loadData, checkForMetadataChanges])
 
-  // Watch for workspace changes and reconnect WebSocket
-  const [previousActiveWorkspaceId, setPreviousActiveWorkspaceId] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (state.activeWorkspaceId &&
-        previousActiveWorkspaceId &&
-        state.activeWorkspaceId !== previousActiveWorkspaceId) {
-      console.log('[AppContext] Active workspace changed, forcing WebSocket reconnection...')
-      websocketService.forceReconnect()
-    }
-    setPreviousActiveWorkspaceId(state.activeWorkspaceId)
-  }, [state.activeWorkspaceId, previousActiveWorkspaceId])
-
-  useEffect(() => {
-    loadData()
-    loadConfig()
-    loadWorkspaces()
-
-    websocketService.connect()
-
-    // Debug WebSocket connection status
-    setTimeout(() => {
-      console.log('[AppContext] WebSocket connection status:', websocketService.getIsConnected())
-    }, 1000)
+  // WebSocket listener setup and management
+  const setupWebSocketListener = useCallback(() => {
+    console.log('[AppContext] Setting up WebSocket listener...')
 
     const removeListener = websocketService.addListener((data: WebSocketData) => {
       console.log('[AppContext] WebSocket data received:', data)
@@ -599,21 +598,69 @@ export function AppProvider({ children }: AppProviderProps): JSX.Element {
             console.warn('[AppContext] checkForMetadataChangesRef.current is not available!')
           }
 
-          setTimeout(() => {
-            // Use ref to call latest loadData function
-            if (loadDataRef.current) {
-              loadDataRef.current()
-            }
-          }, 500)
+          // Use debounced loadData to prevent excessive API calls during rapid editing
+          debouncedLoadData()
         }
       }
     })
 
+    return removeListener
+  }, [debouncedLoadData])
+
+  // Store current listener cleanup function
+  const listenerCleanupRef = useRef<(() => void) | null>(null)
+
+  // Watch for workspace changes and reconnect WebSocket with fresh listeners
+  const [previousActiveWorkspaceId, setPreviousActiveWorkspaceId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (state.activeWorkspaceId &&
+        previousActiveWorkspaceId &&
+        state.activeWorkspaceId !== previousActiveWorkspaceId) {
+      console.log('[AppContext] Active workspace changed, forcing WebSocket reconnection...')
+
+      // Clean up existing listener before reconnecting
+      if (listenerCleanupRef.current) {
+        console.log('[AppContext] Cleaning up existing WebSocket listener before reconnect...')
+        listenerCleanupRef.current()
+        listenerCleanupRef.current = null
+      }
+
+      // Force reconnection and set up fresh listener
+      websocketService.forceReconnect()
+
+      // Set up new listener after a brief delay to ensure WebSocket is connected
+      setTimeout(() => {
+        console.log('[AppContext] Setting up fresh WebSocket listener after workspace change...')
+        listenerCleanupRef.current = setupWebSocketListener()
+      }, 500)
+    }
+    setPreviousActiveWorkspaceId(state.activeWorkspaceId)
+  }, [state.activeWorkspaceId, previousActiveWorkspaceId, setupWebSocketListener])
+
+  useEffect(() => {
+    loadData()
+    loadConfig()
+    loadWorkspaces()
+
+    websocketService.connect()
+
+    // Debug WebSocket connection status
+    setTimeout(() => {
+      console.log('[AppContext] WebSocket connection status:', websocketService.getIsConnected())
+    }, 1000)
+
+    // Set up initial WebSocket listener
+    listenerCleanupRef.current = setupWebSocketListener()
+
     return () => {
-      removeListener()
+      if (listenerCleanupRef.current) {
+        listenerCleanupRef.current()
+        listenerCleanupRef.current = null
+      }
       websocketService.disconnect()
     }
-  }, []) // Remove all dependencies to prevent re-running
+  }, [setupWebSocketListener])
 
   // Initialize metadata storage when data is loaded
   useEffect(() => {

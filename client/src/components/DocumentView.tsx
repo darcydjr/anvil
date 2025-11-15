@@ -693,7 +693,7 @@ export default function DocumentView(): React.ReactElement {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-10 bg-card border-b border-border shadow-sm -m-4 mb-4 p-4">
+      <div className="sticky top-0 z-10 bg-card border-b border-border shadow-sm -m-4 mb-4 p-4 max-w-[99.8%] mx-auto">
         <div className="flex items-center justify-between">
           <div className="flex-1">
             {document?.title && type !== 'template' && (
