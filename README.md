@@ -1106,6 +1106,14 @@ Anvil now includes a comprehensive **Claude Code Subagent System** that transfor
 
 We welcome contributions! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
+## Author
+
+**Darcy Davidson**
+Email: [darcy@teamdjr.com](mailto:darcy@teamdjr.com)
+LinkedIn: [Darcy Davidson](https://www.linkedin.com/in/darcy-davidson-673795157/)
+
+Creator and maintainer of Anvil, passionate about transforming product requirements into working software through AI-powered development workflows.
+
 ## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
