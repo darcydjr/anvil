@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSO Progress Demos - Ford Design System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header with Ford Branding -->
+    <header>
+        <div class="header-content">
+            <div class="ford-logo">
+                <img src="../uploaded-assets/fordlogo.png" alt="Ford Logo">
+            </div>
+            <div class="header-text">
+                <h1>DSO PROGRESS DEMOS</h1>
+                <p class="tagline">Go Further</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav>
+        <ul>
+            <li><a href="#add-demo" class="active">Add Demo</a></li>
+            <li><a href="#demo-records">Demo Records</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <!-- Add New Demo Section -->
+        <section id="add-demo-section" class="card">
+            <h2>Add New Demo</h2>
+            <p class="section-description">Record a new demonstration session with presenter details.</p>
+
+            <form id="demoForm">
+                <div class="form-group">
+                    <label for="date">Date <span class="required">*</span></label>
+                    <input type="date" id="date" name="date" required>
+                    <small class="form-help">Select the date of the demonstration</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="demoName">Demo Name <span class="required">*</span></label>
+                    <input type="text" id="demoName" name="demoName" placeholder="Enter demo name" required>
+                    <small class="form-help">Provide a descriptive name for the demonstration</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="demoPerson">Demo Person <span class="required">*</span></label>
+                    <input type="text" id="demoPerson" name="demoPerson" placeholder="Enter presenter name" required>
+                    <small class="form-help">Name of the person conducting the demonstration</small>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">
+                        <span class="btn-icon">+</span> Add Demo
+                    </button>
+                    <button type="reset" class="btn btn-outlined">Clear Form</button>
+                </div>
+            </form>
+
+            <!-- Success/Error Messages -->
+            <div id="alertContainer"></div>
+        </section>
+
+        <!-- Demo Records Section -->
+        <section id="demo-records-section" class="card">
+            <div class="section-header">
+                <h2>Demo Records</h2>
+                <div class="section-actions">
+                    <span id="recordCount" class="record-count">0 records</span>
+                    <button id="clearAllBtn" class="btn btn-text btn-small">Clear All</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="demoTable">
+                    <thead>
+                        <tr>
+                            <th class="sortable" data-sort="date">
+                                Date
+                                <span class="sort-icon">↕</span>
+                            </th>
+                            <th class="sortable" data-sort="demoName">
+                                Demo Name
+                                <span class="sort-icon">↕</span>
+                            </th>
+                            <th class="sortable" data-sort="demoPerson">
+                                Demo Person
+                                <span class="sort-icon">↕</span>
+                            </th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="demoTableBody">
+                        <!-- Records will be inserted here dynamically -->
+                    </tbody>
+                </table>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="empty-state">
+                    <div class="empty-icon">📋</div>
+                    <h3>No Demo Records Yet</h3>
+                    <p>Get started by adding your first demo record above.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p class="footer-title">DSO Progress Demos</p>
+            <p class="footer-tagline">Go Further</p>
+            <p class="footer-text">Powered by Ford Design System | Built with Material Design Principles</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>
