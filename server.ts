@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+// Load environment variables from .env file
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Debug: Check if API key is loaded
+console.log('[STARTUP] ANTHROPIC_API_KEY loaded:', !!process.env.ANTHROPIC_API_KEY);
+console.log('[STARTUP] ANTHROPIC_API_KEY length:', process.env.ANTHROPIC_API_KEY?.length || 0);
+
 import express, { Request, Response } from 'express';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -24,10 +32,21 @@ import * as chokidar from 'chokidar';
 import { FSWatcher } from 'chokidar';
 import * as http from 'http';
 import { exec } from 'child_process';
+import multer from 'multer';
 import type {
   Config, ConfigPaths, DocumentItem, DocumentMetadata, Enabler, EnablerData,
   Capability, FileLocation, VersionInfo, Dependency
 } from './types/server-types';
+import rateLimit from 'express-rate-limit';
+import {
+  initializeDatabase, getUserByUsername, updateLastLogin, getAllUsers,
+  createUser, updateUser, deleteUser, updateAdminRole
+} from './utils/database';
+import { generateToken, validateToken, extractToken } from './utils/auth';
+import { verifyPassword, hashPassword } from './utils/password';
+import { authenticateToken, requireAdmin } from './utils/middleware';
+import { isAuthEnabled } from './utils/authConfig';
+import { chatService } from './services/chatService';
 
 // File watcher variable for graceful shutdown
 let fileWatcher: FSWatcher | null = null;
@@ -249,6 +268,18 @@ try {
     activeWorkspace: config.activeWorkspaceId,
     logLevel: config.logging?.level || 'INFO'
   });
+
+  // Initialize chat service with AI assistant config
+  logger.info('[CONFIG] Initializing chat service', {
+    hasAiAssistant: !!config.aiAssistant,
+    provider: config.aiAssistant?.provider
+  });
+
+  if (config.aiAssistant) {
+    chatService.setConfig(config.aiAssistant);
+  } else {
+    logger.warn('[CONFIG] No aiAssistant config found, chat will not be available');
+  }
 } catch (error) {
   console.error('Error loading configuration, using defaults:', error.message);
   // Default workspace configuration
@@ -302,6 +333,18 @@ async function reloadConfig(): Promise<void> {
     config = mergedConfig;
     console.log('[CONFIG] Config reloaded successfully, activeWorkspaceId:', config.activeWorkspaceId);
 
+    // Re-initialize chat service with updated AI assistant config
+    logger.info('[CONFIG] Re-initializing chat service after reload', {
+      hasAiAssistant: !!config.aiAssistant,
+      provider: config.aiAssistant?.provider
+    });
+
+    if (config.aiAssistant) {
+      chatService.setConfig(config.aiAssistant);
+    } else {
+      logger.warn('[CONFIG] No aiAssistant config found after reload');
+    }
+
   } catch (error) {
     console.error('[CONFIG] Error reloading configuration:', error.message);
     throw error;
@@ -313,6 +356,84 @@ const PORT = process.env.PORT || config.server.port;
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
+
+// Configure multer for file uploads (store in memory temporarily)
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept any file type (expanded per user request 2025-11-12T23:54:48.410Z)
+    cb(null, true);
+  }
+});
+
+// Determine active workspace root (first project path of active workspace)
+function getActiveWorkspaceRoot(): string {
+  const activeWorkspace = config.workspaces?.find(ws => ws.id === config.activeWorkspaceId);
+  if (activeWorkspace && activeWorkspace.projectPaths && activeWorkspace.projectPaths.length > 0) {
+    // Derive workspace root as parent folder of first mandatory path (e.g. ./WorkspaceName/specifications)
+    const firstEntry = activeWorkspace.projectPaths[0];
+    const firstPath = path.resolve(typeof firstEntry === 'string' ? firstEntry : firstEntry.path);
+    return path.dirname(firstPath); // parent is the workspace root
+  }
+  return process.cwd();
+}
+
+// Ensure upload root directory exists under active workspace: <workspace root>/uploaded-assets
+function ensureUploadRoot(): string {
+  // Store uploads under active workspace root: <active workspace first projectPath>/uploaded-assets
+  const workspaceRoot = getActiveWorkspaceRoot();
+  const uploadRoot = path.join(workspaceRoot, 'uploaded-assets');
+  fs.ensureDirSync(uploadRoot);
+  return uploadRoot;
+}
+
+// Securely resolve a subpath inside the upload root
+function resolveUploadPath(subPath: string): string {
+  const root = ensureUploadRoot();
+  // Clean subPath of leading slashes
+  const clean = (subPath || '').replace(/^[\\/]+/, '').trim();
+  const target = path.join(root, clean);
+  const resolvedRoot = path.resolve(root);
+  const resolvedTarget = path.resolve(target);
+  if (!resolvedTarget.startsWith(resolvedRoot)) {
+    throw new Error('Invalid targetPath (path traversal)');
+  }
+  fs.ensureDirSync(path.dirname(resolvedTarget));
+  return resolvedTarget;
+}
+
+// Upload endpoint: saves files to <active workspace>/uploaded-assets[/optional targetPath]
+// Field name expected: 'files'; optional text field 'targetPath'
+app.post('/api/upload', upload.array('files'), async (req, res) => {
+  try {
+    const files = req.files as Express.Multer.File[];
+    if (!files || files.length === 0) {
+      return res.status(400).json({ success: false, message: 'No files uploaded' });
+    }
+    const targetPath = req.body.targetPath || '';
+    const saved: any[] = [];
+    for (const file of files) {
+      // Combine optional targetPath + original filename
+      const savePath = resolveUploadPath(path.join(targetPath, file.originalname));
+      await fs.writeFile(savePath, file.buffer);
+      saved.push({
+        originalName: file.originalname,
+        size: file.size,
+        mimetype: file.mimetype,
+        path: savePath,
+        relativePath: path.relative(getActiveWorkspaceRoot(), savePath).replace(/\\/g, '/')
+      });
+    }
+    res.json({ success: true, files: saved });
+  } catch (error: any) {
+    console.error('[UPLOAD] Error handling upload:', error.message);
+    res.status(500).json({ success: false, message: 'Upload failed: ' + error.message });
+  }
+});
 
 // Set up marked with options
 marked.setOptions({
@@ -1294,7 +1415,275 @@ function extractComponent(content) {
 }
 
 // API Routes
-// Unified enabler template endpoint 
+// ============================================
+// AUTHENTICATION ENDPOINTS
+// ============================================
+
+// Rate limiter for login attempts
+const loginLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5, // 5 attempts per minute
+  message: 'Too many login attempts, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Login endpoint
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username and password required'
+      });
+    }
+
+    console.log('[AUTH] Login attempt for user:', username);
+
+    const user = getUserByUsername(username);
+
+    if (!user) {
+      console.log('[AUTH] User not found:', username);
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
+
+    const isValid = await verifyPassword(password, user.password_hash);
+
+    if (!isValid) {
+      console.log('[AUTH] Invalid password for user:', username);
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
+
+    // Update last login timestamp
+    updateLastLogin(user.id);
+
+    // Generate JWT token with role
+    const token = generateToken(user.id, user.username, user.role);
+
+    console.log('[AUTH] Login successful for user:', username, 'with role:', user.role);
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('[AUTH] Login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+// Logout endpoint
+app.post('/api/auth/logout', (req, res) => {
+  // Client-side will remove token from localStorage
+  res.json({
+    success: true,
+    message: 'Logged out successfully'
+  });
+});
+
+// Verify token endpoint
+app.get('/api/auth/verify', (req, res) => {
+  const token = extractToken(req);
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: 'No token provided'
+    });
+  }
+
+  const payload = validateToken(token);
+
+  if (!payload) {
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid or expired token'
+    });
+  }
+
+  res.json({
+    success: true,
+    user: {
+      id: payload.userId,
+      username: payload.username,
+      role: payload.role
+    }
+  });
+});
+
+// Check if authentication is enabled
+app.get('/api/auth/status', (req, res) => {
+  res.json({
+    success: true,
+    authEnabled: isAuthEnabled()
+  });
+});
+
+// ============================================
+// END AUTHENTICATION ENDPOINTS
+// ============================================
+
+// ============================================
+// ADMIN USER MANAGEMENT ENDPOINTS
+// ============================================
+
+// Get all users (admin only)
+app.get('/api/admin/users', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const users = getAllUsers();
+    console.log('[ADMIN] Retrieved all users, count:', users.length);
+    res.json({ success: true, users });
+  } catch (error) {
+    console.error('[ADMIN] Error getting users:', error);
+    res.status(500).json({ success: false, error: 'Failed to retrieve users' });
+  }
+});
+
+// Create new user (admin only)
+app.post('/api/admin/users', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { username, password, role } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Username and password are required'
+      });
+    }
+
+    // Validate role
+    if (role && role !== 'admin' && role !== 'user') {
+      return res.status(400).json({
+        success: false,
+        error: 'Role must be either "admin" or "user"'
+      });
+    }
+
+    // Check if username already exists
+    const existingUser = getUserByUsername(username);
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        error: 'Username already exists'
+      });
+    }
+
+    // Hash password
+    const passwordHash = await hashPassword(password);
+
+    // Create user
+    const userId = createUser(username, passwordHash, role || 'user');
+
+    console.log('[ADMIN] Created new user:', username, 'with role:', role || 'user');
+
+    res.status(201).json({
+      success: true,
+      message: 'User created successfully',
+      userId
+    });
+  } catch (error) {
+    console.error('[ADMIN] Error creating user:', error);
+    res.status(500).json({ success: false, error: 'Failed to create user' });
+  }
+});
+
+// Update user (admin only)
+app.put('/api/admin/users/:userId', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const { username, role, is_active, password } = req.body;
+
+    if (isNaN(userId)) {
+      return res.status(400).json({ success: false, error: 'Invalid user ID' });
+    }
+
+    // Validate role if provided
+    if (role && role !== 'admin' && role !== 'user') {
+      return res.status(400).json({
+        success: false,
+        error: 'Role must be either "admin" or "user"'
+      });
+    }
+
+    const updates: any = {};
+    if (username !== undefined) updates.username = username;
+    if (role !== undefined) updates.role = role;
+    if (is_active !== undefined) updates.is_active = is_active;
+
+    // Update basic user info
+    updateUser(userId, updates);
+
+    // Update password if provided
+    if (password) {
+      const { updateUserPassword } = await import('./utils/database');
+      const passwordHash = await hashPassword(password);
+      updateUserPassword(userId, passwordHash);
+    }
+
+    console.log('[ADMIN] Updated user:', userId, 'with updates:', updates);
+
+    res.json({
+      success: true,
+      message: 'User updated successfully'
+    });
+  } catch (error) {
+    console.error('[ADMIN] Error updating user:', error);
+    res.status(500).json({ success: false, error: 'Failed to update user' });
+  }
+});
+
+// Delete user (admin only)
+app.delete('/api/admin/users/:userId', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+
+    if (isNaN(userId)) {
+      return res.status(400).json({ success: false, error: 'Invalid user ID' });
+    }
+
+    // Prevent deleting yourself
+    if (req.user && req.user.userId === userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot delete your own account'
+      });
+    }
+
+    deleteUser(userId);
+
+    console.log('[ADMIN] Deleted user:', userId);
+
+    res.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    console.error('[ADMIN] Error deleting user:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete user' });
+  }
+});
+
+// ============================================
+// END ADMIN USER MANAGEMENT ENDPOINTS
+// ============================================
+
+// Unified enabler template endpoint
 app.get('/api/enabler-template/:capabilityId?', async (req, res) => {
   try {
     const { capabilityId } = req.params;
@@ -2112,6 +2501,72 @@ app.put('/api/file/rename/*', async (req, res) => {
   } catch (error) {
     console.error('Error renaming file:', error);
     res.status(500).json({ error: 'Error renaming file: ' + error.message });
+  }
+});
+
+// Upload files endpoint
+app.post('/api/upload', upload.array('files', 10), async (req, res) => {
+  try {
+    const files = req.files as Express.Multer.File[];
+    const targetPath = path.join('uploaded-assets', req.body.targetPath || '');
+
+    console.log('[UPLOAD] Received files:', files?.length || 0);
+    console.log('[UPLOAD] Target path:', targetPath);
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: 'No files provided' });
+    }
+
+    const configPaths = getConfigPaths(config);
+    const firstProjectPath = path.resolve(configPaths.projectPaths[0]);
+    const uploadResults = [];
+
+    for (const file of files) {
+      try {
+        // Sanitize filename
+        const sanitizedName = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, '_');
+        const cleanTargetPath = targetPath.replace(/^(specifications\/|examples\/)/, '');
+        const relativePath = path.join(cleanTargetPath, sanitizedName);
+
+        // Validate path
+        const fullPath = validateAndResolvePath(relativePath, firstProjectPath, 'upload path');
+
+        // Ensure directory exists
+        await fs.ensureDir(path.dirname(fullPath));
+
+        // Write file
+        await fs.writeFile(fullPath, file.buffer);
+
+        console.log('[UPLOAD] File saved:', fullPath);
+
+        uploadResults.push({
+          originalName: file.originalname,
+          savedName: sanitizedName,
+          path: relativePath,
+          size: file.size,
+          success: true
+        });
+      } catch (fileError) {
+        console.error('[UPLOAD] Error processing file:', file.originalname, fileError);
+        uploadResults.push({
+          originalName: file.originalname,
+          error: fileError.message,
+          success: false
+        });
+      }
+    }
+
+    const successCount = uploadResults.filter(r => r.success).length;
+    const failCount = uploadResults.filter(r => !r.success).length;
+
+    res.json({
+      success: successCount > 0,
+      message: `Uploaded ${successCount} file(s)${failCount > 0 ? `, ${failCount} failed` : ''}`,
+      results: uploadResults
+    });
+  } catch (error) {
+    console.error('[UPLOAD] Error:', error);
+    res.status(500).json({ error: 'Error uploading files: ' + error.message });
   }
 });
 
@@ -3683,6 +4138,98 @@ app.post('/api/config/defaults', async (req, res) => {
   }
 });
 
+// Chat API Endpoints
+
+// Send a message to the AI assistant
+app.post('/api/chat/message', authenticateToken, async (req, res) => {
+  try {
+    const { sessionId, message, workspaceContext } = req.body;
+
+    if (!sessionId || typeof sessionId !== 'string') {
+      return res.status(400).json({ error: 'Session ID is required' });
+    }
+
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    logger.info('[CHAT] Received message', {
+      sessionId,
+      messageLength: message.length,
+      hasWorkspaceContext: !!workspaceContext
+    });
+
+    const response = await chatService.sendMessage(sessionId, message, workspaceContext);
+
+    res.json({
+      success: true,
+      response,
+      sessionId
+    });
+  } catch (error: any) {
+    logger.error('[CHAT] Error sending message', { error: error.message });
+    res.status(500).json({
+      error: 'Error sending message to AI assistant: ' + error.message
+    });
+  }
+});
+
+// Get chat history for a session
+app.get('/api/chat/history/:sessionId', authenticateToken, (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Session ID is required' });
+    }
+
+    const history = chatService.getSessionHistory(sessionId);
+
+    res.json({
+      success: true,
+      sessionId,
+      messages: history
+    });
+  } catch (error: any) {
+    logger.error('[CHAT] Error getting chat history', { error: error.message });
+    res.status(500).json({ error: 'Error getting chat history: ' + error.message });
+  }
+});
+
+// Clear a chat session
+app.delete('/api/chat/session/:sessionId', authenticateToken, (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Session ID is required' });
+    }
+
+    chatService.clearSession(sessionId);
+
+    res.json({
+      success: true,
+      message: 'Chat session cleared'
+    });
+  } catch (error: any) {
+    logger.error('[CHAT] Error clearing session', { error: error.message });
+    res.status(500).json({ error: 'Error clearing session: ' + error.message });
+  }
+});
+
+// Get current AI assistant configuration
+app.get('/api/chat/config', authenticateToken, (req, res) => {
+  try {
+    res.json({
+      success: true,
+      config: config.aiAssistant || null
+    });
+  } catch (error: any) {
+    logger.error('[CHAT] Error getting chat config', { error: error.message });
+    res.status(500).json({ error: 'Error getting chat configuration: ' + error.message });
+  }
+});
+
 // Workspace Management API Endpoints
 
 // Get all workspaces
@@ -3707,16 +4254,39 @@ app.post('/api/workspaces', async (req, res) => {
       return res.status(400).json({ error: 'Workspace name is required' });
     }
 
-    if (!projectPaths || !Array.isArray(projectPaths) || projectPaths.length === 0) {
-      return res.status(400).json({ error: 'At least one project path is required' });
+    const workspaceName = name.trim();
+
+    // Mandatory paths
+    const mandatory = [
+      { path: `./Workspaces/${workspaceName}/specifications`, icon: 'FileText' },
+      { path: `./Workspaces/${workspaceName}/code`, icon: 'Code' },
+      { path: `./Workspaces/${workspaceName}/tests`, icon: 'TestTube' },
+      { path: `./Workspaces/${workspaceName}/uploaded-assets`, icon: 'Folder' }
+    ];
+
+    // Merge user-provided additional paths (optional)
+    const additional: any[] = [];
+    if (Array.isArray(projectPaths)) {
+      for (const p of projectPaths) {
+        const pStr = typeof p === 'string' ? p : p.path;
+        if (!mandatory.some(m => m.path === pStr) && !additional.some(a => a.path === pStr)) {
+          additional.push(typeof p === 'string' ? { path: pStr } : p);
+        }
+      }
+    }
+    const combinedPaths = [...mandatory, ...additional];
+
+    // Ensure mandatory directories exist
+    for (const m of mandatory) {
+      try { fs.ensureDirSync(m.path); } catch (e) { /* ignore */ }
     }
 
     const newWorkspace = {
       id: `ws-${Date.now()}`,
-      name: name.trim(),
+      name: workspaceName,
       description: description?.trim() || '',
       isActive: false,
-      projectPaths: projectPaths,
+      projectPaths: combinedPaths,
       copySwPlan: copySwPlan !== false, // Default to true
       createdDate: new Date().toISOString()
     };
@@ -3799,12 +4369,33 @@ app.put('/api/workspaces/:id', async (req, res) => {
       workspace.description = description?.trim() || '';
     }
 
-    if (projectPaths !== undefined) {
-      if (!Array.isArray(projectPaths) || projectPaths.length === 0) {
-        return res.status(400).json({ error: 'At least one project path is required' });
+    // Recompute mandatory paths and merge additional ones
+    const workspaceName = workspace.name;
+    const mandatory = [
+      { path: `./Workspaces/${workspaceName}/specifications`, icon: 'FileText' },
+      { path: `./Workspaces/${workspaceName}/code`, icon: 'Code' },
+      { path: `./Workspaces/${workspaceName}/tests`, icon: 'TestTube' },
+      { path: `./Workspaces/${workspaceName}/uploaded-assets`, icon: 'Folder' }
+    ];
+    let extras: any[] = [];
+    if (projectPaths !== undefined && Array.isArray(projectPaths)) {
+      for (const p of projectPaths) {
+        const pStr = typeof p === 'string' ? p : p.path;
+        if (!mandatory.some(m => m.path === pStr) && !extras.some(e => e.path === pStr)) {
+          extras.push(typeof p === 'string' ? { path: pStr } : p);
+        }
       }
-      workspace.projectPaths = projectPaths;
+    } else {
+      // preserve existing extras
+      for (const existing of workspace.projectPaths) {
+        const eStr = typeof existing === 'string' ? existing : existing.path;
+        if (!mandatory.some(m => m.path === eStr)) {
+          extras.push(typeof existing === 'string' ? { path: eStr } : existing);
+        }
+      }
     }
+    workspace.projectPaths = [...mandatory, ...extras];
+    for (const m of mandatory) { try { fs.ensureDirSync(m.path); } catch (e) {} }
 
     if (copySwPlan !== undefined) {
       workspace.copySwPlan = copySwPlan !== false; // Default to true
@@ -4969,6 +5560,19 @@ function gracefulShutdown() {
 
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
+
+// Initialize authentication database
+console.log('[AUTH] Initializing authentication database...');
+initializeDatabase();
+console.log('[AUTH] Authentication database initialized');
+
+// Ensure admin user has admin role (for migration from older versions)
+try {
+  updateAdminRole();
+} catch (error) {
+  // Ignore if admin user doesn't exist yet
+  console.log('[AUTH] Admin user role update skipped (user may not exist)');
+}
 
 server.listen(PORT, () => {
   logger.info(`Anvil server running`, {

@@ -1,0 +1,736 @@
+/* ============================================
+   DSO Progress Demos - Ford Design System
+   Implements CAP-129485: Ford UI Design System
+   ============================================ */
+
+/* ============================================
+   CSS Variables - Ford Color Palette
+   ENB-864819: Ford Color Palette Implementation
+   ============================================ */
+:root {
+    /* Primary Ford Blues */
+    --ford-maastricht-blue: #081534;
+    --ford-dark-cerulean: #133A7C;
+    --ford-lapis-lazuli: #2A6BAC;
+    --ford-picton-blue: #47A8E5;
+
+    /* Neutrals */
+    --ford-white: #FFFFFF;
+    --ford-silver-sand: #C6C6C6;
+    --ford-slogan-gray: #3E5966;
+    --ford-text-primary: #212121;
+    --ford-text-secondary: #757575;
+
+    /* Extended Palette */
+    --ford-light-blue-tint: #E8F4FB;
+    --ford-extra-light-blue: #F5FAFD;
+
+    /* Semantic Colors */
+    --color-success: #4caf50;
+    --color-warning: #ff9800;
+    --color-error: #f44336;
+    --color-info: #47A8E5;
+
+    /* Spacing System (8px base) */
+    --spacing-xs: 8px;
+    --spacing-sm: 16px;
+    --spacing-md: 24px;
+    --spacing-lg: 32px;
+    --spacing-xl: 48px;
+    --spacing-2xl: 64px;
+
+    /* Typography Scale - ENB-865096 */
+    --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    --font-size-display: 3rem;
+    --font-size-headline: 2.5rem;
+    --font-size-title: 2.125rem;
+    --font-size-subheading: 1.5rem;
+    --font-size-body: 1rem;
+    --font-size-body-small: 0.875rem;
+    --font-size-caption: 0.75rem;
+
+    /* Elevation Shadows */
+    --elevation-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    --elevation-2: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+    --elevation-3: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+    --elevation-4: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+    --elevation-5: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22);
+
+    /* Transitions */
+    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   Reset & Base Styles
+   ============================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    font-size: var(--font-size-body);
+    line-height: 1.6;
+    color: var(--ford-text-primary);
+    background: var(--ford-extra-light-blue);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ============================================
+   Header - Ford Branding
+   ============================================ */
+header {
+    background: linear-gradient(135deg, var(--ford-maastricht-blue) 0%, var(--ford-dark-cerulean) 100%);
+    color: var(--ford-white);
+    padding: var(--spacing-xl) var(--spacing-md);
+    box-shadow: var(--elevation-2);
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
+
+.ford-logo {
+    flex-shrink: 0;
+}
+
+.ford-logo img {
+    width: 120px;
+    height: auto;
+    display: block;
+}
+
+.header-text {
+    flex: 1;
+    text-align: center;
+}
+
+.header-text h1 {
+    font-size: var(--font-size-display);
+    font-weight: 400;
+    margin-bottom: var(--spacing-xs);
+    letter-spacing: 2px;
+    color: var(--ford-white);
+}
+
+.tagline {
+    color: var(--ford-picton-blue);
+    font-weight: 500;
+    font-style: italic;
+    font-size: var(--font-size-subheading);
+    margin-top: var(--spacing-sm);
+}
+
+/* ============================================
+   Navigation
+   ============================================ */
+nav {
+    background: var(--ford-white);
+    box-shadow: var(--elevation-1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 0;
+    margin: 0;
+}
+
+nav li {
+    margin: 0;
+}
+
+nav a {
+    display: block;
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--ford-dark-cerulean);
+    text-decoration: none;
+    font-weight: 500;
+    transition: background var(--transition-fast), color var(--transition-fast);
+    border-bottom: 3px solid transparent;
+}
+
+nav a:hover,
+nav a.active {
+    background: var(--ford-light-blue-tint);
+    color: var(--ford-maastricht-blue);
+    border-bottom-color: var(--ford-picton-blue);
+}
+
+/* ============================================
+   Container & Layout - ENB-865014: Grid System
+   ============================================ */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+    flex: 1;
+}
+
+/* ============================================
+   Cards - ENB-865044: Component Styling
+   ============================================ */
+.card {
+    background: var(--ford-white);
+    margin: var(--spacing-lg) 0;
+    padding: var(--spacing-xl);
+    border-radius: 8px;
+    box-shadow: var(--elevation-1);
+    transition: box-shadow var(--transition-normal);
+}
+
+.card:hover {
+    box-shadow: var(--elevation-2);
+}
+
+/* ============================================
+   Typography
+   ============================================ */
+h1, h2, h3 {
+    color: var(--ford-maastricht-blue);
+    font-weight: 400;
+    margin-bottom: var(--spacing-md);
+}
+
+h2 {
+    font-size: var(--font-size-title);
+    border-bottom: 2px solid var(--ford-picton-blue);
+    padding-bottom: var(--spacing-sm);
+}
+
+h3 {
+    font-size: var(--font-size-subheading);
+    font-weight: 500;
+}
+
+.section-description {
+    color: var(--ford-text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.section-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+/* ============================================
+   Form Elements - ENB-861546: Form Input Handler
+   ============================================ */
+.form-group {
+    margin: var(--spacing-md) 0;
+}
+
+label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    color: var(--ford-dark-cerulean);
+    font-weight: 500;
+    font-size: var(--font-size-body);
+}
+
+.required {
+    color: var(--color-error);
+}
+
+input[type="text"],
+input[type="date"],
+input[type="email"],
+textarea,
+select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--ford-silver-sand);
+    border-radius: 4px;
+    font-size: var(--font-size-body);
+    font-family: var(--font-family);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    background: var(--ford-white);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--ford-lapis-lazuli);
+    box-shadow: 0 0 0 3px rgba(42, 107, 172, 0.1);
+}
+
+input:invalid:not(:placeholder-shown) {
+    border-color: var(--color-error);
+}
+
+input:valid:not(:placeholder-shown) {
+    border-color: var(--color-success);
+}
+
+.form-help {
+    display: block;
+    margin-top: var(--spacing-xs);
+    font-size: var(--font-size-caption);
+    color: var(--ford-text-secondary);
+}
+
+/* ============================================
+   Buttons - ENB-865044: Component Styling
+   ============================================ */
+.button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-lg) 0;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    font-size: var(--font-size-body-small);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    box-shadow: var(--elevation-2);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-family: var(--font-family);
+}
+
+.btn:hover {
+    box-shadow: var(--elevation-3);
+    transform: translateY(-2px);
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: var(--elevation-1);
+}
+
+.btn-primary {
+    background: var(--ford-dark-cerulean);
+    color: var(--ford-white);
+}
+
+.btn-primary:hover {
+    background: var(--ford-maastricht-blue);
+}
+
+.btn-secondary {
+    background: var(--ford-lapis-lazuli);
+    color: var(--ford-white);
+}
+
+.btn-secondary:hover {
+    background: var(--ford-dark-cerulean);
+}
+
+.btn-accent {
+    background: var(--ford-picton-blue);
+    color: var(--ford-white);
+}
+
+.btn-accent:hover {
+    background: var(--ford-lapis-lazuli);
+}
+
+.btn-outlined {
+    background: transparent;
+    color: var(--ford-dark-cerulean);
+    border: 2px solid var(--ford-dark-cerulean);
+    box-shadow: none;
+}
+
+.btn-outlined:hover {
+    background: var(--ford-light-blue-tint);
+    box-shadow: none;
+    transform: none;
+}
+
+.btn-text {
+    background: transparent;
+    color: var(--ford-dark-cerulean);
+    box-shadow: none;
+    padding: 8px 16px;
+}
+
+.btn-text:hover {
+    background: var(--ford-light-blue-tint);
+    box-shadow: none;
+    transform: none;
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: var(--font-size-caption);
+}
+
+.btn-icon {
+    font-size: 1.2em;
+}
+
+.btn-danger {
+    background: var(--color-error);
+    color: var(--ford-white);
+    box-shadow: none;
+    padding: 6px 12px;
+    font-size: var(--font-size-caption);
+}
+
+.btn-danger:hover {
+    background: #d32f2f;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ============================================
+   Table - ENB-861715: Table Display
+   ============================================ */
+.table-container {
+    overflow-x: auto;
+    margin-top: var(--spacing-md);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--ford-white);
+}
+
+thead {
+    background: var(--ford-maastricht-blue);
+    color: var(--ford-white);
+}
+
+th {
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
+    font-weight: 500;
+    font-size: var(--font-size-body);
+    letter-spacing: 0.5px;
+}
+
+th.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--transition-fast);
+}
+
+th.sortable:hover {
+    background: var(--ford-dark-cerulean);
+}
+
+.sort-icon {
+    font-size: var(--font-size-caption);
+    opacity: 0.6;
+    margin-left: var(--spacing-xs);
+}
+
+th.sorted-asc .sort-icon::after {
+    content: ' ▲';
+}
+
+th.sorted-desc .sort-icon::after {
+    content: ' ▼';
+}
+
+tbody tr {
+    border-bottom: 1px solid var(--ford-silver-sand);
+    transition: background var(--transition-fast);
+}
+
+tbody tr:hover {
+    background: var(--ford-light-blue-tint);
+}
+
+tbody tr:last-child {
+    border-bottom: none;
+}
+
+td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-body);
+}
+
+td:first-child {
+    font-weight: 500;
+    color: var(--ford-dark-cerulean);
+}
+
+/* ============================================
+   Alerts & Messages
+   ============================================ */
+.alert {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: 4px;
+    margin: var(--spacing-md) 0;
+    border-left: 4px solid;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert-success {
+    background: #E8F5E9;
+    border-color: var(--color-success);
+    color: #2E7D32;
+}
+
+.alert-error {
+    background: #FFEBEE;
+    border-color: var(--color-error);
+    color: #C62828;
+}
+
+.alert-info {
+    background: var(--ford-light-blue-tint);
+    border-color: var(--color-info);
+    color: var(--ford-dark-cerulean);
+}
+
+.alert-warning {
+    background: #FFF3E0;
+    border-color: var(--color-warning);
+    color: #E65100;
+}
+
+.alert strong {
+    font-weight: 500;
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-2xl) var(--spacing-md);
+    color: var(--ford-text-secondary);
+    display: none;
+}
+
+.empty-state.show {
+    display: block;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    color: var(--ford-text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+/* ============================================
+   Record Count Badge
+   ============================================ */
+.record-count {
+    background: var(--ford-dark-cerulean);
+    color: var(--ford-white);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: var(--font-size-body-small);
+    font-weight: 500;
+}
+
+/* ============================================
+   Footer
+   ============================================ */
+footer {
+    background: linear-gradient(135deg, var(--ford-maastricht-blue) 0%, var(--ford-dark-cerulean) 100%);
+    color: var(--ford-white);
+    padding: var(--spacing-xl) var(--spacing-md);
+    text-align: center;
+    margin-top: var(--spacing-2xl);
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footer-title {
+    font-size: var(--font-size-title);
+    font-weight: 400;
+    letter-spacing: 2px;
+    margin-bottom: var(--spacing-xs);
+}
+
+.footer-tagline {
+    color: var(--ford-picton-blue);
+    font-weight: 500;
+    font-style: italic;
+    font-size: var(--font-size-subheading);
+    margin-bottom: var(--spacing-sm);
+}
+
+.footer-text {
+    opacity: 0.8;
+    font-size: var(--font-size-body-small);
+}
+
+/* ============================================
+   Responsive Design - ENB-865014
+   ============================================ */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--spacing-md);
+    }
+
+    .ford-logo img {
+        width: 100px;
+    }
+
+    .header-text h1 {
+        font-size: var(--font-size-headline);
+    }
+
+    .tagline {
+        font-size: var(--font-size-body);
+    }
+
+    nav ul {
+        flex-direction: column;
+    }
+
+    nav a {
+        padding: 12px 16px;
+        text-align: center;
+    }
+
+    .container {
+        padding: var(--spacing-sm);
+    }
+
+    .card {
+        padding: var(--spacing-md);
+        margin: var(--spacing-md) 0;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    table {
+        font-size: var(--font-size-body-small);
+    }
+
+    th, td {
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+}
+
+/* ============================================
+   Print Styles
+   ============================================ */
+@media print {
+    header, nav, footer, .button-group, .form-group, #add-demo-section {
+        display: none;
+    }
+
+    body {
+        background: white;
+    }
+
+    .card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+}
+
+/* ============================================
+   Accessibility Enhancements
+   ============================================ */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+:focus-visible {
+    outline: 3px solid var(--ford-picton-blue);
+    outline-offset: 2px;
+}
+
+/* ============================================
+   Loading State
+   ============================================ */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.spinner {
+    border: 3px solid var(--ford-silver-sand);
+    border-top-color: var(--ford-picton-blue);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+}
