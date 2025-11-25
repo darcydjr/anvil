@@ -109,9 +109,30 @@ npm start    # Start the server
 ```
 
 The start scripts will:
-- Automatically install dependencies if needed
-- Start the Anvil server
-- Open at http://localhost:3000
+- **Intelligent dependency checking** - Only install if dependencies are missing or outdated
+- **Smart build detection** - Only rebuild client if source files have changed
+- **Version display** - Shows current Anvil version during startup
+- **Timestamp comparison** - Compares source files vs built files to avoid unnecessary rebuilds
+- **Automatic optimization** - Skips work that doesn't need to be done for faster startup
+- Start the Anvil server at http://localhost:3000
+
+### Stop Anvil Safely
+
+**Windows:**
+```bash
+scripts\stop.bat
+```
+
+**Mac/Linux:**
+```bash
+scripts/stop.sh
+```
+
+The stop scripts will:
+- **Graceful shutdown** - First attempts to shutdown via API endpoint
+- **Targeted process termination** - Only stops processes using port 3000 (Anvil's port)
+- **Safe for development** - Won't terminate Claude Code or other Node.js applications
+- **Process validation** - Confirms Anvil has stopped after shutdown attempt
 
 ### Launch Claude Code for Implementation
 
