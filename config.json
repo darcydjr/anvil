@@ -7,11 +7,11 @@
       "isActive": true,
       "projectPaths": [
         {
-          "path": ".",
+          "path": "specifications",
           "icon": "FileText"
         },
         {
-          "path": "./examples/hello-world/specifications",
+          "path": "examples/hello-world/specifications",
           "icon": "Box"
         }
       ],
@@ -70,7 +70,7 @@
   ],
   "activeWorkspaceId": "ws-default",
   "server": {
-    "port": 3000
+    "port": 3005
   },
   "logging": {
     "level": "DEBUG"
@@ -84,5 +84,10 @@
     "analysisReview": "Required",
     "designReview": "Required",
     "codeReview": "Not Required"
+  },
+  "aiAssistant": {
+    "provider": "claude",
+    "model": "claude-3-haiku-20240307",
+    "maxTokens": 2048
   }
 }

@@ -30,7 +30,19 @@ export default function ManageWorkspaces(): JSX.Element {
   // Workspace form state
   const [newWorkspaceName, setNewWorkspaceName] = useState<string>('')
   const [newWorkspaceDescription, setNewWorkspaceDescription] = useState<string>('')
-  const [newWorkspacePaths, setNewWorkspacePaths] = useState<string[]>([''])
+  const [newWorkspacePaths, setNewWorkspacePaths] = useState<string[]>(['./Workspaces/[WorkspaceName]/specifications','./Workspaces/[WorkspaceName]/tests','./Workspaces/[WorkspaceName]/code','./Workspaces/[WorkspaceName]/uploaded-assets'])
+
+// Dynamically update mandatory path entries when name changes
+useEffect(() => {
+  const ws = newWorkspaceName.trim() || '[WorkspaceName]'
+  setNewWorkspacePaths([
+    `./Workspaces/${ws}/specifications`,
+    `./Workspaces/${ws}/tests`,
+    `./Workspaces/${ws}/code`,
+    `./Workspaces/${ws}/uploaded-assets`
+  ])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [newWorkspaceName])
   const [newWorkspaceCopySwPlan, setNewWorkspaceCopySwPlan] = useState<boolean>(true)
   const [editingWorkspaceId, setEditingWorkspaceId] = useState<string | null>(null)
   const [editWorkspaceName, setEditWorkspaceName] = useState<string>('')
@@ -62,10 +74,10 @@ export default function ManageWorkspaces(): JSX.Element {
 
   const createWorkspace = async (): Promise<void> => {
     const validPaths = newWorkspacePaths.filter(p => p && p.trim())
-    if (!newWorkspaceName.trim() || validPaths.length === 0) {
-      toast.error('Please provide workspace name and at least one project path')
+    if (!newWorkspaceName.trim()) {
+      toast.error('Please provide a workspace name')
       return
-    }
+    } // Additional paths optional now (mandatory auto-created)
 
     try {
       const response = await fetch('/api/workspaces', {
@@ -190,13 +202,22 @@ export default function ManageWorkspaces(): JSX.Element {
     setEditWorkspaceDescription(workspace.description || '')
     setEditWorkspaceCopySwPlan(workspace.copySwPlan !== false)
 
-    const pathStrings = (workspace.projectPaths || []).map(pathItem => {
-      if (typeof pathItem === 'string') {
-        return pathItem
-      }
-      return pathItem.path || ''
-    })
-    setEditWorkspacePaths(pathStrings)
+    const mandatory = [
+      `./${workspace.name}/specifications`,
+      `./${workspace.name}/code`,
+      `./${workspace.name}/tests`,
+      `./${workspace.name}/uploaded-assets`
+    ]
+    const allPaths = (workspace.projectPaths || []).map(p => typeof p === 'string' ? p : p.path || '')
+    // Ensure mandatory indexes 0-3 in editWorkspacePaths
+    const mandatoryResolved = [
+      allPaths.find(p => p.endsWith('/specifications')) || mandatory[0],
+      allPaths.find(p => p.endsWith('/tests')) || mandatory[2].replace('/code','/tests'),
+      allPaths.find(p => p.endsWith('/code')) || mandatory[1],
+      allPaths.find(p => p.endsWith('/uploaded-assets')) || mandatory[3]
+    ]
+    const extras = allPaths.filter(p => !mandatoryResolved.includes(p))
+    setEditWorkspacePaths([...mandatoryResolved, ...extras])
     setShowEditForm(true)
   }
 
@@ -462,7 +483,29 @@ export default function ManageWorkspaces(): JSX.Element {
                 </small>
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Project Paths</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Mandatory Project Paths</label>
+                <div className="space-y-2 mb-4">
+                  {['specifications','tests','code','uploaded-assets'].map((label, idx) => {
+                    const current = editWorkspacePaths[idx] || ''
+                    return (
+                      <div key={label} className="flex items-center gap-2">
+                        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-muted-foreground"><Folder size={16} /></div>
+                        <span className="text-xs font-medium w-28 text-muted-foreground capitalize">{label}</span>
+                        <input
+                          type="text"
+                          value={current}
+                          onChange={(e) => {
+                            const updated = [...editWorkspacePaths]
+                            updated[idx] = e.target.value
+                            setEditWorkspacePaths(updated)
+                          }}
+                          className="flex-1 px-3 py-2 bg-background border border-border rounded-md text-foreground text-xs"
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+                <label className="block text-sm font-medium text-foreground mb-2">Additional Project Paths</label>
                 {editWorkspacePaths.map((path, index) => (
                   <div
                     key={index}

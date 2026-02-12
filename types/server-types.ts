@@ -42,6 +42,13 @@ export interface LoggingConfig {
   level: 'ERROR' | 'WARN' | 'INFO' | 'DEBUG';
 }
 
+export interface AIAssistantConfig {
+  provider: 'claude' | 'openai';
+  apiKey?: string;
+  model?: string;
+  maxTokens?: number;
+}
+
 export interface Config {
   workspaces: Workspace[];
   activeWorkspaceId: string;
@@ -49,6 +56,7 @@ export interface Config {
   ui: UIConfig;
   defaults?: DefaultsConfig;
   logging?: LoggingConfig;
+  aiAssistant?: AIAssistantConfig;
   importedComponents?: any[];
 }
 

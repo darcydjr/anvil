@@ -1,98 +1,128 @@
 @import "tailwindcss";
 
 @theme {
+  /* Base settings */
   --radius: 0.5rem;
 
-  /* Define color tokens that Tailwind can use */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
+  /* Light mode colors - Purple Design System (#7b1fa2 primary) */
+  --color-background: oklch(0.98 0.005 280);
+  --color-foreground: oklch(0.15 0.02 280);
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.15 0.02 280);
+  --color-popover: oklch(1 0 0);
+  --color-popover-foreground: oklch(0.15 0.02 280);
+  --color-primary: oklch(0.48 0.18 305);
+  --color-primary-foreground: oklch(1 0 0);
+  --color-secondary: oklch(0.85 0.08 305);
+  --color-secondary-foreground: oklch(0.20 0.05 305);
+  --color-muted: oklch(0.96 0.01 280);
+  --color-muted-foreground: oklch(0.50 0.02 280);
+  --color-accent: oklch(0.92 0.05 305);
+  --color-accent-foreground: oklch(0.20 0.05 305);
+  --color-destructive: oklch(0.55 0.22 27);
+  --color-destructive-foreground: oklch(0.98 0.02 27);
+  --color-border: oklch(0.90 0.02 280);
+  --color-input: oklch(0.90 0.02 280);
+  --color-ring: oklch(0.48 0.18 305);
+  --color-chart-1: oklch(0.48 0.18 305);
+  --color-chart-2: oklch(0.60 0.15 280);
+  --color-chart-3: oklch(0.40 0.15 320);
+  --color-chart-4: oklch(0.55 0.18 290);
+  --color-chart-5: oklch(0.65 0.15 310);
+}
+
+/* Also define in :root so they're available as CSS variables */
+:root {
+  --color-background: oklch(0.98 0.005 280);
+  --color-foreground: oklch(0.15 0.02 280);
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.15 0.02 280);
+  --color-popover: oklch(1 0 0);
+  --color-popover-foreground: oklch(0.15 0.02 280);
+  --color-primary: oklch(0.48 0.18 305);
+  --color-primary-foreground: oklch(1 0 0);
+  --color-secondary: oklch(0.85 0.08 305);
+  --color-secondary-foreground: oklch(0.20 0.05 305);
+  --color-muted: oklch(0.96 0.01 280);
+  --color-muted-foreground: oklch(0.50 0.02 280);
+  --color-accent: oklch(0.92 0.05 305);
+  --color-accent-foreground: oklch(0.20 0.05 305);
+  --color-destructive: oklch(0.55 0.22 27);
+  --color-destructive-foreground: oklch(0.98 0.02 27);
+  --color-border: oklch(0.90 0.02 280);
+  --color-input: oklch(0.90 0.02 280);
+  --color-ring: oklch(0.48 0.18 305);
+  --color-chart-1: oklch(0.48 0.18 305);
+  --color-chart-2: oklch(0.60 0.15 280);
+  --color-chart-3: oklch(0.40 0.15 320);
+  --color-chart-4: oklch(0.55 0.18 290);
+  --color-chart-5: oklch(0.65 0.15 310);
+}
+
+/* Dark mode color overrides - Purple theme */
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-background: oklch(0.12 0.02 280);
+    --color-foreground: oklch(0.95 0.01 280);
+    --color-card: oklch(0.15 0.02 280);
+    --color-card-foreground: oklch(0.95 0.01 280);
+    --color-popover: oklch(0.15 0.02 280);
+    --color-popover-foreground: oklch(0.95 0.01 280);
+    --color-primary: oklch(0.65 0.20 305);
+    --color-primary-foreground: oklch(1 0 0);
+    --color-secondary: oklch(0.25 0.05 305);
+    --color-secondary-foreground: oklch(0.95 0.01 280);
+    --color-muted: oklch(0.20 0.02 280);
+    --color-muted-foreground: oklch(0.70 0.02 280);
+    --color-accent: oklch(0.25 0.05 305);
+    --color-accent-foreground: oklch(0.95 0.01 280);
+    --color-destructive: oklch(0.60 0.25 27);
+    --color-destructive-foreground: oklch(0.95 0.01 280);
+    --color-border: oklch(0.25 0.02 280);
+    --color-input: oklch(0.25 0.02 280);
+    --color-ring: oklch(0.65 0.20 305);
+  }
+}
+
+.dark {
+  --color-background: oklch(0.12 0.02 280);
+  --color-foreground: oklch(0.95 0.01 280);
+  --color-card: oklch(0.15 0.02 280);
+  --color-card-foreground: oklch(0.95 0.01 280);
+  --color-popover: oklch(0.15 0.02 280);
+  --color-popover-foreground: oklch(0.95 0.01 280);
+  --color-primary: oklch(0.65 0.20 305);
+  --color-primary-foreground: oklch(1 0 0);
+  --color-secondary: oklch(0.25 0.05 305);
+  --color-secondary-foreground: oklch(0.95 0.01 280);
+  --color-muted: oklch(0.20 0.02 280);
+  --color-muted-foreground: oklch(0.70 0.02 280);
+  --color-accent: oklch(0.25 0.05 305);
+  --color-accent-foreground: oklch(0.95 0.01 280);
+  --color-destructive: oklch(0.60 0.25 27);
+  --color-destructive-foreground: oklch(0.95 0.01 280);
+  --color-border: oklch(0.25 0.02 280);
+  --color-input: oklch(0.25 0.02 280);
+  --color-ring: oklch(0.65 0.20 305);
 }
 
 @layer base {
-  :root {
-    --background: oklch(0.95 0.005 211);
-    --foreground: oklch(0.15 0.08 211);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.15 0.08 222);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.15 0.08 222);
-    --primary: oklch(0.6 0.2 235);
-    --primary-foreground: oklch(100% 0.0 0);
-    --secondary: oklch(99.281% 0.00654 209.662);
-    --secondary-foreground: oklch(0.20 0.05 222);
-    --muted: oklch(0.98 0.005 210);
-    --muted-foreground: oklch(0.55 0.02 215);
-    --accent: oklch(0.96 0.01 210);
-    --accent-foreground: oklch(0.20 0.05 222);
-    --destructive: oklch(0.55 0.22 27);
-    --destructive-foreground: oklch(0.98 0.02 210);
-    --border: oklch(0.91 0.03 214);
-    --input: oklch(0.91 0.03 214);
-    --ring: oklch(0.70 0.25 217);
-    --chart-1: oklch(0.70 0.20 12);
-    --chart-2: oklch(0.50 0.15 173);
-    --chart-3: oklch(0.35 0.10 197);
-    --chart-4: oklch(0.75 0.20 43);
-    --chart-5: oklch(0.75 0.22 27);
-  }
-
-  html.dark,
-  .dark {
-    --background: oklch(0.15 0.08 211);
-    --foreground: oklch(0.92 0.01 211);
-    --card: oklch(0.25 0.05 222);
-    --card-foreground: oklch(0.98 0.02 210);
-    --popover: oklch(0.20 0.05 222);
-    --popover-foreground: oklch(0.98 0.02 210);
-    --primary: oklch(0.9 0.1 235 / 80);
-    --primary-foreground: oklch(23.173% 0.04079 214.257);
-    --secondary: oklch(0.25 0.03 217);
-    --secondary-foreground: oklch(0.98 0.02 210);
-    --muted: oklch(0.25 0.03 217);
-    --muted-foreground: oklch(0.70 0.02 215);
-    --accent: oklch(0.25 0.03 217);
-    --accent-foreground: oklch(0.98 0.02 210);
-    --destructive: oklch(0.45 0.20 27);
-    --destructive-foreground: oklch(0.98 0.02 210);
-    --border: oklch(0.25 0.03 217);
-    --input: oklch(0.25 0.03 217);
-    --ring: oklch(0.60 0.25 224);
-    --chart-1: oklch(0.60 0.20 220);
-    --chart-2: oklch(0.55 0.15 160);
-    --chart-3: oklch(0.65 0.20 30);
-    --chart-4: oklch(0.70 0.18 280);
-    --chart-5: oklch(0.65 0.20 340);
-  }
-
   * {
-    border-color: var(--border);
+    border-color: oklch(0.90 0.02 280);
   }
 
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    background-color: oklch(0.98 0.005 280);
+    color: oklch(0.15 0.02 280);
+  }
+
+  .dark * {
+    border-color: oklch(0.25 0.02 280);
+  }
+
+  .dark body {
+    background-color: oklch(0.12 0.02 280);
+    color: oklch(0.95 0.01 280);
   }
 }
 
@@ -109,43 +139,81 @@
   .markdown-content h4,
   .markdown-content h5,
   .markdown-content h6 {
-    @apply text-foreground font-semibold;
+    color: oklch(0.15 0.08 211);
+    font-weight: 600;
     margin-top: 1.5rem;
     margin-bottom: 0.75rem;
     line-height: 1.3;
   }
 
+  .dark .markdown-content h1,
+  .dark .markdown-content h2,
+  .dark .markdown-content h3,
+  .dark .markdown-content h4,
+  .dark .markdown-content h5,
+  .dark .markdown-content h6 {
+    color: oklch(0.92 0.01 211);
+  }
+
   .markdown-content h1 {
     font-size: 2rem;
-    @apply border-b-2 border-primary;
+    border-bottom: 2px solid oklch(0.6 0.2 235);
     padding-bottom: 0.5rem;
     margin-top: 0;
   }
 
+  .dark .markdown-content h1 {
+    border-bottom-color: oklch(0.9 0.1 235 / 0.8);
+  }
+
   .markdown-content h2 {
     font-size: 1.625rem;
-    @apply text-primary border-b border-border/50;
+    color: oklch(0.6 0.2 235);
+    border-bottom: 1px solid oklch(0.91 0.03 214 / 0.5);
     padding-bottom: 0.3rem;
+  }
+
+  .dark .markdown-content h2 {
+    color: oklch(0.9 0.1 235 / 0.8);
+    border-bottom-color: oklch(0.25 0.03 217 / 0.5);
   }
 
   .markdown-content h3 {
     font-size: 1.375rem;
-    @apply text-primary/90;
+    color: oklch(0.6 0.2 235 / 0.9);
+  }
+
+  .dark .markdown-content h3 {
+    color: oklch(0.9 0.1 235 / 0.72);
   }
 
   .markdown-content h4 {
     font-size: 1.125rem;
-    @apply text-foreground/90;
+    color: oklch(0.15 0.08 211 / 0.9);
+  }
+
+  .dark .markdown-content h4 {
+    color: oklch(0.92 0.01 211 / 0.9);
   }
 
   .markdown-content h5 {
     font-size: 1rem;
-    @apply text-foreground/80;
+    color: oklch(0.15 0.08 211 / 0.8);
+  }
+
+  .dark .markdown-content h5 {
+    color: oklch(0.92 0.01 211 / 0.8);
   }
 
   .markdown-content h6 {
     font-size: 0.875rem;
-    @apply text-muted-foreground uppercase tracking-wide;
+    color: oklch(0.55 0.02 215);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .dark .markdown-content h6 {
+    color: oklch(0.70 0.02 215);
   }
 
   .markdown-content p {
@@ -179,19 +247,45 @@
   }
 
   .markdown-content strong {
-    @apply font-semibold text-foreground;
+    font-weight: 600;
+    color: oklch(0.15 0.08 211);
+  }
+
+  .dark .markdown-content strong {
+    color: oklch(0.92 0.01 211);
   }
 
   .markdown-content em {
-    @apply italic;
+    font-style: italic;
   }
 
   .markdown-content a {
-    @apply text-primary underline decoration-primary/30 hover:decoration-primary transition-colors;
+    color: oklch(0.6 0.2 235);
+    text-decoration: underline;
+    text-decoration-color: oklch(0.6 0.2 235 / 0.3);
+    transition: text-decoration-color 0.2s;
+  }
+
+  .markdown-content a:hover {
+    text-decoration-color: oklch(0.6 0.2 235);
+  }
+
+  .dark .markdown-content a {
+    color: oklch(0.9 0.1 235 / 0.8);
+    text-decoration-color: oklch(0.9 0.1 235 / 0.24);
+  }
+
+  .dark .markdown-content a:hover {
+    text-decoration-color: oklch(0.9 0.1 235 / 0.8);
   }
 
   .markdown-content hr {
-    @apply border-border my-6;
+    border-color: oklch(0.91 0.03 214);
+    margin: 1.5rem 0;
+  }
+
+  .dark .markdown-content hr {
+    border-color: oklch(0.25 0.03 217);
   }
 
   .markdown-content table {
@@ -199,25 +293,50 @@
     border-collapse: separate;
     border-spacing: 0;
     margin: 1.5rem 0;
-    @apply bg-card rounded-lg shadow-sm border border-border;
+    background-color: oklch(1 0 0);
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px 0 oklch(0 0 0 / 0.05);
+    border: 1px solid oklch(0.91 0.03 214);
     overflow: hidden;
+  }
+
+  .dark .markdown-content table {
+    background-color: oklch(0.25 0.05 222);
+    border-color: oklch(0.25 0.03 217);
   }
 
   .markdown-content th,
   .markdown-content td {
     padding: 0.875rem 1rem;
     text-align: left;
-    @apply border-b border-border;
+    border-bottom: 1px solid oklch(0.91 0.03 214);
+  }
+
+  .dark .markdown-content th,
+  .dark .markdown-content td {
+    border-bottom-color: oklch(0.25 0.03 217);
   }
 
   .markdown-content th {
-    @apply bg-muted/80 font-semibold text-foreground;
+    background-color: oklch(0.98 0.005 210 / 0.8);
+    font-weight: 600;
+    color: oklch(0.15 0.08 211);
     border-bottom-width: 2px;
+  }
+
+  .dark .markdown-content th {
+    background-color: oklch(0.25 0.03 217 / 0.8);
+    color: oklch(0.92 0.01 211);
   }
 
   .markdown-content td:not(:last-child),
   .markdown-content th:not(:last-child) {
-    @apply border-r border-border/50;
+    border-right: 1px solid oklch(0.91 0.03 214 / 0.5);
+  }
+
+  .dark .markdown-content td:not(:last-child),
+  .dark .markdown-content th:not(:last-child) {
+    border-right-color: oklch(0.25 0.03 217 / 0.5);
   }
 
   .markdown-content tbody tr:last-child td {
@@ -225,18 +344,41 @@
   }
 
   .markdown-content tbody tr:hover {
-    @apply bg-muted/30;
+    background-color: oklch(0.98 0.005 210 / 0.3);
+  }
+
+  .dark .markdown-content tbody tr:hover {
+    background-color: oklch(0.25 0.03 217 / 0.3);
   }
 
   .markdown-content code {
-    @apply bg-muted/70 px-1.5 py-0.5 rounded text-sm border border-border/50;
+    background-color: oklch(0.98 0.005 210 / 0.7);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    border: 1px solid oklch(0.91 0.03 214 / 0.5);
     font-family: ui-monospace, 'SF Mono', 'Cascadia Code', 'Courier New', monospace;
-    @apply text-foreground;
+    color: oklch(0.15 0.08 211);
+  }
+
+  .dark .markdown-content code {
+    background-color: oklch(0.25 0.03 217 / 0.7);
+    border-color: oklch(0.25 0.03 217 / 0.5);
+    color: oklch(0.92 0.01 211);
   }
 
   .markdown-content pre {
-    @apply bg-muted/50 p-4 rounded-lg overflow-x-auto border border-border;
+    background-color: oklch(0.98 0.005 210 / 0.5);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    border: 1px solid oklch(0.91 0.03 214);
     margin: 1.25rem 0;
+  }
+
+  .dark .markdown-content pre {
+    background-color: oklch(0.25 0.03 217 / 0.5);
+    border-color: oklch(0.25 0.03 217);
   }
 
   .markdown-content pre code {
@@ -248,8 +390,22 @@
   }
 
   .markdown-content blockquote {
-    @apply border-l-4 border-primary/60 pl-4 py-0.5 italic text-muted-foreground bg-muted/30 rounded-r;
+    border-left: 4px solid oklch(0.6 0.2 235 / 0.6);
+    padding-left: 1rem;
+    padding-top: 0.125rem;
+    padding-bottom: 0.125rem;
+    font-style: italic;
+    color: oklch(0.55 0.02 215);
+    background-color: oklch(0.98 0.005 210 / 0.3);
+    border-top-right-radius: 0.25rem;
+    border-bottom-right-radius: 0.25rem;
     margin: 1.25rem 0;
+  }
+
+  .dark .markdown-content blockquote {
+    border-left-color: oklch(0.9 0.1 235 / 0.48);
+    color: oklch(0.70 0.02 215);
+    background-color: oklch(0.25 0.03 217 / 0.3);
   }
 
   .markdown-content blockquote p {
@@ -260,7 +416,14 @@
   .mermaid-diagram {
     margin: 2rem 0;
     text-align: center;
-    @apply bg-card rounded-lg p-4 shadow-sm;
+    background-color: oklch(1 0 0);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 1px 2px 0 oklch(0 0 0 / 0.05);
+  }
+
+  .dark .mermaid-diagram {
+    background-color: oklch(0.25 0.05 222);
   }
 
   .mermaid-diagram svg {

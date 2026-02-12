@@ -1,17 +1,43 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings, HelpCircle, Lightbulb, Clipboard, Search, X } from 'lucide-react'
+import { Settings, HelpCircle, Lightbulb, Clipboard, Search, X, MessageSquare, Upload, Shield } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
+import { useAuth } from '../contexts/AuthContext'
 import { version } from '../../../package.json'
 import WorkspaceSelector from './WorkspaceSelector'
 import { Button } from './ui/button'
 import { ButtonGroup } from './ui/button-group'
 import { ThemeToggle } from './ui/theme-toggle'
+import { getCurrentDesignSystem } from '../config/designSystems'
 
-export default function Header(): JSX.Element {
+interface HeaderProps {
+  onChatToggle?: () => void
+}
+
+export default function Header({ onChatToggle }: HeaderProps): JSX.Element {
   const { config, setSelectedCapability, searchTerm, setSearchTerm, performSearch } = useApp()
+  const { isAdmin } = useAuth()
   const navigate = useNavigate()
   const [localSearchTerm, setLocalSearchTerm] = useState('')
+  const [logoFilter, setLogoFilter] = useState('')
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+
+  // Update logo filter based on design system
+  useEffect(() => {
+    const system = getCurrentDesignSystem()
+
+    // Apply CSS filter to tint the logo to match the design system
+    if (system.id === 'purple') {
+      // Purple tint: hue-rotate to purple range
+      setLogoFilter('brightness(0) saturate(100%) invert(21%) sepia(89%) saturate(3067%) hue-rotate(280deg) brightness(91%) contrast(102%)')
+    } else if (system.id === 'blue') {
+      // Blue tint
+      setLogoFilter('brightness(0) saturate(100%) invert(11%) sepia(98%) saturate(4289%) hue-rotate(221deg) brightness(95%) contrast(107%)')
+    } else {
+      // Default (no filter)
+      setLogoFilter('none')
+    }
+  }, [])
 
   const handleLogoClick = (): void => {
     setSelectedCapability(null)
@@ -31,6 +57,43 @@ export default function Header(): JSX.Element {
     performSearch('')
   }
 
+  const handleFileUploadClick = (): void => {
+    fileInputRef.current?.click()
+  }
+
+  const [pendingFiles, setPendingFiles] = useState<File[]>([])
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const files = e.target.files
+    if (files && files.length > 0) {
+      setPendingFiles(Array.from(files))
+    }
+  }
+
+  const handlePerformUpload = async (): Promise<void> => {
+    if (pendingFiles.length === 0) return
+    try {
+      const formData = new FormData()
+      pendingFiles.forEach(f => formData.append('files', f))
+      // optional targetPath left blank to use root of uploaded-assets
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        console.error('Upload failed:', data)
+      } else {
+        console.log('Upload success:', data)
+      }
+    } catch (err) {
+      console.error('Upload error:', err)
+    } finally {
+      setPendingFiles([])
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
   // Sync local state with context
   useEffect(() => {
     setLocalSearchTerm(searchTerm)
@@ -40,13 +103,15 @@ export default function Header(): JSX.Element {
 
   return (
     <header className="p-4 bg-background border-border">
-      <div className="flex justify-between items-center relative">
-        <div className="flex items-center gap-4 flex-1">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-8">
+        {/* Left section - Logo and Workspace */}
+        <div className="flex items-center gap-4">
           <div className="flex items-center gap-4 cursor-pointer transition-opacity duration-150 ease-in-out hover:opacity-80" onClick={handleLogoClick}>
             <img
               src="/logo.png"
               alt="Anvil Logo"
-              className="w-[80px] h-[80px] object-contain"
+              className="w-[80px] h-[80px] object-contain transition-all duration-300"
+              style={{ filter: logoFilter }}
               onError={(e: React.SyntheticEvent<HTMLImageElement, Event>): void => {
                 (e.target as HTMLImageElement).style.display = 'none'
               }}
@@ -54,17 +119,19 @@ export default function Header(): JSX.Element {
           </div>
           <WorkspaceSelector />
         </div>
-        <div className="flex justify-center items-center flex-1 absolute left-1/2 -translate-x-1/2">
-          <div className="text-center">
-            <div className="text-2xl whitespace-nowrap font-semibold text-foreground">
-              {config?.description || 'Product Specifications Driven Development'}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              v{version}
-            </div>
+
+        {/* Center section - Title */}
+        <div className="flex flex-col items-center justify-center text-center whitespace-nowrap px-4">
+          <div className="text-xl font-semibold text-foreground">
+            {config?.description || 'Product Specifications Driven Development'}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            v{version}
           </div>
         </div>
-        <div className="flex gap-4 items-center flex-1 justify-end">
+
+        {/* Right section - Search and buttons */}
+        <div className="flex gap-4 items-center justify-end">
           <div className="relative max-w-md">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
@@ -86,7 +153,35 @@ export default function Header(): JSX.Element {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={handleFileChange}
+              multiple
+              accept=".md,.txt,.pdf,.doc,.docx,.json,.csv,.xml,.html,.css,.js,.ts,.tsx,.jsx,.py,.java,.cpp,.c,.h,.hpp,.go,.rs,.rb,.php,.swift,.kt,.yaml,.yml,text/*,application/pdf,application/json"
+            />
             <ButtonGroup>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleFileUploadClick}
+                title="Select Files"
+                className="text-primary hover:bg-primary/10 hover:text-primary/80 transition-colors"
+              >
+                <Upload size={20} />
+              </Button>
+              {pendingFiles.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePerformUpload}
+                  title={`Upload ${pendingFiles.length} file(s)`}
+                  className="text-green-600 hover:bg-green-600/10 hover:text-green-600/80 transition-colors dark:text-green-400 dark:hover:bg-green-400/10"
+                >
+                  Upload ({pendingFiles.length})
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="icon"
@@ -95,6 +190,15 @@ export default function Header(): JSX.Element {
                 className="text-primary hover:bg-primary/10 hover:text-primary/80 transition-colors"
               >
                 <Lightbulb size={20} />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onChatToggle}
+                title="AI Chat Assistant"
+                className="text-primary hover:bg-primary/10 hover:text-primary/80 transition-colors"
+              >
+                <MessageSquare size={20} />
               </Button>
               <Button
                 variant="outline"
@@ -123,6 +227,17 @@ export default function Header(): JSX.Element {
               >
                 <Settings size={20} />
               </Button>
+              {isAdmin() && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={(): void => navigate('/admin/users')}
+                  title="User Management (Admin)"
+                  className="text-purple-600 hover:bg-purple-600/10 hover:text-purple-600/80 transition-colors dark:text-purple-400 dark:hover:bg-purple-400/10"
+                >
+                  <Shield size={20} />
+                </Button>
+              )}
             </ButtonGroup>
             <ThemeToggle />
           </div>

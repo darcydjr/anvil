@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { Lightbulb, FileText, Zap, Eye, EyeOff, Send, Loader, AlertCircle } from 'lucide-react'
+import { Lightbulb, FileText, Zap, Eye, EyeOff, Send, Loader, AlertCircle, Upload } from 'lucide-react'
 import { marked } from 'marked'
 import { apiService } from '../services/apiService'
 import toast from 'react-hot-toast'
+import { FileUpload } from './ui/file-upload'
 
 interface DiscoveryCapability {
   id: string
@@ -30,6 +31,8 @@ export default function Discovery(): JSX.Element {
   const [previewMode, setPreviewMode] = useState<boolean>(false)
   const [analyzing, setAnalyzing] = useState<boolean>(false)
   const [results, setResults] = useState<DiscoveryResults | null>(null)
+  const [uploading, setUploading] = useState<boolean>(false)
+  const [showUpload, setShowUpload] = useState<boolean>(false)
 
   const handleAnalyze = async (): Promise<void> => {
     if (!inputText.trim()) {
@@ -94,6 +97,50 @@ export default function Discovery(): JSX.Element {
     }
   }
 
+  const handleFileUpload = async (files: File[]): Promise<void> => {
+    if (files.length === 0) return
+
+    setUploading(true)
+    try {
+      const response = await apiService.uploadFiles(files, 'specifications')
+
+      if (response.success) {
+        toast.success(response.message || `Successfully uploaded ${files.length} file(s)`)
+
+        // Read the content of uploaded markdown files and append to input text
+        const markdownFiles = files.filter(f => f.name.endsWith('.md') || f.name.endsWith('.txt'))
+        if (markdownFiles.length > 0) {
+          const reader = new FileReader()
+          let fileContents: string[] = []
+
+          for (const file of markdownFiles) {
+            const content = await new Promise<string>((resolve) => {
+              reader.onload = (e) => resolve(e.target?.result as string || '')
+              reader.readAsText(file)
+            })
+            fileContents.push(content)
+          }
+
+          if (fileContents.length > 0) {
+            setInputText(prev => {
+              const newContent = fileContents.join('\n\n---\n\n')
+              return prev ? `${prev}\n\n---\n\n${newContent}` : newContent
+            })
+            toast.success('File content loaded into editor')
+          }
+        }
+      } else {
+        toast.error(response.message || 'Upload failed')
+      }
+    } catch (error) {
+      console.error('Upload failed:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      toast.error(`Upload failed: ${errorMessage}`)
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const renderPreview = (): { __html: string } => {
     try {
       return { __html: marked(inputText) }
@@ -117,11 +164,43 @@ export default function Discovery(): JSX.Element {
           </p>
         </div>
         <p className="text-muted-foreground">
-          Enter or paste text/markdown describing your project requirements. AI will analyze and generate Capabilities, Enablers, and Requirements.
+          Upload files or enter/paste text/markdown describing your project requirements. AI will analyze and generate Capabilities, Enablers, and Requirements.
         </p>
       </div>
 
       <div className="space-y-6">
+        {/* File Upload Section */}
+        <div className="bg-card rounded-lg shadow-md border border-border p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Upload size={20} className="text-chart-2" />
+              <h2 className="text-xl font-semibold text-foreground">Upload Files</h2>
+            </div>
+            <button
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setShowUpload(!showUpload)}
+            >
+              {showUpload ? 'Hide' : 'Show'}
+            </button>
+          </div>
+
+          {showUpload && (
+            <FileUpload
+              onFilesSelected={handleFileUpload}
+              disabled={uploading}
+              multiple={true}
+              accept=".md,.txt,.pdf,.doc,.docx,text/markdown,text/plain,application/pdf"
+            />
+          )}
+
+          {uploading && (
+            <div className="flex items-center justify-center gap-2 py-4">
+              <Loader size={20} className="animate-spin text-primary" />
+              <span className="text-sm text-muted-foreground">Uploading files...</span>
+            </div>
+          )}
+        </div>
+
         <div className="bg-card rounded-lg shadow-md border border-border">
           <div className="border-b border-border p-4 flex items-center justify-between">
             <div className="flex rounded-md border border-border overflow-hidden">

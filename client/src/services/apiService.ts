@@ -151,6 +151,20 @@ const api: AxiosInstance = axios.create({
   timeout: 30000
 })
 
+// Add request interceptor to inject authentication token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
+
 // Add response interceptor for consistent error handling
 api.interceptors.response.use(
   (response) => response,
@@ -250,6 +264,30 @@ export const apiService = {
     } catch (error) {
       console.error(`Failed to rename file ${oldPath} to ${newPath}:`, error)
       throw new Error(`Failed to rename file: ${(error as Error).message}`)
+    }
+  },
+
+  async uploadFiles(files: File[], targetPath: string = ''): Promise<ApiResponse> {
+    try {
+      if (!files || files.length === 0) {
+        throw new Error('At least one file is required')
+      }
+
+      const formData = new FormData()
+      files.forEach(file => {
+        formData.append('files', file)
+      })
+      if (targetPath) formData.append('targetPath', targetPath)
+
+      const response = await api.post<ApiResponse>('/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      return response.data
+    } catch (error) {
+      console.error('Failed to upload files:', error)
+      throw new Error(`Failed to upload files: ${(error as Error).message}`)
     }
   },
 
